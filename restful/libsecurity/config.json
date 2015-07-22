@@ -1,0 +1,10 @@
+{
+	"accountManager": "full", 
+	"otp": "basic",
+	"acl": "none",
+	"appAcl": "none",
+	"um": "basic",
+	"ocra": "basic",
+	"password": "basic",
+	"secureStorage": "basic"
+}

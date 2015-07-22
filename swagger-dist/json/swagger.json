@@ -1,0 +1,1364 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Brave project provides a remote inspection service built over IBM data  and  3<sup>rd</sup> party inspection services.\n",
+        "version": "3.0",
+        "title": "IBM Brave API",
+        "termsOfService": "http://brave.ibm.com/terms/",
+        "license": {
+            "name": "IBM liecense",
+            "url": "https://exchange.xforce.ibmcloud.com/views/static/terms_text.html"
+        },
+        "contact": {
+            "email": "security-innovation@il.ibm.com"
+        }
+    },
+    "host": "security-innovation.haifa.ibm.com",
+    "produces": [
+        "application/json"
+    ],
+    "schemes": [
+        "http"
+    ],
+    "paths": {
+        "/v3.0/datum/{checksum_value}": {
+            "get": {
+                "tags": [
+                    "datum"
+                ],
+                "summary": "Retreives data on checksum value",
+                "description": "Retreives data on checksum value from IBM internal databases and from 3<sup>rd</sup> party inspection services, checksum value is of a type MD5, SHA1 and SHA256 in hexadecimal format.",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "checksum_value",
+                        "description": "Hexadecimal value of checksum (MD5, SHA1, SHA256).",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "origin",
+                        "description": "checsum value from specific origin",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "machine_id",
+                        "description": "Hexadecimal value of agent",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/Datum"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid checksum value is supplied."
+                    },
+                    "404": {
+                        "description": "Checksum value is not found."
+                    },
+                    "500": {
+                        "description": "Internal server error."
+                    },
+                    "503": {
+                        "description": "Service unavailable."
+                    }
+                }
+            }
+        },
+        "/v3.0/datum/": {
+            "post": {
+                "tags": [
+                    "datum"
+                ],
+                "summary": "Retreives data of a list of checksum values",
+                "description": "Batch retrieval of checksum values",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "checksum_value_list",
+                        "description": "An array of hexadecimal values of checksum (MD5, SHA1, SHA256).",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "example": "[\"111ED2F02D8AF54D0B982D8C9DD4932E\", \"222ED2F02D8AF54D0B982D8C9DD4932E\"]"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation."
+                    },
+                    "400": {
+                        "description": "Invalid checksum value is supplied."
+                    },
+                    "404": {
+                        "description": "Checksum value is not found."
+                    },
+                    "500": {
+                        "description": "Internal server error."
+                    },
+                    "503": {
+                        "description": "Service unavailable."
+                    }
+                }
+            }
+        },
+        "/v3.0/scan/file/{content_type}": {
+            "post": {
+                "tags": [
+                    "datum"
+                ],
+                "summary": "Uploads a file for scanning",
+                "description": "Uploads a file for analysis (e.g.sandbox execution).",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "content_type",
+                        "description": "Type of the file, bin, javascript, php, etc.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "File to upload.",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/File"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation."
+                    },
+                    "400": {
+                        "description": "Invalid data."
+                    }
+                }
+            }
+        },
+        "/v3.0/scan/url": {
+            "post": {
+                "tags": [
+                    "datum"
+                ],
+                "summary": "Analyses a URL",
+                "description": "URL analysis, including navigation to the URL in a sandbox.",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "URL to analyze.",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ScanURL"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation."
+                    },
+                    "400": {
+                        "description": "Invalid data."
+                    }
+                }
+            }
+        },
+        "/v3.0/tag/{checksum_value}/{checksum_tag}/{source}": {
+            "put": {
+                "tags": [
+                    "datum"
+                ],
+                "summary": "Tags a checksum value",
+                "description": "Tag a checksum value as whitelisted, blackelisted, etc.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "checksum_value",
+                        "description": "Hexadecimal value of checksum (MD5, SHA1, SHA256).",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "checksum_tag",
+                        "description": "Description tag of checksum, for instance, known, malicious, suspicious, etc.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "source",
+                        "description": "Masked source of tagging, for instance, xfe, trusteer_orion, etc.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "Description of the tagging.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "origin",
+                        "description": "checsum value of specific origin",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation."
+                    },
+                    "400": {
+                        "description": "Invalid checksum value is supplied or undefined tag or unauthorized source."
+                    },
+                    "500": {
+                        "description": "Internal server error."
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "datum"
+                ],
+                "summary": "Retrieves metadata associated with a tag ",
+                "description": "Tagging operations have associated metadata (partly user provided in the PUT operation and partly system generated). This is the retrieval request.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "checksum_value",
+                        "description": "Hexadecimal value of checksum (MD5, SHA1, SHA256).",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "checksum_tag",
+                        "description": "Description tag of checksum, for instance, known, malicious, suspicious, etc.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "source",
+                        "description": "Masked source of tagging, for instance, xfe, trusteer_orion, etc.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "origin",
+                        "description": "checsum value of specific origin",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation."
+                    },
+                    "304": {
+                        "description": "HTTP method is not modified."
+                    },
+                    "400": {
+                        "description": "Invalid checksum value is supplied or undefined tag or unauthorized source."
+                    },
+                    "404": {
+                        "description": "Tag not found."
+                    },
+                    "500": {
+                        "description": "Internal server error."
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "datum"
+                ],
+                "summary": "Delete a tag",
+                "description": "Delete the tag of a checksum value.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "checksum_value",
+                        "description": "Hexadecimal value of checksum (MD5, SHA1, SHA256).",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "checksum_tag",
+                        "description": "Description tag of checksum, for instance, known, malicious, suspicious, etc.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "source",
+                        "description": "Masked source of tagging, for instance, xfe, trusteer_orion, etc.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "origin",
+                        "description": "checsum value of specific origin",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation."
+                    },
+                    "400": {
+                        "description": "Invalid checksum value is supplied or undefined tag or unauthorized source."
+                    },
+                    "500": {
+                        "description": "Internal server error."
+                    }
+                }
+            }
+        },
+        "/v3.0/phishing": {
+            "get": {
+                "tags": [
+                    "Phishing"
+                ],
+                "summary": "Returns a list of phishing URLs.",
+                "description": "Returns a list of phishing URLs reported in the last hour.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation."
+                    },
+                    "500": {
+                        "description": "Internal server error."
+                    }
+                }
+            }
+        },
+        "/v3.0/phishing/{url}": {
+            "get": {
+                "tags": [
+                    "Phishing"
+                ],
+                "summary": "Verifies phishing URL.",
+                "description": "Verifies if a URL is reported as a phishing site.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "url",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation."
+                    },
+                    "500": {
+                        "description": "Internal server error."
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Phishing"
+                ],
+                "summary": "Reports phishing site.",
+                "description": "Reports a URL as phishing site.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "url",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation."
+                    },
+                    "500": {
+                        "description": "Internal server error."
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Phishing"
+                ],
+                "summary": "Deletes phishing site.",
+                "description": "Deletes a URL from phishing site database.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "url",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation."
+                    },
+                    "500": {
+                        "description": "Internal server error."
+                    }
+                }
+            }
+        },
+        "/v3.0/geoloc/ip/{ip}": {
+            "get": {
+                "tags": [
+                    "GeoLocation"
+                ],
+                "summary": "Determines the geographical location of an IP addresses",
+                "description": "Determines the geographical location of an IP addresses, country, city, organization, ISP, etc.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "ip",
+                        "description": "IP address",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/GeoLocation"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid IP type of value supplied"
+                    },
+                    "500": {
+                        "description": "Internal server error."
+                    }
+                }
+            }
+        },
+        "/v3.0/apps/fulltext": {
+            "get": {
+                "tags": [
+                    "Internet Application Profile"
+                ],
+                "summary": "Returns IAP list",
+                "description": "Returns list of all Internet Application Profiles(IAP) associated with the search term.\n",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search term e.g. TestApp for Social Networking.",
+                        "required": true,
+                        "type": "string",
+                        "format": "double"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/FullText"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found."
+                    },
+                    "500": {
+                        "description": "Internal server error."
+                    }
+                }
+            }
+        },
+        "/v3.0/app/{appname}": {
+            "get": {
+                "tags": [
+                    "Internet Application Profile"
+                ],
+                "summary": "Returns IAP that need to be fetched",
+                "description": "Returns the Internet Application Profiles(IAP) that needs to be fetched.",
+                "parameters": [
+                    {
+                        "name": "appname",
+                        "in": "path",
+                        "description": "Search term e.g. TestApp for Social Networking.",
+                        "required": true,
+                        "type": "string",
+                        "format": "double"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/App"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found."
+                    }
+                }
+            }
+        },
+        "/v3.0/ipr/{ip}": {
+            "get": {
+                "tags": [
+                    "IP Reputation"
+                ],
+                "summary": "Returns IP report.",
+                "description": "Returns the IP report for the entered IP.",
+                "parameters": [
+                    {
+                        "name": "ip",
+                        "in": "path",
+                        "description": "ip addresses in all valid formats e.g. 1.2.3.4, 216.137.61.0x08, 0270.0254.0153.0362, 0xB8.0xAC.0x6B.0xF2, 0xB8AC6BF2, 184.0xAC.0153.0xf2, 0x11112222333344445555666677778888, ::127.0.0.1, ::fFff:127.0.0.1, 1:2:3:4:5:6:7:8, 1:2:3:4::6:7:8, 0x00010002000300040005000600070008, 2001:DB8:1234:ABCD::75",
+                        "required": true,
+                        "type": "string",
+                        "format": "double"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/IPR"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found."
+                    }
+                }
+            }
+        },
+        "/v3.0/ipr/history/{ip}": {
+            "get": {
+                "tags": [
+                    "IP Reputation"
+                ],
+                "summary": "Returns IP reputation.",
+                "description": "Returns the IP reputation report for the entered IP.",
+                "parameters": [
+                    {
+                        "name": "ip",
+                        "in": "path",
+                        "description": "ip addresses in all valid formats e.g. 1.2.3.4, 216.137.61.0x08, 0270.0254.0153.0362, 0xB8.0xAC.0x6B.0xF2, 0xB8AC6BF2, 184.0xAC.0153.0xf2, 0x11112222333344445555666677778888, ::127.0.0.1, ::fFff:127.0.0.1, 1:2:3:4:5:6:7:8, 1:2:3:4::6:7:8, 0x00010002000300040005000600070008, 2001:DB8:1234:ABCD::75",
+                        "required": true,
+                        "type": "string",
+                        "format": "double"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "schema": {
+                            "type": "object",
+                            "example": {
+                                "malware": []
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found."
+                    }
+                }
+            }
+        },
+        "/v3.0/ipr/malware/{ip}": {
+            "get": {
+                "tags": [
+                    "IP Reputation"
+                ],
+                "summary": "Returns malware associated ith IP.",
+                "description": "Returns the malware associated with the entered IP.",
+                "parameters": [
+                    {
+                        "name": "ip",
+                        "in": "path",
+                        "description": "ip addresses in all valid formats e.g. 1.2.3.4, 216.137.61.0x08, 0270.0254.0153.0362, 0xB8.0xAC.0x6B.0xF2, 0xB8AC6BF2, 184.0xAC.0153.0xf2, 0x11112222333344445555666677778888, ::127.0.0.1, ::fFff:127.0.0.1, 1:2:3:4:5:6:7:8, 1:2:3:4::6:7:8, 0x00010002000300040005000600070008, 2001:DB8:1234:ABCD::75",
+                        "required": true,
+                        "type": "string",
+                        "format": "double"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response, JSON object of malware with structure {malware: []}",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/IPR"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found."
+                    }
+                }
+            }
+        },
+        "/v3.0/resolve/{input}": {
+            "get": {
+                "tags": [
+                    "DNS"
+                ],
+                "description": "Returns live and passive DNS records.",
+                "parameters": [
+                    {
+                        "name": "input",
+                        "in": "path",
+                        "description": "ip or domain or url",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/DNS"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found."
+                    }
+                }
+            }
+        },
+        "/v3.0/url/{url}": {
+            "get": {
+                "tags": [
+                    "URL"
+                ],
+                "summary": "Returns the URL report.",
+                "description": "Returns the URL report for the entered URL.",
+                "parameters": [
+                    {
+                        "name": "url",
+                        "in": "path",
+                        "description": "url e.g. ibm.com, www.ibm.com/smarterplanet.",
+                        "required": true,
+                        "type": "string",
+                        "format": "double"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/URL"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found."
+                    }
+                }
+            }
+        },
+        "/v3.0/vulnerabilities/fulltext": {
+            "get": {
+                "tags": [
+                    "Vulnerabilities"
+                ],
+                "summary": "Returns term vulnerabilities",
+                "description": "Returns list of all vulnerabilities associated with the search term.",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search term e.g. Heartbleed.",
+                        "required": true,
+                        "type": "string",
+                        "format": "double"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/Vulnerabilities_i"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found."
+                    }
+                }
+            }
+        },
+        "/v3.0/vulnerabilities/{xfid}": {
+            "get": {
+                "tags": [
+                    "Vulnerabilities"
+                ],
+                "summary": "Returns xfdbid vulnerability",
+                "description": "Returns the vulnerability associated with the entered xfdbid.",
+                "parameters": [
+                    {
+                        "name": "xfid",
+                        "in": "path",
+                        "description": "Search term e.g. 92744",
+                        "required": true,
+                        "type": "string",
+                        "format": "double"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/Vulnerabilities_i"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found."
+                    }
+                }
+            }
+        },
+        "/v3.0/vulnerabilities/search/{stdcode}": {
+            "get": {
+                "tags": [
+                    "Vulnerabilities"
+                ],
+                "summary": "Returns stdcode vulnerability",
+                "description": "Returns the vulnerability associated with the entered stdcode.\n Supported codes are CVE, BID, US-CERT UV# and RHSA.",
+                "parameters": [
+                    {
+                        "name": "stdcode",
+                        "in": "path",
+                        "description": "Search term e.g. CVE-2014-2601, BID-69453, VU#546340, RHSA20131456.",
+                        "required": true,
+                        "type": "string",
+                        "format": "double"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/Vulnerabilities_i"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found."
+                    }
+                }
+            }
+        },
+        "/v3.0/vulnerabilities/": {
+            "get": {
+                "tags": [
+                    "Vulnerabilities"
+                ],
+                "summary": "Returns recent vulnerabilities.",
+                "description": "Returns the seven latest vulnerabilities.",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "number of vulnerabilities",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "$ref": "#/definitions/Vulnerabilities_i"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied."
+                    },
+                    "404": {
+                        "description": "Not found."
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "File": {
+            "required": [
+                "file"
+            ],
+            "properties": {
+                "file": {
+                    "type": "string",
+                    "example": "c:\\malware.exe"
+                }
+            }
+        },
+        "ScanURL": {
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "example": "www.example.com/malware"
+                }
+            }
+        },
+        "Datum": {
+            "properties": {
+                "response": {
+                    "type": "string",
+                    "example": "known/infected/unknown"
+                },
+                "details": {
+                    "$ref": "#/definitions/Details"
+                }
+            }
+        },
+        "Details": {
+            "properties": {
+                "interface_version": {
+                    "type": "string",
+                    "example": "3.0"
+                },
+                "details_rl": {
+                    "$ref": "#/definitions/DetailsRL"
+                },
+                "details_rl_av_reputation": {
+                    "$ref": "#/definitions/Details_RL_AV_Reputation"
+                },
+                "details_vt_av_reputation": {
+                    "$ref": "#/definitions/Details_VT_AV_Reputation"
+                }
+            }
+        },
+        "DetailsRL": {
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "MALICIOUS"
+                },
+                "query_hash": {
+                    "$ref": "#/definitions/Query_Hash"
+                },
+                "scanner_count": {
+                    "type": "integer",
+                    "example": 28
+                },
+                "scanner_match": {
+                    "type": "integer",
+                    "example": 28
+                },
+                "scanner_percent": {
+                    "type": "number",
+                    "format": "double",
+                    "example": 1
+                },
+                "first_seen": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2011-11-03T02:50:00"
+                },
+                "last_seen": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2013-07-08T03:39:00"
+                },
+                "classification": {
+                    "$ref": "#/definitions/RL_Classification"
+                }
+            }
+        },
+        "RL_Classification": {
+            "properties": {
+                "family_name": {
+                    "type": "string",
+                    "example": "Buzus"
+                },
+                "platform": {
+                    "type": "string",
+                    "example": "Win32,"
+                },
+                "type_": {
+                    "type": "string",
+                    "example": "Trojan"
+                },
+                "is_generic": {
+                    "type": "string",
+                    "example": false
+                }
+            }
+        },
+        "Query_Hash": {
+            "properties": {
+                "md5": {
+                    "type": "string"
+                },
+                "sha1": {
+                    "type": "string"
+                },
+                "sha256": {
+                    "type": "string"
+                }
+            }
+        },
+        "Details_RL_AV_Reputation": {
+            "description": "A list of anti-viruses and its results"
+        },
+        "Details_VT_AV_Reputation": {
+            "description": "A list of anti-viruses and its results"
+        },
+        "GeoLocation": {
+            "properties": {
+                "country_name": {
+                    "type": "string",
+                    "example": "Germany"
+                },
+                "charset": {
+                    "type": "string",
+                    "example": 1
+                },
+                "dma_code": {
+                    "type": "string",
+                    "example": 0
+                },
+                "continent_code": {
+                    "type": "string",
+                    "example": "EU"
+                },
+                "isp": {
+                    "type": "string",
+                    "example": "ibm"
+                },
+                "area_code": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "longitude": {
+                    "type": "number",
+                    "example": 9
+                },
+                "latitude": {
+                    "type": "number",
+                    "example": 51
+                },
+                "country_code": {
+                    "type": "string",
+                    "example": "DE"
+                },
+                "country_code3": {
+                    "type": "string",
+                    "example": "DEU"
+                }
+            }
+        },
+        "FullText": {
+            "properties": {
+                "applications": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/app_i"
+                    }
+                }
+            }
+        },
+        "app_i": {
+            "properties": {
+                "canonicalName": {
+                    "type": "string",
+                    "example": "testapp for web storage"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "TestApp for Web Storage"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Entry is for testing purposes only"
+                },
+                "score": {
+                    "type": "number",
+                    "example": 2.5
+                }
+            }
+        },
+        "App": {
+            "properties": {
+                "application": {
+                    "type": "object",
+                    "$ref": "#/definitions/Application"
+                }
+            }
+        },
+        "Application": {
+            "properties": {
+                "canonicalName": {
+                    "type": "string",
+                    "example": "facebook"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Facebook"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "A social network that interconnects people"
+                },
+                "categories": {
+                    "type": "object",
+                    "example": {
+                        "Social Networking": true,
+                        "Social Media": true
+                    }
+                },
+                "actions": {
+                    "type": "object",
+                    "example": {
+                        "share": true,
+                        "start up": true
+                    }
+                },
+                "rlfs": {
+                    "type": "object",
+                    "example": {}
+                },
+                "score": {
+                    "type": "number",
+                    "example": 2.7
+                },
+                "baseurl": {
+                    "type": "string",
+                    "example": "http://facebook.com/"
+                },
+                "urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "IPR": {
+            "properties": {
+                "ip": {
+                    "type": "string",
+                    "example": "9.9.9.9"
+                },
+                "subnets": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/subnet_i"
+                    }
+                },
+                "cats": {
+                    "type": "object",
+                    "example": {}
+                },
+                "geo": {
+                    "type": "object",
+                    "$ref": "#/definitions/geo_i"
+                },
+                "score": {
+                    "type": "number",
+                    "example": 1
+                }
+            }
+        },
+        "subnet_i": {
+            "properties": {
+                "geo": {
+                    "type": "object",
+                    "$ref": "#/definitions/geo_i"
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "9.0.0.0"
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Regional Internet Registry"
+                },
+                "created": {
+                    "type": "string",
+                    "example": "2012-03-22T07:26:00.000Z"
+                },
+                "score": {
+                    "type": "number",
+                    "example": 1
+                },
+                "cats": {
+                    "type": "object",
+                    "example": {}
+                },
+                "subnet": {
+                    "type": "string",
+                    "example": "9.0.0.0/8"
+                }
+            }
+        },
+        "geo_i": {
+            "properties": {
+                "country": {
+                    "type": "string",
+                    "example": "United States"
+                },
+                "countrycode": {
+                    "type": "string",
+                    "example": "US"
+                }
+            }
+        },
+        "DNS": {
+            "properties": {
+                "RDNS": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "example": "google-public-dns-a.google.com"
+                    }
+                },
+                "Passive": {
+                    "type": "object",
+                    "$ref": "#/definitions/Passive"
+                }
+            }
+        },
+        "Passive": {
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "example": 281470816487432
+                },
+                "recoreds": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/recored_i"
+                    }
+                }
+            }
+        },
+        "recored_i": {
+            "properties": {
+                "value": {
+                    "type": "string",
+                    "example": "kross33.ru"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "url"
+                },
+                "recordType": {
+                    "type": "string",
+                    "example": "A"
+                },
+                "first": {
+                    "type": "string",
+                    "example": "2014-09-22T06:26:00.000Z"
+                },
+                "last": {
+                    "type": "string",
+                    "example": "2015-02-26T21:15:00.000Z"
+                }
+            }
+        },
+        "URL": {
+            "properties": {
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/Result"
+                }
+            }
+        },
+        "Result": {
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "example": "ibm.com"
+                },
+                "cats": {
+                    "type": "object",
+                    "example": {
+                        "Software / Hardware": true,
+                        "General Business": true
+                    }
+                },
+                "score": {
+                    "type": "number",
+                    "example": 2
+                }
+            }
+        },
+        "Vulnerabilities_i": {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "example": "vulnerability"
+                },
+                "xfdbid": {
+                    "type": "number",
+                    "example": 101274
+                },
+                "updateid": {
+                    "type": "number",
+                    "example": 3863
+                },
+                "inserted": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "variant": {
+                    "type": "string",
+                    "example": "single"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "BEdita CMS newsletter mail group creation page cross-site scripting"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "BEdita CMS is vulnerable to cross-site scripting, caused by improper validation of user-supplied input by the newsletter mail group creation page. A remote attacker could exploit this vulnerability using a specially-crafted URL to execute script in a victim's Web browser within the security context of the hosting Web site, once the URL is clicked. An attacker could use this vulnerability to steal the victim's cookie-based authentication credentials."
+                },
+                "description_fmt": {
+                    "type": "string",
+                    "example": "<P>BEdita CMS is vulnerable to cross-site scripting, caused by improper validation of user-supplied input by the newsletter mail group creation page. A remote attacker could exploit this vulnerability using a specially-crafted URL to execute script in a victim's Web browser within the security context of the hosting Web site, once the URL is clicked. An attacker could use this vulnerability to steal the victim's cookie-based authentication credentials.</P>"
+                },
+                "risk_level": {
+                    "type": "number",
+                    "example": 4.3
+                },
+                "access_vector": {
+                    "type": "string",
+                    "example": "Network"
+                },
+                "access_complexity": {
+                    "type": "string",
+                    "example": "Medium"
+                },
+                "authentication": {
+                    "type": "string",
+                    "example": "None"
+                },
+                "confidentiality_impact": {
+                    "type": "string",
+                    "example": "None"
+                },
+                "integrity_impact": {
+                    "type": "string",
+                    "example": "Partial"
+                },
+                "availability_impact": {
+                    "type": "string",
+                    "example": "None"
+                },
+                "temporal_score": {
+                    "type": "number",
+                    "example": 4.1
+                },
+                "remediation_level": {
+                    "type": "string",
+                    "example": "Unavailable"
+                },
+                "remedy": {
+                    "type": "string",
+                    "example": "No remedy available as of March 2015."
+                },
+                "remedy_fmt": {
+                    "type": "string",
+                    "example": "<P>No remedy available as of March 2015.</P>"
+                },
+                "reported": {
+                    "type": "string",
+                    "example": "2015-03-02T00:00:00Z"
+                },
+                "tagname": {
+                    "type": "string",
+                    "example": "bedita-newsletter-xss"
+                },
+                "platforms_affected": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "example": "Bedita BEdita CMS 3.5.0"
+                    }
+                },
+                "exploitability": {
+                    "type": "string",
+                    "example": "High"
+                },
+                "consequences": {
+                    "type": "string",
+                    "example": "Cross-Site Scripting"
+                },
+                "references": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "example": {
+                            "link_target": "http://www.bedita.com/download-bedita",
+                            "link_name": "Bedita Web site",
+                            "description": "BEdita CMS"
+                        }
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "example": {
+                            "coverage": "Cross_Site_Scripting",
+                            "coverage_date": "2008-11-11T00:00:00Z"
+                        }
+                    }
+                },
+                "report_confidence": {
+                    "type": "string",
+                    "example": "Uncorroborated"
+                }
+            }
+        }
+    }
+}
