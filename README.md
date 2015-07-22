@@ -24,11 +24,11 @@ Secure "things" that connect to the internet by providing a set of security libr
   - Authentication services as defined by OpenID connect
   - Authorization services as defined by OAUTH 2.0
   - Access Control List (ACL) services when access rights may be defined for resource entity. The  implementation should allow flexible types of access to resources (not limited to READ/WRITE/EXECUTE).
-  - One Time Password (OTP) services as defined by RFCs 4226 (HOTP), 6238 (TOTP) 
+  - One Time Password (OTP) services as defined by RFCs 4226 (HOTP), 6238 (TOTP)
 
 ## Higher layers:
 - RESTful layer: most of the above libraries have a RESTful layer
-- Examples: 
+- Examples:
   1. Each of the above libraries have usage examples
   2. All the above libraries are combined into libsecurity-go RESTful GUI (each library could be shown/hidden using the tool configuration file)
 
@@ -42,7 +42,7 @@ Secure "things" that connect to the internet by providing a set of security libr
 - **cd ibm-security-innovation/libsecurity-go**
 - Clone the library with **git clone https://github.com/ibm-security-innovation/libsecurity-go .**
 - Copy all the needed external libraries using go get
-  - e.g. 
+  - e.g.
     - **cd libsecurity-go/entity**
     - **go get**
 - Running a RESTful GUI example:
@@ -59,12 +59,12 @@ Secure "things" that connect to the internet by providing a set of security libr
   3. Generate a minimal secure storage (a file that contains just the root user with its privilege and password) and RSA files by executing the following steps:
       - **cd setup**
       - **go run setup_storage_.go**
-        -storage-file="./dist/data.txt" -password="your new compliant 
+        -storage-file="./dist/data.txt" -password="your new compliant
       password here" -secure-key="./dist/secureKey" -generate-rsa=true
       - **cd ..**
 Note: if you generated the RSA files, copy them to the dist directory (the generated RSA files are: key.private and key.public)
 - The following should be done any time the RESTful API browser is used:
-  - Running the RESTful server 
+  - Running the RESTful server
     - change directory to the restful/libsecurity directory
     - **go run libsecurity.go**
     -  -config-file (default "./config.json"): Configuration information file
@@ -80,12 +80,15 @@ Note: if you generated the RSA files, copy them to the dist directory (the gener
     - click on the **/forewind/app/v1/account-manager/user** link in order to authenticate the user
     - After filling the user name and password, click on the **Try it out** button.
       - If the account information is correct the "Response body" should contain the line **"Match" : true**.
-    - Click on the directory link in order to Change/Update/Save the relevant data using the RESTful API 
-  
+    - Click on the directory link in order to Change/Update/Save the relevant data using the RESTful API
+
 ### License
-This project is licensed under the Apache License 2.0. See the LICENSE file for more info
+
+(c) Copyright IBM Corp. 2010, 2015
+This project is licensed under the Apache License 2.0. See the LICENSE file for more info.
+
 - 3rd party software used by libsecurity-go
-  - jwt-go, https://github.com/dgrijalva/jwt-go , MIT 
+  - jwt-go, https://github.com/dgrijalva/jwt-go , MIT
   - swagger, https://github.com/swagger-api , Apache v2
   - go-restful https://github.com/emicklei/go-restful,  MIT
   - marked  https://github.com/chjj/marked , MIT
@@ -109,12 +112,12 @@ Libsecurity-go implementations targeted to Linux capable IoT platforms (e.g. ARM
 ## Architecture and High level design:
 The following diagram details the layers of libsecurity :
 
-- The encryption layer is the lowest one (where either Go encryption or NaCl encryption library are used). 
+- The encryption layer is the lowest one (where either Go encryption or NaCl encryption library are used).
 - The second layer, Secure Storage, implements secure storage for persistency. The secure storage is based on encrypted key value pairs stored in signed files to guarantee that the data is not altered or corrupted (more details will be presented later)
 - The next layers are designed as entity centric, where entities must have a name and may have a list of associated properties and a list of members (see more details and example below)
 
 ### Possible associated properties:
-- Account Management: the entity's privilege (Super user, Admin or User), password related information and handling methods including  current password, old passwords list, salt, whether it is a 'one time password' (after password reset), and password expiration time. 
+- Account Management: the entity's privilege (Super user, Admin or User), password related information and handling methods including  current password, old passwords list, salt, whether it is a 'one time password' (after password reset), and password expiration time.
 - Password handling (for cases when password mechanism other than the Account management is required). This may include: current password, old passwords list, salt, whether it is a 'one time password' (after password reset), password expiration time, whether the password is locked and more.
 - Access control List (ACL): Permissions associated with the resource entity. Permissions are defined as a string to provide flexibility (in contrast with the old Read/Write/Execute model). The string may have any legal string value (e.g. "Can take", "can play")
     - Note: We chose to implement only a positive mechanism - listing what is allowed. We believe that this is more intuitive and easy to manage compared with a combination of positive assertions with negative ones. More details and examples below
@@ -127,12 +130,12 @@ Application Layer: A set of “glue components” to ease the use of the securit
 
 ### Major Data and Property Structures:
 #### Secure Storage
-    - Allows maintaining data persistently and securely. The implementation of the secure storage is based on encrypted key value pairs stored in signed files to guarantee that the data is not altered or corrupted. 
+    - Allows maintaining data persistently and securely. The implementation of the secure storage is based on encrypted key value pairs stored in signed files to guarantee that the data is not altered or corrupted.
     - Both the key and the value are encrypted when added to the storage using an Advanced Encryption Standard (AES) algorithm.
     - Each time a new secure storage is generated, a secret supplied by the user accompanies it and is used in all HMAC and AES calculations related to that storage .
-In order to make it difficult for a third party to decipher or use the stored data we ensure that multiple independent encryptions of the same data (e.g. a block with the same piece of plain text) with the same key have different results. This is achieved by implementing the Cipher Block Chaining (CBC) mode. 
-    - In order to implement a time efficient secure storage with keys (i.e. identify keys that are already stored without decrypting the entire storage, and when such a key is identified replacing its value) a two step mechanism is used. The first time a key is introduced, a new IV is drawn, the key is 'HMAC'ed with the secret and is stored with the IV as the value (1st step). Than the original key is encrypted with the drawn IV and stored again, this time with the (encrypted with its own random IV) value (2nd step).  The next time that same key is stored, the algorithm, identifies that it already exists in the storage, pulls out the random IV (stored in the 1st step), finds the 2nd step storage of that key and replaces its value with the new (encrypted) one. 
-    - In order to guarantee that the data is not altered or corrupted the storage is signed using HMAC. The signature is added to the secure storage, when the storage is loaded, HMAC is calculated and compared with the stored signature to verify that the file is genuine. 
+In order to make it difficult for a third party to decipher or use the stored data we ensure that multiple independent encryptions of the same data (e.g. a block with the same piece of plain text) with the same key have different results. This is achieved by implementing the Cipher Block Chaining (CBC) mode.
+    - In order to implement a time efficient secure storage with keys (i.e. identify keys that are already stored without decrypting the entire storage, and when such a key is identified replacing its value) a two step mechanism is used. The first time a key is introduced, a new IV is drawn, the key is 'HMAC'ed with the secret and is stored with the IV as the value (1st step). Than the original key is encrypted with the drawn IV and stored again, this time with the (encrypted with its own random IV) value (2nd step).  The next time that same key is stored, the algorithm, identifies that it already exists in the storage, pulls out the random IV (stored in the 1st step), finds the 2nd step storage of that key and replaces its value with the new (encrypted) one.
+    - In order to guarantee that the data is not altered or corrupted the storage is signed using HMAC. The signature is added to the secure storage, when the storage is loaded, HMAC is calculated and compared with the stored signature to verify that the file is genuine.
 
 - Entity structure:
     - There are three types of entities: User, Group and resource
@@ -155,12 +158,12 @@ In order to make it difficult for a third party to decipher or use the stored da
                 - Name: IBM, members: User2, User3
                 - Name: All (reserved token)
                 - Name: Disk, properties: ACL:
-                - ACL → 
+                - ACL →
                     - Name: User1, properties: “can write”, “can take”
                     - Name: IBM, properties: “can read”
                     - Name: All, Properties: “can execute”
             - In this example:
-            1. The user-entity named User1 has the following permissions with relation to the resource-entity Disk: “can write”, “can take” and “can execute” (via All)  
+            1. The user-entity named User1 has the following permissions with relation to the resource-entity Disk: “can write”, “can take” and “can execute” (via All)
             2. The group-entity named IBM has the following permissions with relation to the resource-entity Disk: “can read” and “can execute” (via All)
             3. The user-entity named User2 has the following permissions with relation to the resource-entity Disk: “can read” (via IBM) and “can execute” (via All)
 
@@ -174,5 +177,5 @@ Libsecurity implements the 2 possible OTP implementations: A time based one time
             - The second layer is the counting mechanism which is time based for TOTP and counter based for HOTP.
             - The topmost layer includes the policy of handing unsuccessful authentication attempts. This includes blocking and throttling. The blocking mechanism allows blocking users for a given duration (or until a manual unblock) after they pass a threshold which a limit for the number of allowed consecutive unsuccessful authentication attempts. The throttling mechanism controls the delay between the authentication request and the response. This delay is increased as the number of consecutive unsuccessful attempts grows to avoid brute force password attacks. This layer also includes a time window for avoiding clock drifting errors when TOTPs are used.
 
-    - The OCRA property: 
+    - The OCRA property:
         - According to Wikipedia: Challenge–response authentication: is a family of protocols in which one party presents a question ("challenge") and another party must provide a valid answer ("response") to be authenticated. It may be used for mutual authentication e.g. when a server needs to install a new version on a client. In the case of the example, the client has to verify that the server is the one it claims it is (otherwise a  malicious version may be downloaded) and the server has to verify that it sends the new version to the right client.
