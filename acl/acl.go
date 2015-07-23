@@ -66,7 +66,7 @@ var (
 
 // Permission could be any string
 type AclEntryMap map[string]*AclEntry
-type PermissionSet map[string]bool
+type PermissionSet map[string]interface{}
 
 type Serializer struct{}
 
@@ -225,6 +225,9 @@ func GetUserPermissions(el *en.EntityManager, userName string, resourceName stri
 	if err != nil {
 		return nil, err
 	}
+	if el.IsEntityInList(userName) == false {
+		return nil, fmt.Errorf("Error: Entity %q is not in the entity manager", userName)
+	}
 	permissions := make(PermissionsMap)
 	data, err := el.GetPropertyAttachedToEntity(resourceName, stc.AclPropertyName)
 	if err != nil {
@@ -277,7 +280,7 @@ func (a *Acl) AddPermissionToResource(el *en.EntityManager, userName string, per
 		return err
 	}
 	if el.IsEntityInList(userName) == false {
-		return fmt.Errorf("Error: Can't add permission to entity '%v', it is not in the resource entity list", userName)
+		return fmt.Errorf("Error: Can't add permission to entity '%v', it is not in the entity list", userName)
 	}
 	e, exist := a.Permissions[userName]
 	if exist == false {
@@ -325,7 +328,7 @@ func GetWhoUseAPermission(el *en.EntityManager, resourceName string, permission 
 		pVec, _ := GetUserPermissions(el, name, resourceName)
 		for v, _ := range pVec {
 			if string(v) == permission {
-				p[name] = true
+				p[name] = ""
 				break
 			}
 		}

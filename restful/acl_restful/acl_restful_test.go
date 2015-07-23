@@ -1,6 +1,5 @@
 package acl_restful
 
-/*
 import (
 	"encoding/json"
 	"fmt"
@@ -275,4 +274,3 @@ func TestPermissionWhoUses(t *testing.T) {
 		exeCommandCheckRes(t, cr.GET_STR, specificAcl, http.StatusOK, "", acl.GetWhoUseAPermission(stRestful.UsersList, resourceName, string(permission)))
 	}
 }
-*/

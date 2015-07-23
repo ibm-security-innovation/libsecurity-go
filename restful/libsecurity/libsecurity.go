@@ -13,11 +13,10 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful/swagger"
 	app "ibm-security-innovation/libsecurity-go/app/token"
-	// "ibm-security-innovation/libsecurity-go/go-restful/swagger"
-	// "ibm-security-innovation/libsecurity-go/restful/acl_restful"
 	en "ibm-security-innovation/libsecurity-go/entity"
 	logger "ibm-security-innovation/libsecurity-go/logger"
 	"ibm-security-innovation/libsecurity-go/restful/accounts_restful"
+	"ibm-security-innovation/libsecurity-go/restful/acl_restful"
 	"ibm-security-innovation/libsecurity-go/restful/common_restful"
 	en_restful "ibm-security-innovation/libsecurity-go/restful/entity_restful"
 	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
@@ -142,13 +141,11 @@ func registerComponents(configFile string, secureKeyFilePath string, privateKeyF
 		um.RegisterBasic(wsContainer)
 	}
 
-	/*
-		a := acl_restful.NewAclRestful()
-		a.SetData(st)
-		if conf[aclToken] == basicToken || conf[appAclToken] == basicToken {
-			a.RegisterBasic(wsContainer)
-		}
-	*/
+	a := acl_restful.NewAclRestful()
+	a.SetData(st)
+	if conf[aclToken] == basicToken || conf[appAclToken] == basicToken {
+		a.RegisterBasic(wsContainer)
+	}
 	/*
 		appAclPermissions := appAcl.NewAppPermissions()
 		st.STool.SetAppAclData(appAclPermissions)

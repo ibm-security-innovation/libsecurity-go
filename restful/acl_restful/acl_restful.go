@@ -2,14 +2,13 @@ package acl_restful
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/emicklei/go-restful"
 	"ibm-security-innovation/libsecurity-go/acl"
 	stc "ibm-security-innovation/libsecurity-go/defs"
-	en "ibm-security-innovation/libsecurity-go/entity"
+	//	en "ibm-security-innovation/libsecurity-go/entity"
 	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
 	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
 )
@@ -21,12 +20,14 @@ const (
 	resourceComment    = "Resource (Entity) name"
 	permissionComment  = "permission"
 	descriptionComment = "permission description"
-	PermissionsToken   = "permissions"
-	DescriptionToken   = "description"
-	//	entityNameParam    = "entity-name"
-	//	resourceNameParam  = "resource-name"
-	permissionParam  = "permission"
-	descriptionParam = "description"
+	entityToken        = "entity"
+	resourceToken      = "resource"
+	permissionsToken   = "permissions"
+	descriptionToken   = "description"
+	entityNameParam    = "entity-name"
+	resourceNameParam  = "resource-name"
+	permissionParam    = "permission"
+	descriptionParam   = "description"
 )
 
 var (
@@ -68,39 +69,13 @@ func (a *aclRestful) setError(response *restful.Response, httpStatusCode int, er
 	response.WriteErrorString(httpStatusCode, string(data))
 }
 
-func (a aclRestful) checkEntityNameParamValidity(request *restful.Request, response *restful.Response, name string) bool {
-	err := en.IsEntityNameValid(name)
-	if err != nil {
-		a.setError(response, http.StatusNotFound, err)
-		return false
-	}
-	if a.st.UsersList.IsEntityInList(name) == false {
-		err := fmt.Sprintf("Entity '%v' doesn't have ACL property", name)
-		a.setError(response, http.StatusNotFound, errors.New(err))
-		return false
-	}
-	return true
-}
-
-/*
-func (a *aclRestful) restGetAclData(request *restful.Request, response *restful.Response) *acl.Acl {
-	resorceName := request.PathParameter(resourceNameParam)
-	if a.checkEntityNameParamValidity(request, response, aclName) == false {
-		return nil
-	}
-	acl, _ := a.aclUsers.GetAclAddUserToGroup(aclName) // the acl is found from the previus check
-	return acl
-}
-*/
-
 func (a *aclRestful) getResourceAclData(request *restful.Request, response *restful.Response) (*acl.Acl, *resource, error) {
 	var aclInfo resource
 	var aclData *acl.Acl
 
-	err := request.ReadEntity(&aclInfo)
-	if err != nil {
-		return nil, nil, err
-	}
+	aclInfo.UserName = request.PathParameter(entityNameParam)
+	aclInfo.ResourceName = request.PathParameter(resourceNameParam)
+	aclInfo.Permission = request.PathParameter(permissionParam)
 	data, err := cr.GetPropertyData(aclInfo.ResourceName, stc.AclPropertyName, a.st.UsersList)
 	if err != nil {
 		return nil, &aclInfo, err
@@ -112,19 +87,29 @@ func (a *aclRestful) getResourceAclData(request *restful.Request, response *rest
 	return aclData, &aclInfo, nil
 }
 
-func (a *aclRestful) addAclToResource(request *restful.Request, response *restful.Response, name string) error {
+func (a *aclRestful) addAclToResource(request *restful.Request, response *restful.Response, resourceName string) bool {
 	a1 := acl.NewACL()
-	err := a.st.UsersList.AddPropertyToEntity(name, stc.AclPropertyName, a1)
+	err := a.st.UsersList.AddPropertyToEntity(resourceName, stc.AclPropertyName, a1)
 	if err != nil {
 		a.setError(response, http.StatusNotFound, err)
-		return err
+		return false
 	}
-	return nil
+	return true
+}
+
+func (a *aclRestful) restClearAclOfResource(request *restful.Request, response *restful.Response) {
+	resourceName := request.PathParameter(resourceNameParam)
+	if a.addAclToResource(request, response, resourceName) == false {
+		return
+	}
+	response.WriteEntity(a.getUrlPath(request, resourceName))
+	response.WriteHeader(http.StatusOK)
 }
 
 func (a *aclRestful) restGetAclOfResource(request *restful.Request, response *restful.Response) {
 	data, _, err := a.getResourceAclData(request, response)
 	if err != nil {
+		a.setError(response, http.StatusNotFound, err)
 		return
 	}
 	response.WriteEntity(data)
@@ -132,14 +117,8 @@ func (a *aclRestful) restGetAclOfResource(request *restful.Request, response *re
 }
 
 func (a *aclRestful) restDeleteAclFromResource(request *restful.Request, response *restful.Response) {
-	var aclInfo resource
-
-	err := request.ReadEntity(&aclInfo)
-	if err != nil {
-		a.setError(response, http.StatusNotFound, err)
-		return
-	}
-	err = a.st.UsersList.RemovePropertyFromEntity(aclInfo.ResourceName, stc.AclPropertyName)
+	resourceName := request.PathParameter(resourceNameParam)
+	err := a.st.UsersList.RemovePropertyFromEntity(resourceName, stc.AclPropertyName)
 	if err != nil {
 		a.setError(response, http.StatusBadRequest, err)
 	} else {
@@ -147,32 +126,12 @@ func (a *aclRestful) restDeleteAclFromResource(request *restful.Request, respons
 	}
 }
 
-func (a aclRestful) getPermissions(request *restful.Request, response *restful.Response) {
-	aclData, _, err := a.getResourceAclData(request, response)
+func (a aclRestful) restCheckPermission(request *restful.Request, response *restful.Response) {
+	a1, aclInfo, err := a.getResourceAclData(request, response)
 	if err != nil {
+		a.setError(response, http.StatusNotFound, err)
 		return
 	}
-	permissions := aclData.GetAllPermissions()
-	ret := make(permissionsVecT)
-	cnt := 0
-	for p, _ := range permissions {
-		ret[acl.Permission(fmt.Sprintf("%v", cnt))] = acl.Permission(p)
-		cnt = cnt + 1
-	}
-	//	if err != nil {
-	//		a.setError(response, http.StatusNotFound, err)
-	//	} else {
-	//		response.WriteEntity(ret)
-	//	}
-	response.WriteEntity(ret)
-}
-
-func (a aclRestful) restGetPermissions(request *restful.Request, response *restful.Response) {
-	a.getPermissions(request, response)
-}
-
-func (a aclRestful) checkPermission(request *restful.Request, response *restful.Response) {
-	a1, aclInfo, err := a.getResourceAclData(request, response)
 	if a1 == nil {
 		a.setError(response, http.StatusNotFound, err)
 		return
@@ -182,9 +141,9 @@ func (a aclRestful) checkPermission(request *restful.Request, response *restful.
 	if a1 != nil && aclInfo != nil {
 		ok = acl.CheckUserPermission(a.st.UsersList, aclInfo.UserName, aclInfo.ResourceName, acl.Permission(aclInfo.Permission))
 	}
-	str := fmt.Sprintf("Permission '%s' is allowed", aclInfo.Permission)
+	str := fmt.Sprintf("Permission '%v' is allowed", aclInfo.Permission)
 	if ok == false {
-		str = fmt.Sprintf("Permission '%s' doesn't allowed", aclInfo.Permission)
+		str = fmt.Sprintf("Permission '%v' doesn't allowed", aclInfo.Permission)
 		status = http.StatusNotFound
 	}
 	res := cr.Match{Match: ok, Message: str}
@@ -192,15 +151,19 @@ func (a aclRestful) checkPermission(request *restful.Request, response *restful.
 	response.WriteEntity(res)
 }
 
-func (a aclRestful) restCheckPermission(request *restful.Request, response *restful.Response) {
-	a.checkPermission(request, response)
-}
-
-func (a aclRestful) setPermission(request *restful.Request, response *restful.Response) {
+func (a aclRestful) restSetPermission(request *restful.Request, response *restful.Response) {
 	a1, aclInfo, err := a.getResourceAclData(request, response)
+	if err != nil {
+		a.setError(response, http.StatusNotFound, err)
+		return
+	}
 	if a1 == nil {
 		a.addAclToResource(request, response, aclInfo.ResourceName)
-		a1, aclInfo, _ = a.getResourceAclData(request, response)
+		a1, aclInfo, err = a.getResourceAclData(request, response)
+		if err != nil {
+			a.setError(response, http.StatusInternalServerError, err)
+			return
+		}
 	}
 	err = a1.AddPermissionToResource(a.st.UsersList, aclInfo.UserName, acl.Permission(aclInfo.Permission))
 	if err != nil {
@@ -211,13 +174,10 @@ func (a aclRestful) setPermission(request *restful.Request, response *restful.Re
 	}
 }
 
-func (a aclRestful) restSetPermission(request *restful.Request, response *restful.Response) {
-	a.setPermission(request, response)
-}
-
-func (a aclRestful) deletePermission(request *restful.Request, response *restful.Response) {
+func (a aclRestful) restDeletePermission(request *restful.Request, response *restful.Response) {
 	aclData, aclInfo, err := a.getResourceAclData(request, response)
 	if err != nil {
+		a.setError(response, http.StatusNotFound, err)
 		return
 	}
 	err = aclData.RemovePermissionFromEntity(aclInfo.UserName, acl.Permission(aclInfo.Permission))
@@ -228,18 +188,40 @@ func (a aclRestful) deletePermission(request *restful.Request, response *restful
 	}
 }
 
-func (a aclRestful) restDeletePermission(request *restful.Request, response *restful.Response) {
-	a.deletePermission(request, response)
-}
-
-/*
-
-func (a aclRestful) restGetAllUsersOfPermission(request *restful.Request, response *restful.Response) {
-	aclData := a.restGetAclData(request, response)
-	if aclData == nil {
+func (a aclRestful) restGetAllPermissions(request *restful.Request, response *restful.Response) {
+	aclData, _, err := a.getResourceAclData(request, response)
+	if err != nil {
+		a.setError(response, http.StatusNotFound, err)
 		return
 	}
-	permission := acl.Permission(request.PathParameter(permissionParam))
-	response.WriteEntity(aclData.GetWhoUseAPermission(permission.Name))
+	permissions := aclData.GetAllPermissions()
+	ret := []acl.Permission{}
+	for p, _ := range permissions {
+		ret = append(ret, p)
+	}
+	response.WriteEntity(ret)
 }
-*/
+
+func (a aclRestful) restGetAllPermissionsOfEntity(request *restful.Request, response *restful.Response) {
+	userName := request.PathParameter(entityNameParam)
+	resourceName := request.PathParameter(resourceNameParam)
+	res, err := acl.GetUserPermissions(a.st.UsersList, userName, resourceName)
+	if err != nil {
+		a.setError(response, http.StatusNotFound, err)
+		return
+	}
+	response.WriteHeader(http.StatusOK)
+	response.WriteEntity(res)
+}
+
+func (a aclRestful) restGetWhoUsesAResourcePermission(request *restful.Request, response *restful.Response) {
+	resourceName := request.PathParameter(resourceNameParam)
+	permission := request.PathParameter(permissionParam)
+	res := acl.GetWhoUseAPermission(a.st.UsersList, resourceName, permission)
+	data := []string{}
+	response.WriteHeader(http.StatusOK)
+	for name, _ := range res {
+		data = append(data, name)
+	}
+	response.WriteEntity(data)
+}
