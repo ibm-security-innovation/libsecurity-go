@@ -21,7 +21,7 @@ var (
 	commandsToPath = []cr.ComamndsToPath{
 		{handleAclCommand, "%v/{%v}"},
 		{handlePermissionCommand, "%v/{%v}/%v/{%v}/%v/{%v}"},
-		{getAllPermissionCommand, "%v/{%v}"},
+		{getAllPermissionCommand, "%v/%v/{%v}"},
 		{getAllPermissionsOfEntityCommand, "%v/{%v}/%v/{%v}"},
 	}
 	urlCommands = make(cr.CommandToPath)
@@ -37,10 +37,11 @@ func (a aclRestful) setRoute(service *restful.WebService) {
 	str := fmt.Sprintf(urlCommands[handleAclCommand], resourceToken, resourceNameParam)
 	service.Route(service.PUT(str).
 		Filter(a.st.SuperUserFilter).
-		To(a.restClearAclOfResource).
-		Doc("Set empty ACL to resource").
+		To(a.restAddAclToResource).
+		Doc("Add ACL to resource").
 		Operation("addAclToResource").
 		Param(service.PathParameter(resourceNameParam, resourceComment).DataType("string")).
+		Reads(acl.Acl{}).
 		Writes(cr.Url{}))
 
 	str = fmt.Sprintf(urlCommands[handleAclCommand], resourceToken, resourceNameParam)
@@ -64,7 +65,7 @@ func (a aclRestful) setRoute(service *restful.WebService) {
 func (a aclRestful) setUsersRoute(service *restful.WebService) {
 	str := fmt.Sprintf(urlCommands[handlePermissionCommand], entityToken, entityNameParam, resourceToken, resourceNameParam, permissionsToken, permissionParam)
 	service.Route(service.PUT(str).
-		// ravid set it		Filter(a.st.SuperUserFilter).
+		Filter(a.st.SuperUserFilter).
 		To(a.restSetPermission).
 		Doc("Grant the premission to the given entity for a given resource").
 		Operation("setPermission").
@@ -75,7 +76,7 @@ func (a aclRestful) setUsersRoute(service *restful.WebService) {
 
 	str = fmt.Sprintf(urlCommands[handlePermissionCommand], entityToken, entityNameParam, resourceToken, resourceNameParam, permissionsToken, permissionParam)
 	service.Route(service.GET(str).
-		// ravid set it		Filter(a.st.SameUserFilter).
+		Filter(a.st.SameUserFilter).
 		To(a.restCheckPermission).
 		Doc("Check if the entity has the given permission to the resource").
 		Operation("checkEntityPermissionToResource").
@@ -94,7 +95,7 @@ func (a aclRestful) setUsersRoute(service *restful.WebService) {
 		Param(service.PathParameter(resourceNameParam, resourceComment).DataType("string")).
 		Param(service.PathParameter(permissionParam, permissionComment).DataType("string")))
 
-	str = fmt.Sprintf(urlCommands[getAllPermissionCommand], resourceToken, resourceNameParam)
+	str = fmt.Sprintf(urlCommands[getAllPermissionCommand], permissionsToken, resourceToken, resourceNameParam)
 	service.Route(service.GET(str).
 		Filter(a.st.SameUserFilter).
 		To(a.restGetAllPermissions).

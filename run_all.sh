@@ -1,1 +1,0 @@
-../../ibm-security-innovation-old/libsecurity-private/Go/build-Go/run_all.sh

@@ -40,8 +40,6 @@ type aclRestful struct {
 
 type Config map[string]string
 
-type permissionsVecT map[acl.Permission]interface{}
-
 type resource struct {
 	ResourceName string
 	UserName     string
@@ -60,8 +58,8 @@ func (a *aclRestful) SetData(stR *libsecurity_restful.LibsecurityRestful) {
 	a.st = stR
 }
 
-func (a aclRestful) getUrlPath(request *restful.Request, name string) cr.Url {
-	return cr.Url{Url: fmt.Sprintf("%v/%v", ServicePath, name)}
+func (a aclRestful) getUrlPath(request *restful.Request, path string, name string) cr.Url {
+	return cr.Url{Url: fmt.Sprintf("%v/%v/%v", ServicePath, path, name)}
 }
 
 func (a *aclRestful) setError(response *restful.Response, httpStatusCode int, err error) {
@@ -87,9 +85,8 @@ func (a *aclRestful) getResourceAclData(request *restful.Request, response *rest
 	return aclData, &aclInfo, nil
 }
 
-func (a *aclRestful) addAclToResource(request *restful.Request, response *restful.Response, resourceName string) bool {
-	a1 := acl.NewACL()
-	err := a.st.UsersList.AddPropertyToEntity(resourceName, stc.AclPropertyName, a1)
+func (a *aclRestful) addAclToResource(request *restful.Request, response *restful.Response, resourceName string, newAcl *acl.Acl) bool {
+	err := a.st.UsersList.AddPropertyToEntity(resourceName, stc.AclPropertyName, newAcl)
 	if err != nil {
 		a.setError(response, http.StatusNotFound, err)
 		return false
@@ -97,13 +94,19 @@ func (a *aclRestful) addAclToResource(request *restful.Request, response *restfu
 	return true
 }
 
-func (a *aclRestful) restClearAclOfResource(request *restful.Request, response *restful.Response) {
+func (a *aclRestful) restAddAclToResource(request *restful.Request, response *restful.Response) {
+	var a1 *acl.Acl
 	resourceName := request.PathParameter(resourceNameParam)
-	if a.addAclToResource(request, response, resourceName) == false {
+
+	err := request.ReadEntity(&a1)
+	if err != nil {
+		a1 = acl.NewACL()
+	}
+	if a.addAclToResource(request, response, resourceName, a1) == false {
 		return
 	}
-	response.WriteEntity(a.getUrlPath(request, resourceName))
-	response.WriteHeader(http.StatusOK)
+	response.WriteHeader(http.StatusCreated)
+	response.WriteEntity(a.getUrlPath(request, resourceToken, resourceName))
 }
 
 func (a *aclRestful) restGetAclOfResource(request *restful.Request, response *restful.Response) {
@@ -112,8 +115,8 @@ func (a *aclRestful) restGetAclOfResource(request *restful.Request, response *re
 		a.setError(response, http.StatusNotFound, err)
 		return
 	}
-	response.WriteEntity(data)
 	response.WriteHeader(http.StatusOK)
+	response.WriteEntity(data)
 }
 
 func (a *aclRestful) restDeleteAclFromResource(request *restful.Request, response *restful.Response) {
@@ -158,7 +161,8 @@ func (a aclRestful) restSetPermission(request *restful.Request, response *restfu
 		return
 	}
 	if a1 == nil {
-		a.addAclToResource(request, response, aclInfo.ResourceName)
+		eAcl := acl.NewACL()
+		a.addAclToResource(request, response, aclInfo.ResourceName, eAcl)
 		a1, aclInfo, err = a.getResourceAclData(request, response)
 		if err != nil {
 			a.setError(response, http.StatusInternalServerError, err)
@@ -170,7 +174,7 @@ func (a aclRestful) restSetPermission(request *restful.Request, response *restfu
 		a.setError(response, http.StatusNotFound, err)
 	} else {
 		response.WriteHeader(http.StatusCreated)
-		response.WriteEntity(a.getUrlPath(request, aclInfo.Permission))
+		response.WriteEntity(a.getUrlPath(request, entityToken, fmt.Sprintf("%v/%v/%v/%v/%v", aclInfo.UserName, resourceToken, aclInfo.ResourceName, permissionsToken, aclInfo.Permission)))
 	}
 }
 
@@ -194,12 +198,13 @@ func (a aclRestful) restGetAllPermissions(request *restful.Request, response *re
 		a.setError(response, http.StatusNotFound, err)
 		return
 	}
-	permissions := aclData.GetAllPermissions()
-	ret := []acl.Permission{}
-	for p, _ := range permissions {
-		ret = append(ret, p)
+	res := aclData.GetAllPermissions()
+	data := []string{}
+	for name, _ := range res {
+		data = append(data, string(name))
 	}
-	response.WriteEntity(ret)
+	response.WriteHeader(http.StatusOK)
+	response.WriteEntity(data)
 }
 
 func (a aclRestful) restGetAllPermissionsOfEntity(request *restful.Request, response *restful.Response) {
@@ -210,8 +215,12 @@ func (a aclRestful) restGetAllPermissionsOfEntity(request *restful.Request, resp
 		a.setError(response, http.StatusNotFound, err)
 		return
 	}
+	data := []string{}
+	for name, _ := range res {
+		data = append(data, string(name))
+	}
 	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(res)
+	response.WriteEntity(data)
 }
 
 func (a aclRestful) restGetWhoUsesAResourcePermission(request *restful.Request, response *restful.Response) {
@@ -223,5 +232,6 @@ func (a aclRestful) restGetWhoUsesAResourcePermission(request *restful.Request, 
 	for name, _ := range res {
 		data = append(data, name)
 	}
+	response.WriteHeader(http.StatusOK)
 	response.WriteEntity(data)
 }
