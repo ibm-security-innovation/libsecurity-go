@@ -146,15 +146,6 @@ func registerComponents(configFile string, secureKeyFilePath string, privateKeyF
 	if conf[aclToken] == basicToken || conf[appAclToken] == basicToken {
 		a.RegisterBasic(wsContainer)
 	}
-	/*
-		appAclPermissions := appAcl.NewAppPermissions()
-		st.STool.SetAppAclData(appAclPermissions)
-		aa := appAcl_restful.NewAppAclRestful()
-		aa.SetData(appAclPermissions, st)
-		if conf[appAclToken] == basicToken {
-			aa.RegisterBasic(wsContainer)
-		}
-	*/
 
 	p := otp_restful.NewOtpRestful()
 	p.SetData(st)
