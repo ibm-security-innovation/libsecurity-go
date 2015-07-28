@@ -36,7 +36,7 @@ func (el *EntityManager) contains(el1 *EntityManager) bool {
 		return false
 	}
 	for _, e := range el.Users {
-		e1, _ := el1.getUserAddUserToGroup(e.Name)
+		e1, _ := el1.getUser(e.Name)
 		if e1 == nil || e.isEqualUser(e1) == false {
 			return false
 		}
@@ -45,7 +45,7 @@ func (el *EntityManager) contains(el1 *EntityManager) bool {
 		}
 	}
 	for _, g := range el.Groups {
-		g1, _ := el1.getGroupAddUserToGroup(g.Name)
+		g1, _ := el1.getGroup(g.Name)
 		if g1 == nil || g.isEqualGroup(g1) == false {
 			return false
 		}
@@ -54,7 +54,7 @@ func (el *EntityManager) contains(el1 *EntityManager) bool {
 		}
 	}
 	for _, e := range el.Resources {
-		e1, _ := el1.getResourceAddUserToGroup(e.Name)
+		e1, _ := el1.getResource(e.Name)
 		if e1 == nil || e.isEqualResource(e1) == false {
 			return false
 		}
@@ -108,7 +108,7 @@ func addEntities(el *EntityManager, typeStr string, names []string, expected boo
 				if err != nil && i >= j {
 					return false, fmt.Errorf("Error: User '%v' is part of the entity list %v but was not added as a member, error: %v", name1, el, err)
 				}
-				_, err = el.getGroupAddUserToGroup(groupName)
+				_, err = el.getGroup(groupName)
 				if err != nil {
 					return false, fmt.Errorf("Error: %v '%v' added to the entity list but was not found in %v", typeStr, name, el)
 				}
@@ -124,12 +124,12 @@ func removeEntities(el *EntityManager, typeStr string, names []string, expected 
 
 	for _, name := range names {
 		if typeStr == userTypeStr {
-			err = el.RemoveUserAddUserToGroup(name)
+			err = el.RemoveUser(name)
 		} else if typeStr == groupTypeStr {
-			el.RemoveUserAddUserToGroup(name)
-			err = el.RemoveGroupAddUserToGroup(getGroupFormat(name))
+			el.RemoveUser(name)
+			err = el.RemoveGroup(getGroupFormat(name))
 		} else {
-			err = el.RemoveResourceAddUserToGroup(name)
+			err = el.RemoveResource(name)
 		}
 		if expected == true && err != nil {
 			return false, fmt.Errorf("Error: Can't remove a valid %v '%v' from the entity list %v", typeStr, name, el)
@@ -137,11 +137,11 @@ func removeEntities(el *EntityManager, typeStr string, names []string, expected 
 			return false, fmt.Errorf("Error: Removed an already removed %v '%v' from entity list %v", typeStr, name, el)
 		}
 		if typeStr == userTypeStr {
-			_, err = el.getUserAddUserToGroup(name)
+			_, err = el.getUser(name)
 		} else if typeStr == groupTypeStr {
-			_, err = el.getGroupAddUserToGroup(name)
+			_, err = el.getGroup(name)
 		} else {
-			_, err = el.getResourceAddUserToGroup(name)
+			_, err = el.getResource(name)
 		}
 		if err == nil {
 			return false, fmt.Errorf("Error: %v '%v' found in entity list %v after it was removed", typeStr, name, el)

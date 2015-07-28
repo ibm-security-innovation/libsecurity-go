@@ -364,7 +364,7 @@ func Test_CheckPermissionWhenUserIsRemovedAndAdded(t *testing.T) {
 	if CheckUserPermission(el, userName, resourceName, p) != true {
 		t.Errorf("Test fail: '%v' permission must be set, %v", p, a)
 	}
-	el.RemoveGroupAddUserToGroup(groupName)
+	el.RemoveGroup(groupName)
 	if CheckUserPermission(el, userName, resourceName, p) == true {
 		t.Errorf("Test fail: '%v' permission must not be allowed, %v", p, a)
 	}
@@ -374,7 +374,7 @@ func Test_CheckPermissionWhenUserIsRemovedAndAdded(t *testing.T) {
 	if CheckUserPermission(el, userName, resourceName, p) != true {
 		t.Errorf("Test fail: '%v' permission must be set, %v", p, a)
 	}
-	el.RemoveUserAddUserToGroup(userName)
+	el.RemoveUser(userName)
 	el.AddUser(userName)
 	if CheckUserPermission(el, userName, resourceName, p) == true {
 		t.Errorf("Test fail: '%v' permission must not be allowed, %v", p, a)
