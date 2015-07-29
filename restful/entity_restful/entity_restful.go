@@ -96,7 +96,7 @@ func (g enRestful) getAllGroups() []string {
 func (g enRestful) restRemoveAllGroups(request *restful.Request, response *restful.Response) {
 	gList := g.getAllGroups()
 	for _, name := range gList {
-		g.st.UsersList.RemoveGroupAddUserToGroup(name)
+		g.st.UsersList.RemoveGroup(name)
 	}
 	response.WriteHeader(http.StatusNoContent)
 }
@@ -113,7 +113,7 @@ func (g enRestful) restGetGroup(request *restful.Request, response *restful.Resp
 
 func (g *enRestful) restRemoveGroup(request *restful.Request, response *restful.Response) {
 	groupId := request.PathParameter(groupIdParam)
-	err := g.st.UsersList.RemoveGroupAddUserToGroup(groupId)
+	err := g.st.UsersList.RemoveGroup(groupId)
 	if err != nil {
 		g.setError(response, http.StatusBadRequest, err)
 	} else {
@@ -174,14 +174,14 @@ func (u *enRestful) restRemoveAllUsers(request *restful.Request, response *restf
 		if name == stc.RootUserName || name == stc.AclAllEntryName {
 			continue
 		}
-		u.st.UsersList.RemoveUserAddUserToGroup(name)
+		u.st.UsersList.RemoveUser(name)
 	}
 	response.WriteHeader(http.StatusNoContent)
 }
 
 func (u *enRestful) restRemoveUser(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter(userIdParam)
-	err := u.st.UsersList.RemoveUserAddUserToGroup(id)
+	err := u.st.UsersList.RemoveUser(id)
 	if err != nil {
 		u.setError(response, http.StatusNotFound, err)
 	} else {
@@ -222,14 +222,14 @@ func (u enRestful) restGetResource(request *restful.Request, response *restful.R
 
 func (u *enRestful) restRemoveAllResources(request *restful.Request, response *restful.Response) {
 	for name, _ := range u.st.UsersList.Resources {
-		u.st.UsersList.RemoveResourceAddUserToGroup(name)
+		u.st.UsersList.RemoveResource(name)
 	}
 	response.WriteHeader(http.StatusNoContent)
 }
 
 func (u *enRestful) restRemoveResource(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter(resourceIdParam)
-	err := u.st.UsersList.RemoveResourceAddUserToGroup(id)
+	err := u.st.UsersList.RemoveResource(id)
 	if err != nil {
 		u.setError(response, http.StatusNotFound, err)
 	} else {

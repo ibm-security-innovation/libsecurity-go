@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strings"
 
 	en "ibm-security-innovation/libsecurity-go/entity"
@@ -131,6 +132,18 @@ func GetExpectedData(sData string, okJ interface{}) (bool, string, string, Error
 		}
 		res = resUrl.Url
 		exp = okJ.(Url).Url
+	case []string:
+		var per []string
+		json.Unmarshal([]byte(sData), &per)
+		sort.Strings(per)
+		data := okJ.([]string)
+		sort.Strings(data)
+		for _, p := range data {
+			exp += " " + p
+		}
+		for _, p := range per {
+			res += " " + p
+		}
 	case Match:
 		var matchOk Match
 		json.Unmarshal([]byte(sData), &matchOk)

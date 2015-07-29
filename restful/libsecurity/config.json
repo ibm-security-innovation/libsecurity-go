@@ -1,7 +1,7 @@
 {
 	"accountManager": "full", 
 	"otp": "basic",
-	"acl": "none",
+	"acl": "basic",
 	"appAcl": "none",
 	"um": "basic",
 	"ocra": "basic",

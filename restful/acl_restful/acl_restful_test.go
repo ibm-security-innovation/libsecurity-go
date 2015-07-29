@@ -1,51 +1,40 @@
 package acl_restful
 
-/*
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"reflect"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/emicklei/go-restful"
 	"ibm-security-innovation/libsecurity-go/acl"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
-	//	"ibm-security-innovation/libsecurity-go/restful/libsecurity"
 	stc "ibm-security-innovation/libsecurity-go/defs"
+	en "ibm-security-innovation/libsecurity-go/entity"
 	logger "ibm-security-innovation/libsecurity-go/logger"
+	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
 	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
 )
 
 const (
-	host     = "http://localhost"
-	port     = ":8082"
-	listener = host + port
+	host         = "http://localhost"
+	port         = ":8082"
+	listener     = host + port
+	propertyName = stc.AclPropertyName
 
-	userName1        = "User1"
-	userName2        = "User2"
-	userInGroupName1 = "gUser1"
-	userInGroupName2 = userName2
-	groupName        = "support"
-	resourceName     = "Disk1"
+	userName1     = "User1"
+	userName2     = "User2"
+	groupName     = "group1"
+	resourceName1 = "Disk1"
+	resourceName2 = "Camera1"
 
-	savePermission    = "save"
-	deletePermission  = "delete"
-	canUsePermission  = "Can use"
-	allPermission     = "All can use it"
-	usersPermission   = "for users only"
-	supportPermission = "Can take"
-
-	PerRead  = "Read"
-	PerWrite = "Write"
-	PerExe   = "Execute"
-	PerTake  = "Take"
-	PerAll   = "Can be used by All"
+	perRead  = "Read"
+	perWrite = "Write"
+	perExe   = "Execute"
+	perTake  = "Take"
+	perAll   = "Can be used by All"
 
 	emptyRes      = "{}"
 	permissionFmt = "%v-%v-%v"
@@ -56,34 +45,15 @@ var (
 
 	stRestful *libsecurity_restful.LibsecurityRestful
 
-	usersName        = []string{userName1, userName2, groupName}
-	groupUsersName   = []string{userInGroupName1, userInGroupName2}
-	usersPermissions = [][]string{{deletePermission, savePermission}, {canUsePermission, savePermission}, {canUsePermission, supportPermission}}
+	usersName        = []string{userName1, userName2}
+	resourcesName    = []string{resourceName1, resourceName2}
+	usersPermissions = []string{perRead, perWrite, perExe, perTake}
 )
-
-type permissionsVecS struct {
-	val permissionsVecT
-}
-
-// Compare only the permissions: The order of the permissions is not relevant
-func (p permissionsVecS) Equal(p1 permissionsVecS) bool {
-	pVec := make(permissionsVecT)
-	p1Vec := make(permissionsVecT)
-
-	for permissions, _ := range p.val {
-		pVec[permissions] = ""
-	}
-	for permissions, _ := range p1.val {
-		p1Vec[permissions] = ""
-	}
-	return reflect.DeepEqual(pVec, p1Vec)
-}
 
 func init() {
 	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard)
 
 	usersList := en.NewEntityManager()
-
 	stRestful = libsecurity_restful.NewLibsecurityRestful()
 	stRestful.SetData(usersList, nil, nil, nil, nil)
 	stRestful.SetToFilterFlag(false)
@@ -114,27 +84,13 @@ func getExpectedData(sData string, okJ interface{}) (string, string, cr.Error, e
 	}
 
 	switch okJ.(type) {
-	case permissionsVecS:
-		// The order of the dat is not relevant
-		res = cr.RemoveSpaces(string(sData))
-		d1, _ := json.Marshal(okJ.(permissionsVecS).val)
-		var pu permissionsVecS
-		err = json.Unmarshal([]byte(sData), &pu.val)
-		if err == nil && pu.Equal(okJ.(permissionsVecS)) == false {
-			exp = string(d1)
-		} else {
-			exp = res
-		}
-	case acl.PermissionSet:
-		res = cr.RemoveSpaces(string(sData))
-		d1, _ := json.Marshal(okJ.(acl.PermissionSet))
-		var pu acl.PermissionSet
-		json.Unmarshal([]byte(sData), &pu)
-		if reflect.DeepEqual(pu, okJ.(acl.PermissionSet)) == false {
-			exp = string(d1)
-		} else {
-			exp = res
-		}
+	case *acl.Acl:
+		var a1 *acl.Acl
+		json.Unmarshal([]byte(sData), &a1)
+		data, _ := json.Marshal(a1)
+		res = string(data)
+		data, _ = json.Marshal(okJ.(*acl.Acl))
+		exp = string(data)
 	default:
 		panic(fmt.Sprintf("Error unknown type: value: %v", okJ))
 	}
@@ -153,126 +109,118 @@ func exeCommandCheckRes(t *testing.T, method string, url string, expCode int, da
 	if code != expCode || res != exp || err != nil {
 		t.Errorf("Test fail: run %v '%v' Expected status: %v, received %v, expected data: '%v' received: '%v', error: %v %v",
 			method, url, expCode, code, exp, res, e, err)
+		t.Errorf("Test fail: status: %v, data %v, error: %v",
+			expCode != code, exp != res, err)
 		t.FailNow()
 	}
 	return res
 }
 
 func generateAcl() (string, *acl.Acl, error) {
-	stRestful.UsersList.AddResource(resourceName)
+	stRestful.UsersList.AddResource(resourceName1)
 	stRestful.UsersList.AddGroup(groupName)
 	for _, name := range usersName {
 		stRestful.UsersList.AddUser(name)
 		stRestful.UsersList.AddUserToGroup(groupName, name)
 	}
 	aclData := acl.NewACL()
-	for i, _ := range usersPermissions {
-		aclData.AddPermissionToResource(stRestful.UsersList, usersName[i], acl.Permission(usersPermission[i]))
+	for _, name := range usersName {
+		for _, p := range usersPermissions {
+			aclData.AddPermissionToResource(stRestful.UsersList, name, acl.Permission(p))
+		}
 	}
+	aclData.AddPermissionToResource(stRestful.UsersList, stc.AclAllEntryName, perAll)
+	stRestful.UsersList.AddPropertyToEntity(resourceName1, stc.AclPropertyName, aclData)
 	data, _ := json.Marshal(aclData)
 	return string(data), aclData, nil
 }
 
-func addAclVerifyResults(t *testing.T, url string, okJ cr.Url) {
-	aclDataStr, aclData, err := generateAcl()
-	if err != nil {
-		t.Errorf("Test fail: Error: %v", err)
-		t.Fail()
-		return
+func initState() {
+	a := acl.NewACL()
+	for _, name := range resourcesName {
+		stRestful.UsersList.AddResource(name)
+		stRestful.UsersList.AddPropertyToEntity(name, stc.AclPropertyName, a)
 	}
-	exeCommandCheckRes(t, cr.PUT_STR, url, http.StatusCreated, aclDataStr, okJ)
-
-	code, sData, _ := cr.HttpDataMethod(cr.GET_STR, url, "")
-	var resData acl.Acl
-	json.Unmarshal([]byte(sData), &resData)
-	if code != http.StatusOK || aclData.IsEqual(resData) == false {
-		t.Errorf("Test fail: run GET '%v' Expected status: %v received %v, expected data: '%v' received '%v'",
-			url, http.StatusOK, code, aclData, resData)
-		t.FailNow()
-	}
-}
-
-func initState(t *testing.T) {
-}
-
-// Set the permission for the given princple: Users/Group or All
-// and verify that the permission was setted as expected
-func setPermissions(t *testing.T, url string, numOfPermissions int) {
-	stRestful.UsersList.AddGroup(groupName)
 	for _, name := range usersName {
 		stRestful.UsersList.AddUser(name)
-		stRestful.UsersList.AddUserToGroup(groupName, name)
-	}
-	for _, principleName := range usersName {
-		permissions := make(permissionsVecT)
-		for k := 0; k < numOfPermissions; k++ {
-			permission := fmt.Sprintf(permissionFmt, principleName, PerRead, k)
-			permissions[acl.Permission(permission)] = ""
-			okUrlJ := cr.Url{Url: ServicePath + "/" + fmt.Sprintf(permissionUrlPath, principleName)}
-			okUrlJ.Url = strings.TrimRight(okUrlJ.Url, "/")
-			specificAcl := url + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handlePermissionCommand]),
-				principleName, PermissionsToken, permission)
-			exeCommandCheckRes(t, cr.PUT_STR, specificAcl, http.StatusCreated, "", okUrlJ)
-		}
-		// verify the permission list is as expected
-		specificAcl := url + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[getPermissionCommand]), principleName)
-		exeCommandCheckRes(t, cr.GET_STR, specificAcl, http.StatusOK, "", permissionsVecS{permissions})
 	}
 }
 
-// Verify that the expected permissions are setted for the given princple: Users/Group or All
-// Delete the permissions and verify that the permissions were cleared
-func checkDeletePermissions(t *testing.T, url string, numOfPermissions int) {
-	// check that the permission is setted and deleted and not permissions are left
-	stRestful.UsersList.AddGroup(groupName)
-	for _, principleName := range usersName {
-		stRestful.UsersList.RemoveUserFromGroup(groupName, principleName)
-		for k := 0; k < numOfPermissions; k++ {
-			permission := fmt.Sprintf(permissionFmt, principleName, PerRead, k)
-			match := cr.Match{Match: true}
-			specificAcl := url + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handlePermissionCommand]),
-				principleName, PermissionsToken, permission)
-			exeCommandCheckRes(t, cr.GET_STR, specificAcl, http.StatusOK, "", match)
-			exeCommandCheckRes(t, cr.DELETE_STR, specificAcl, http.StatusNoContent, "", cr.StringMessage{Str: ""})
-		}
-		// verify the permission list is as expected: empty
-		specificAcl := url + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[getPermissionCommand]), principleName)
-		exeCommandCheckRes(t, cr.GET_STR, specificAcl, http.StatusOK, "", cr.StringMessage{Str: emptyRes})
+// Add ACL property to resource and get it
+// Remove the property and verify an error when try to get it
+func Test_addGetRemoveAcl(t *testing.T) {
+	initState()
+	strFmt := "%v/%v/%v"
+	for _, name := range resourcesName {
+		okUrlJ := cr.Url{Url: fmt.Sprintf(strFmt, ServicePath, resourceToken, name)}
+		url := fmt.Sprintf(strFmt, resourcePath, resourceToken, name)
+		exeCommandCheckRes(t, cr.PUT_STR, url, http.StatusCreated, emptyRes, okUrlJ)
+		data, _ := stRestful.UsersList.GetPropertyAttachedToEntity(name, propertyName)
+		exeCommandCheckRes(t, cr.GET_STR, url, http.StatusOK, "", data.(*acl.Acl))
+		exeCommandCheckRes(t, cr.DELETE_STR, url, http.StatusNoContent, "", cr.StringMessage{Str: ""})
+		exeCommandCheckRes(t, cr.GET_STR, url, http.StatusNotFound, "", cr.Error{Code: http.StatusNotFound})
 	}
 }
 
-// set permission for:
-// 1. all + group
-// 2. all
-// 3. only for specific user
-//   verify that the results are as expected
-func TestPermissionWhoUses(t *testing.T) {
-	permissions := []acl.Permission{PerAll, PerRead, PerWrite}
-
-	initState(t)
-	for i, permission := range permissions {
-		// set all permission
-		if i < 2 {
-			specificAcl := resourcePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[getAllPermissionCommand]),
-				stc.AclAllEntryName, PermissionsToken, permission)
-			cr.HttpDataMethod(cr.PUT_STR, specificAcl, "")
-		}
-		// set groupName permission
-		if i == 0 {
-			specificAcl := resourcePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handlePermissionCommand]),
-				groupName, PermissionsToken, permission)
-			cr.HttpDataMethod(cr.PUT_STR, specificAcl, "")
-		}
-		// set user UserName1 permission
-		if i == 2 {
-			specificAcl := resourcePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handlePermissionCommand]),
-				userName1, PermissionsToken, permission)
-			cr.HttpDataMethod(cr.PUT_STR, specificAcl, "")
-		}
-		specificAcl := resourcePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[getAllUsersOfPermissionCommand]),
-			PermissionsToken, permission)
-		stRestful.UsersList.GetPropertyAttachedToEntity(resourceName, stc.AclPropertyName)
-		exeCommandCheckRes(t, cr.GET_STR, specificAcl, http.StatusOK, "", acl.GetWhoUseAPermission(stRestful.UsersList, resourceName, string(permission)))
-	}
+// Add a permission to resource for a given user and verify that it have it
+// Remove the permission for the resource from the user and verify it doesn't have it
+func Test_addCheckDeletePermission(t *testing.T) {
+	initState()
+	strFmt := "%v/%v"
+	permission := perRead
+	baseUrl := fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handlePermissionCommand]),
+		entityToken, userName1, resourceToken, resourceName1, permissionsToken, permission)
+	okUrlJ := cr.Url{Url: fmt.Sprintf(strFmt, ServicePath, baseUrl)}
+	url := fmt.Sprintf(strFmt, resourcePath, baseUrl)
+	exeCommandCheckRes(t, cr.PUT_STR, url, http.StatusCreated, "", okUrlJ)
+	exeCommandCheckRes(t, cr.GET_STR, url, http.StatusOK, "", cr.Match{Match: true, Message: ""})
+	exeCommandCheckRes(t, cr.DELETE_STR, url, http.StatusNoContent, "", cr.StringMessage{Str: ""})
+	str := fmt.Sprintf("Permission '%v' doesn't allowed", permission)
+	exeCommandCheckRes(t, cr.GET_STR, url, http.StatusNotFound, "", cr.Error{Code: 0, Message: str})
 }
-*/
+
+// Test estGetAllPermissionsOfEntity
+// Add a set of permissions to resource for a given users list and verify that the respobse is as expected
+func Test_getAllPermissionsOfEntity(t *testing.T) {
+	initState()
+	generateAcl()
+	baseUrl := fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[getAllPermissionsOfEntityCommand]), entityToken, userName1, resourceToken, resourceName1)
+	url := fmt.Sprintf("%v/%v", resourcePath, baseUrl)
+	data, _ := acl.GetUserPermissions(stRestful.UsersList, userName1, resourceName1)
+	res := []string{}
+	for p, _ := range data {
+		res = append(res, string(p))
+	}
+	exeCommandCheckRes(t, cr.GET_STR, url, http.StatusOK, "", res)
+}
+
+// Test restGetAllPermissions
+// Add a set of permissions to resource for a given users list and verify that the respobse is as expected
+func Test_getAllPermissions(t *testing.T) {
+	initState()
+	_, a, _ := generateAcl()
+	baseUrl := fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[getAllPermissionCommand]), permissionsToken, resourceToken, resourceName1)
+	url := fmt.Sprintf("%v/%v", resourcePath, baseUrl)
+	data := a.GetAllPermissions()
+	res := []string{}
+	for p, _ := range data {
+		res = append(res, string(p))
+	}
+	exeCommandCheckRes(t, cr.GET_STR, url, http.StatusOK, "", res)
+}
+
+// Test restGetWhoUsesAResourcePermission
+// Add a set of permissions to resource for a given users list and verify that the respobse is as expected
+func Test_getWhoUsesAResourcePermission(t *testing.T) {
+	initState()
+	generateAcl()
+	permission := perAll
+	baseUrl := fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[getAllPermissionsOfEntityCommand]), resourceToken, resourceName1, permissionsToken, permission)
+	url := fmt.Sprintf("%v/%v", resourcePath, baseUrl)
+	data := acl.GetWhoUseAPermission(stRestful.UsersList, resourceName1, permission)
+	res := []string{}
+	for p, _ := range data {
+		res = append(res, p)
+	}
+	exeCommandCheckRes(t, cr.GET_STR, url, http.StatusOK, "", res)
+}

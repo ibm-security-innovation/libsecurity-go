@@ -3,26 +3,26 @@ package acl_restful
 import (
 	"fmt"
 
-	//	"ibm-security-innovation/libsecurity-go/acl"
 	"github.com/emicklei/go-restful"
+	"ibm-security-innovation/libsecurity-go/acl"
 	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
 )
 
 const (
-	handlePermissionCommand = iota
-	getPermissionCommand
+	handleAclCommand = iota
+	handlePermissionCommand
 	getAllPermissionCommand
-	getAllUsersOfPermissionCommand
+	getAllPermissionsOfEntityCommand
 
 	permissionUrlPath = "%v"
 )
 
 var (
 	commandsToPath = []cr.ComamndsToPath{
-		{handlePermissionCommand, "%v"},
-		//		{getPermissionCommand, "%v/{%v}/{%v}"},
-		//		{getAllPermissionCommand, "%v/{%v}/%v"},
-		//		{getAllUsersOfPermissionCommand, "%v/{%v}/%v/{%v}"},
+		{handleAclCommand, "%v/{%v}"},
+		{handlePermissionCommand, "%v/{%v}/%v/{%v}/%v/{%v}"},
+		{getAllPermissionCommand, "%v/%v/{%v}"},
+		{getAllPermissionsOfEntityCommand, "%v/{%v}/%v/{%v}"},
 	}
 	urlCommands = make(cr.CommandToPath)
 )
@@ -33,65 +33,94 @@ func initCommandToPath() {
 	}
 }
 
-// acl.AddPermissionToEntity(el *en.EntityManager, entityName string, permission Permission) error
-// acl.RemovePermissionFromEntity(entityName string, permission Permission) error
-// GetAllPermissions() PermissionsT // get all the permissions of the object
-// GetUserPermissions(el *en.EntityManager, userName string, entityName string) (PermissionsT, error) {
-// CheckUserPermission(el *en.EntityManager, userName string, entityName string, permission Permission) bool {
-// GetWhoUseAPermission(el *en.EntityManager, entityName string, permission string) PermissionSet {
+func (a aclRestful) setRoute(service *restful.WebService) {
+	str := fmt.Sprintf(urlCommands[handleAclCommand], resourceToken, resourceNameParam)
+	service.Route(service.PUT(str).
+		Filter(a.st.SuperUserFilter).
+		To(a.restAddAclToResource).
+		Doc("Add ACL to resource").
+		Operation("addAclToResource").
+		Param(service.PathParameter(resourceNameParam, resourceComment).DataType("string")).
+		Reads(acl.Acl{}).
+		Writes(cr.Url{}))
+
+	str = fmt.Sprintf(urlCommands[handleAclCommand], resourceToken, resourceNameParam)
+	service.Route(service.GET(str).
+		Filter(a.st.SameUserFilter).
+		To(a.restGetAclOfResource).
+		Doc("Get ACL attached to resource").
+		Operation("getAcl").
+		Param(service.PathParameter(resourceNameParam, resourceComment).DataType("string")).
+		Writes(acl.Acl{}))
+
+	str = fmt.Sprintf(urlCommands[handleAclCommand], resourceToken, resourceNameParam)
+	service.Route(service.DELETE(str).
+		Filter(a.st.SuperUserFilter).
+		To(a.restDeleteAclFromResource).
+		Doc("Remove ACL from resource").
+		Operation("deleteAcl").
+		Param(service.PathParameter(resourceNameParam, resourceComment).DataType("string")))
+}
 
 func (a aclRestful) setUsersRoute(service *restful.WebService) {
-	str := fmt.Sprintf(urlCommands[handlePermissionCommand], permissionParam)
+	str := fmt.Sprintf(urlCommands[handlePermissionCommand], entityToken, entityNameParam, resourceToken, resourceNameParam, permissionsToken, permissionParam)
 	service.Route(service.PUT(str).
 		Filter(a.st.SuperUserFilter).
 		To(a.restSetPermission).
 		Doc("Grant the premission to the given entity for a given resource").
 		Operation("setPermission").
-		Reads(resource{}).
+		Param(service.PathParameter(entityNameParam, entityComment).DataType("string")).
+		Param(service.PathParameter(resourceNameParam, resourceComment).DataType("string")).
+		Param(service.PathParameter(permissionParam, permissionComment).DataType("string")).
 		Writes(cr.Url{}))
 
-	str = fmt.Sprintf(urlCommands[handlePermissionCommand], permissionParam)
+	str = fmt.Sprintf(urlCommands[handlePermissionCommand], entityToken, entityNameParam, resourceToken, resourceNameParam, permissionsToken, permissionParam)
 	service.Route(service.GET(str).
 		Filter(a.st.SameUserFilter).
 		To(a.restCheckPermission).
 		Doc("Check if the entity has the given permission to the resource").
 		Operation("checkEntityPermissionToResource").
-		Reads(resource{}).
+		Param(service.PathParameter(entityNameParam, entityComment).DataType("string")).
+		Param(service.PathParameter(resourceNameParam, resourceComment).DataType("string")).
+		Param(service.PathParameter(permissionParam, permissionComment).DataType("string")).
 		Writes(cr.Match{}))
 
-	str = fmt.Sprintf(urlCommands[handlePermissionCommand], permissionParam)
+	str = fmt.Sprintf(urlCommands[handlePermissionCommand], entityToken, entityNameParam, resourceToken, resourceNameParam, permissionsToken, permissionParam)
 	service.Route(service.DELETE(str).
 		Filter(a.st.SuperUserFilter).
 		To(a.restDeletePermission).
 		Doc("Revoke the permission of the given entity for the given resource").
 		Operation("deleteEntityPermissionFromAResource").
-		Reads(resource{}))
+		Param(service.PathParameter(entityNameParam, entityComment).DataType("string")).
+		Param(service.PathParameter(resourceNameParam, resourceComment).DataType("string")).
+		Param(service.PathParameter(permissionParam, permissionComment).DataType("string")))
 
-	/*
-		str = fmt.Sprintf(urlCommands[getPermissionCommand], resourecNameParam, entityNameParam)
-		service.Route(service.GET(str).
-			Filter(a.st.SameUserFilter).
-			To(a.restGetPermissions).
-			Doc("Get all the permissions of the given entity").
-			Operation("getUserGroupPermissions").
-			Param(service.PathParameter(resourceNameParam, entityComment).DataType("string")).
-			Param(service.PathParameter(entityNameParam, entityComment).DataType("string")).
-	*/
-}
+	str = fmt.Sprintf(urlCommands[getAllPermissionCommand], permissionsToken, resourceToken, resourceNameParam)
+	service.Route(service.GET(str).
+		Filter(a.st.SameUserFilter).
+		To(a.restGetAllPermissions).
+		Doc("Get all the permissions of the given resource").
+		Operation("getUserGroupPermissions").
+		Param(service.PathParameter(resourceNameParam, resourceComment).DataType("string")))
 
-/*
-func (a aclRestful) setPermissionsRoute(service *restful.WebService) {
-	str := fmt.Sprintf(urlCommands[getAllUsersOfPermissionCommand], AclsPath, aclNameParam, PermissionsToken, permissionParam)
+	str = fmt.Sprintf(urlCommands[getAllPermissionsOfEntityCommand], entityToken, entityNameParam, resourceToken, resourceNameParam)
+	service.Route(service.GET(str).
+		Filter(a.st.SameUserFilter).
+		To(a.restGetAllPermissionsOfEntity).
+		Doc("Get all the permissions of the entity").
+		Operation("getAllEntityPermission").
+		Param(service.PathParameter(entityNameParam, entityComment).DataType("string")).
+		Param(service.PathParameter(resourceNameParam, resourceComment).DataType("string")))
+
+	str = fmt.Sprintf(urlCommands[getAllPermissionsOfEntityCommand], resourceToken, resourceNameParam, permissionsToken, permissionParam)
 	service.Route(service.GET(str).
 		Filter(a.st.SuperUserFilter).
-		To(a.restGetAllUsersOfPermission).
-		Doc("Get all the users/groups and ALL that uses the permission").
-		Operation("getAllUsersOfPermission").
-		Param(service.PathParameter(aclNameParam, aclComment).DataType("string")).
-		Param(service.PathParameter(permissionParam, permissionComment).DataType("string")).
-		Writes(acl.PermissionSet{}))
+		To(a.restGetWhoUsesAResourcePermission).
+		Doc("Get all the entities that have the permission to the resource").
+		Operation("getAllEntitiesOfPermission").
+		Param(service.PathParameter(resourceNameParam, resourceComment).DataType("string")).
+		Param(service.PathParameter(permissionParam, permissionComment).DataType("string")))
 }
-*/
 
 func (a aclRestful) RegisterBasic(container *restful.Container) {
 	ServicePath = cr.ServicePathPrefix + cr.Version + AclPrefix
@@ -102,7 +131,7 @@ func (a aclRestful) RegisterBasic(container *restful.Container) {
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 	//	.Doc("Access Control List")
+	a.setRoute(service)
 	a.setUsersRoute(service)
-	//	a.setPermissionsRoute(service)
 	container.Add(service)
 }

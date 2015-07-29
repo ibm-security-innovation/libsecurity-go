@@ -68,7 +68,7 @@ func testAddCheckRemoveUserProperty(t *testing.T, propertyName string, moduleDat
 		t.Errorf("Test fail, Error while feteching module '%v' from user '%v', error: %v", propertyName, name, err)
 	}
 
-	usersList.RemoveResourceAddUserToGroup(name)
+	usersList.RemoveResource(name)
 	_, err = usersList.GetPropertyAttachedToEntity(name, propertyName)
 	if err == nil {
 		t.Errorf("Test fail, Module '%v' of removed user '%v' was successfully fetched", propertyName, name)

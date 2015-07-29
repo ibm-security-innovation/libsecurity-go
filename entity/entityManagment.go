@@ -128,7 +128,7 @@ func (el *EntityManager) AddResource(name string) error {
 
 // Remove the given user from the EntityManager, from all the groups it is a part of
 // and from all the ACLs that give it permissions
-func (el *EntityManager) RemoveUserAddUserToGroup(name string) error {
+func (el *EntityManager) RemoveUser(name string) error {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -155,7 +155,7 @@ func (el *EntityManager) RemoveUserAddUserToGroup(name string) error {
 
 // Remove the given group from the EntityManager
 // and from all the ACLs that give it permissions
-func (el *EntityManager) RemoveGroupAddUserToGroup(name string) error {
+func (el *EntityManager) RemoveGroup(name string) error {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -172,7 +172,7 @@ func (el *EntityManager) RemoveGroupAddUserToGroup(name string) error {
 }
 
 // Remove the given resource from the EntityManager
-func (el *EntityManager) RemoveResourceAddUserToGroup(name string) error {
+func (el *EntityManager) RemoveResource(name string) error {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -185,7 +185,7 @@ func (el *EntityManager) RemoveResourceAddUserToGroup(name string) error {
 }
 
 // Return the user from the EntityManager using the given user name
-func (el EntityManager) getUserAddUserToGroup(name string) (*User, error) {
+func (el EntityManager) getUser(name string) (*User, error) {
 	e, exist := el.Users[name]
 	if !exist {
 		return nil, fmt.Errorf("%v '%v' is not in the entity list", userTypeStr, name)
@@ -194,7 +194,7 @@ func (el EntityManager) getUserAddUserToGroup(name string) (*User, error) {
 }
 
 // Return the group from the EntityManager using the given user name
-func (el EntityManager) getGroupAddUserToGroup(name string) (*Group, error) {
+func (el EntityManager) getGroup(name string) (*Group, error) {
 	e, exist := el.Groups[name]
 	if !exist {
 		return nil, fmt.Errorf("%v '%v' is not in the entity list", groupTypeStr, name)
@@ -203,7 +203,7 @@ func (el EntityManager) getGroupAddUserToGroup(name string) (*Group, error) {
 }
 
 // Return the resource from the EntityManager using the given user name
-func (el EntityManager) getResourceAddUserToGroup(name string) (*Resource, error) {
+func (el EntityManager) getResource(name string) (*Resource, error) {
 	e, exist := el.Resources[name]
 	if !exist {
 		return nil, fmt.Errorf("%v '%v' is not in the entity list", resourceTypeStr, name)
@@ -214,7 +214,7 @@ func (el EntityManager) getResourceAddUserToGroup(name string) (*Resource, error
 // Add a new user to the given group
 // the user name must be in the EntityManager before it can be added as a user of a group
 func (el *EntityManager) AddUserToGroup(groupName string, name string) error {
-	e, err := el.getGroupAddUserToGroup(groupName)
+	e, err := el.getGroup(groupName)
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func (el *EntityManager) AddUserToGroup(groupName string, name string) error {
 
 // Check if the given user is part of the given group
 func (el *EntityManager) IsUserPartOfAGroup(groupName string, userName string) bool {
-	g, err := el.getGroupAddUserToGroup(groupName)
+	g, err := el.getGroup(groupName)
 	if err != nil {
 		return false
 	}
@@ -238,7 +238,7 @@ func (el *EntityManager) IsUserPartOfAGroup(groupName string, userName string) b
 func (el *EntityManager) GetGroupUsers(groupName string) []string {
 	var groupUsers []string
 
-	g, err := el.getGroupAddUserToGroup(groupName)
+	g, err := el.getGroup(groupName)
 	if err != nil {
 		return nil
 	}
@@ -250,7 +250,7 @@ func (el *EntityManager) GetGroupUsers(groupName string) []string {
 
 // Remove the given user name from the group's users
 func (el *EntityManager) RemoveUserFromGroup(groupName string, name string) error {
-	e, err := el.getGroupAddUserToGroup(groupName)
+	e, err := el.getGroup(groupName)
 	if err != nil {
 		return err
 	}

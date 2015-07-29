@@ -194,5 +194,6 @@ func (s LibsecurityRestful) restLoadData(request *restful.Request, response *res
 		s.setError(response, http.StatusInternalServerError, err)
 		return
 	}
-	response.WriteHeader(http.StatusOK)
+	response.WriteHeader(http.StatusCreated)
+	response.WriteEntity(fileData.FilePath)
 }
