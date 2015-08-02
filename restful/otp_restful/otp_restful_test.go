@@ -46,7 +46,7 @@ func init() {
 	ServicePath = cr.ServicePathPrefix + cr.Version + OtpPrefix
 	resourcePath = listener + ServicePath + UsersPath
 
-	usersList := en.NewEntityManager()
+	usersList := en.New()
 
 	stRestful = libsecurity_restful.NewLibsecurityRestful()
 	stRestful.SetData(usersList, nil, nil, nil, nil)

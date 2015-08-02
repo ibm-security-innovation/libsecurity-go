@@ -79,7 +79,7 @@ func init() {
 func isPwdLengthValid(pwd []byte) error {
 	pLen := len(pwd)
 	if pLen < MinPasswordLength || pLen > MaxPasswordLength {
-		return fmt.Errorf("Password length %v is not in the allowed range %v-%v", pLen, MinPasswordLength, MaxPasswordLength)
+		return fmt.Errorf("password length %v is not in the allowed range %v-%v", pLen, MinPasswordLength, MaxPasswordLength)
 	}
 	return nil
 }
@@ -92,11 +92,11 @@ func (u UserPwd) IsNewPwdValid(pwd []byte) error {
 	}
 	newPwd := GetHashedPwd(pwd)
 	if compareHashedPwd(newPwd, u.Password) == true {
-		return fmt.Errorf("The new password is illegal: it is the same as the current password, please select a new password")
+		return fmt.Errorf("the new password is illegal: it is the same as the current password, please select a new password")
 	}
 	for _, s := range u.OldPasswords {
 		if compareHashedPwd(newPwd, s) == true {
-			return fmt.Errorf("The new password is illegal: it was already used, please select a new password")
+			return fmt.Errorf("the new password is illegal: it was already used, please select a new password")
 		}
 	}
 	return nil
@@ -157,7 +157,7 @@ func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiratio
 	}
 	tmpPwd, err := salt.GenerateSaltedPassword(pwd, MinPasswordLength, MaxPasswordLength, u.Salt, -1)
 	if err != nil {
-		return nil, fmt.Errorf("Error while generating the new password: %v", err)
+		return nil, fmt.Errorf("problems while generating the new password: %v", err)
 	}
 	err = u.IsNewPwdValid(tmpPwd)
 	if err != nil {
@@ -186,7 +186,7 @@ func (u *UserPwd) isPasswordMatchHandler(pwd []byte, overrideChecks bool) error 
 
 	if overrideChecks == false {
 		if u.ErrorsCounter >= maxPwdAttempts {
-			return fmt.Errorf("Too many password attempts, Reset password before trying again")
+			return fmt.Errorf("too many password attempts, Reset password before trying again")
 		}
 		err := isPwdLengthValid(pwd)
 		if err != nil {
@@ -194,13 +194,13 @@ func (u *UserPwd) isPasswordMatchHandler(pwd []byte, overrideChecks bool) error 
 		}
 		// If the password expired, don't check it
 		if time.Now().After(u.Expiration) {
-			return fmt.Errorf("Password has expired, please replace it.")
+			return fmt.Errorf("password has expired, please replace it.")
 		}
 	}
 	// the error counter must be increased also for password update to avoid backdoors
 	if compareHashedPwd(pwd, u.Password) == false {
 		u.ErrorsCounter = u.ErrorsCounter + 1
-		return fmt.Errorf("Password is wrong, please try again")
+		return fmt.Errorf("password is wrong, please try again")
 	} else {
 		if u.OneTimePwd == true {
 			u.Expiration = time.Now()          // The password expired => it can't be used any more.
@@ -277,7 +277,7 @@ func GenerateNewValidPassword() []byte {
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*UserPwd)
 	if ok == false {
-		return "Error: Can't print the Password property its not in the right type"
+		return "can't print the Password property its not in the right type"
 	}
 	return d.String()
 }
@@ -295,10 +295,10 @@ func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.SecureStorage) error {
 	d, ok := data.(*UserPwd)
 	if ok == false {
-		return fmt.Errorf("Error: Can't store the Password property: its not in the right type")
+		return fmt.Errorf("can't store the Password property: its not in the right type")
 	}
 	if storage == nil {
-		return fmt.Errorf("Error: can't add Password property to storage, storage is nil")
+		return fmt.Errorf("can't add Password property to storage, storage is nil")
 	}
 	value, _ := json.Marshal(d)
 	err := storage.AddItem(prefix, string(value))
@@ -313,11 +313,11 @@ func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (inte
 	var user UserPwd
 
 	if storage == nil {
-		return nil, fmt.Errorf("Error: can't read Password property from storage, storage is nil")
+		return nil, fmt.Errorf("can't read Password property from storage, storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if !exist {
-		return nil, fmt.Errorf("Error: key '%v' was not found in storage", key)
+		return nil, fmt.Errorf("key '%v' was not found in storage", key)
 	}
 	err := json.Unmarshal([]byte(value), &user)
 	if err != nil {

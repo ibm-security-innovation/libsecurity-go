@@ -79,12 +79,12 @@ func addMembers(e *Group, names []string, expected bool) (bool, error) {
 	for _, name := range names {
 		err := e.addUserToGroup(name)
 		if expected == true && err != nil {
-			return false, fmt.Errorf("Error: Can't add the valid member '%v' to entity %v", name, e)
+			return false, fmt.Errorf("can't add the valid member '%v' to entity %v", name, e)
 		} else if expected == false && err == nil {
-			return false, fmt.Errorf("Error: Attempting to add an existing member '%v' to entity %v", name, e)
+			return false, fmt.Errorf("attempting to add an existing member '%v' to entity %v", name, e)
 		}
 		if e.isUserInGroup(name) == false {
-			return false, fmt.Errorf("Error: Member was '%v' added to group but was not found in entity list %v", name, e)
+			return false, fmt.Errorf("member was '%v' added to group but was not found in entity list %v", name, e)
 		}
 	}
 	return true, nil
@@ -94,12 +94,12 @@ func removeMembers(e *Group, names []string, expected bool) (bool, error) {
 	for _, name := range names {
 		err := e.removeUserFromGroup(name)
 		if expected == true && err != nil {
-			return false, fmt.Errorf("Error: Can't remove the valid member '%v' from entity %v", name, e)
+			return false, fmt.Errorf("can't remove the valid member '%v' from entity %v", name, e)
 		} else if expected == false && err == nil {
-			return false, fmt.Errorf("Error: Removed an already removed member '%v' from entity %v", name, e)
+			return false, fmt.Errorf("removed an already removed member '%v' from entity %v", name, e)
 		}
 		if e.isUserInGroup(name) == true {
-			return false, fmt.Errorf("Error: Member '%v' found in group %v after it was removed", name, e)
+			return false, fmt.Errorf("member '%v' found in group %v after it was removed", name, e)
 		}
 	}
 	return true, nil
@@ -112,13 +112,13 @@ func addProperty(e *Entity, propertyList []string) (bool, error) {
 		pData := prefix + p
 		err := e.addProperty(p, pData)
 		if err != nil {
-			return false, fmt.Errorf("Error: Can't add the valid property '%v' with data' %v' to entity %v", p, pData, e)
+			return false, fmt.Errorf("can't add the valid property '%v' with data' %v' to entity %v", p, pData, e)
 		}
 		data, err := e.getProperty(p)
 		if err != nil {
-			return false, fmt.Errorf("Error: Property '%v' added to property list but was not found in property list %v", p, e.EntityProperties)
+			return false, fmt.Errorf("property '%v' added to property list but was not found in property list %v", p, e.EntityProperties)
 		} else if data != pData {
-			return false, fmt.Errorf("Error: Data '%v was added to property '%v' but read '%v', entity %v", pData, p, data, e)
+			return false, fmt.Errorf("data '%v was added to property '%v' but read '%v', entity %v", pData, p, data, e)
 		}
 	}
 	return true, nil
@@ -128,23 +128,23 @@ func removeProperty(e *Entity, propertyList []string, expected bool) (bool, erro
 	for _, p := range propertyList {
 		err := e.removeProperty(p)
 		if expected == true && err != nil {
-			return false, fmt.Errorf("Error: Can't remove a property '%v' from entity %v", p, e)
+			return false, fmt.Errorf("can't remove a property '%v' from entity %v", p, e)
 		} else if expected == false && err == nil {
-			return false, fmt.Errorf("Error: Attempting to remove a non exiting member '%v' from entity %v", p, e)
+			return false, fmt.Errorf("attempting to remove a non exiting member '%v' from entity %v", p, e)
 		}
 		_, err = e.getProperty(p)
 		if err == nil {
-			return false, fmt.Errorf("Error: Property '%v' found in property %v after it was removed", p, e)
+			return false, fmt.Errorf("property '%v' found in property %v after it was removed", p, e)
 		}
 	}
 	return true, nil
 }
 
-// Test that an empty member can't be added to the entity list
-// Verify that when a member was added, it is in the members list
-// Verify that the same member can be added only once
-// Verify thea member is removed only once
-// Verift that at the end of the test, the member list must by empty
+// Test that an empty entity can't be added to the entity list
+// Verify that when a user was added to group, it is in the users list
+// Verify that the same user can be added only once
+// Verify thet user member is removed only once
+// Verift that at the end of the test, the users list must by empty
 func Test_AddRemoveMember(t *testing.T) {
 	expected := []bool{true, false}
 	names := []string{"a", "a1", "a2"}

@@ -46,7 +46,7 @@ func init() {
 
 	baseHeaderInfo[secretIdParam] = secretCode
 
-	usersList := en.NewEntityManager()
+	usersList := en.New()
 	stRestful = libsecurity_restful.NewLibsecurityRestful()
 	secureStorage, _ := ss.NewStorage([]byte(secretCode))
 	stRestful.SetData(usersList, nil, nil, nil, secureStorage)

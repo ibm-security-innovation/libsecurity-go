@@ -61,21 +61,21 @@ func (o Otp) String() string {
 
 func isNumberOfDigitsValid(val int) error {
 	if val < minNumOfDigits {
-		return fmt.Errorf("The OTP struct is not valid, the number of digits used %d is less than the minimum (%d)", val, minNumOfDigits)
+		return fmt.Errorf("the OTP struct is not valid, the number of digits used %d is less than the minimum (%d)", val, minNumOfDigits)
 	}
 	return nil
 }
 
 func isDigestValid(digest func() hash.Hash) error {
 	if digest == nil {
-		return fmt.Errorf("The OTP struct is not valid, it must have a hash function, but the current hash is nil")
+		return fmt.Errorf("the OTP struct is not valid, it must have a hash function, but the current hash is nil")
 	}
 	return nil
 }
 
 func isSecretValid(secret []byte) error {
 	if len(secret) < minSecretLen || len(secret) > maxSecretLen {
-		return fmt.Errorf("The secret key has an illegal length (%d), the length must be between %d and %d", len(secret), minSecretLen, maxSecretLen)
+		return fmt.Errorf("the secret key has an illegal length (%d), the length must be between %d and %d", len(secret), minSecretLen, maxSecretLen)
 	}
 	return nil
 }
@@ -167,7 +167,7 @@ func validInterval(val time.Duration) bool {
 
 func (totp Totp) isDataValid() error {
 	if !validInterval(totp.Interval) {
-		return fmt.Errorf("Totp struct is not valid, the time interval should be between %vs and %vs, but the current interval is %v", minIntervalSec, maxIntervalSec, totp.Interval.Seconds())
+		return fmt.Errorf("totp struct is not valid, the time interval should be between %vs and %vs, but the current interval is %v", minIntervalSec, maxIntervalSec, totp.Interval.Seconds())
 	}
 	return nil
 }

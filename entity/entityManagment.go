@@ -63,7 +63,7 @@ func initList() *EntityManager {
 
 // Create and initilize a new EntityManager, add all the protected entities
 // to avoid giving regular entities protected names
-func NewEntityManager() *EntityManager {
+func New() *EntityManager {
 	return initList()
 }
 
@@ -79,7 +79,7 @@ func (el *EntityManager) isNameValid(name string) error {
 		return err
 	}
 	if el.IsEntityInList(name) {
-		return fmt.Errorf("The name '%v' is already in the Entity list", name)
+		return fmt.Errorf("the name '%v' is already in the Entity list", name)
 	}
 	return nil
 }
@@ -134,12 +134,12 @@ func (el *EntityManager) RemoveUser(name string) error {
 
 	for _, eName := range protectedEntityManager {
 		if name == eName {
-			return fmt.Errorf("Error: %v '%v', can't be removed, its name is protected name", userTypeStr, name)
+			return fmt.Errorf("%v '%v', can't be removed, its name is protected name", userTypeStr, name)
 		}
 	}
 	_, exist := el.Users[name]
 	if exist == false {
-		return fmt.Errorf("Error: Can't remove %v '%v', it is not part of the users in the entity list", userTypeStr, name)
+		return fmt.Errorf("can't remove %v '%v', it is not part of the users in the entity list", userTypeStr, name)
 	}
 	// remove the entity from all the groups it belongs to
 	for _, e := range el.Groups {
@@ -161,7 +161,7 @@ func (el *EntityManager) RemoveGroup(name string) error {
 
 	_, exist := el.Groups[name]
 	if exist == false {
-		return fmt.Errorf("Error: Can't remove %v '%v', it is not part of the groups in the entity list", groupTypeStr, name)
+		return fmt.Errorf("can't remove %v '%v', it is not part of the groups in the entity list", groupTypeStr, name)
 	}
 	// remove the entity from all the ACL entries
 	if RemoveEntityFromAcl != nil {
@@ -178,7 +178,7 @@ func (el *EntityManager) RemoveResource(name string) error {
 
 	_, exist := el.Resources[name]
 	if exist == false {
-		return fmt.Errorf("Error: Can't remove %v '%v', it is not part of the resources in the entity list", resourceTypeStr, name)
+		return fmt.Errorf("can't remove %v '%v', it is not part of the resources in the entity list", resourceTypeStr, name)
 	}
 	delete(el.Resources, name)
 	return nil
@@ -220,7 +220,7 @@ func (el *EntityManager) AddUserToGroup(groupName string, name string) error {
 	}
 	_, exist := el.Users[name]
 	if exist == false {
-		return fmt.Errorf("Error: User '%v' is not in the entity users list yet", name)
+		return fmt.Errorf("user '%v' is not in the entity users list yet", name)
 	}
 	return e.addUserToGroup(name)
 }
@@ -277,7 +277,7 @@ func (el EntityManager) isResourceInList(name string) bool {
 
 func isEntityNameAndPropertyNameValid(name string, propertyName string) error {
 	if len(propertyName) == 0 || len(name) == 0 {
-		return fmt.Errorf("Error: the '%v' and the property name '%v' can't be removed as they are nil", name, propertyName)
+		return fmt.Errorf("the '%v' and the property name '%v' can't be removed as they are nil", name, propertyName)
 	}
 	return nil
 }
@@ -288,7 +288,7 @@ func (el *EntityManager) AddPropertyToEntity(name string, propertyName string, d
 	defer lock.Unlock()
 
 	if data == nil {
-		return fmt.Errorf("Error: Can't add property '%v': it is nil", propertyName)
+		return fmt.Errorf("can't add property '%v': it is nil", propertyName)
 	}
 	ret := isEntityNameAndPropertyNameValid(name, propertyName)
 	if ret != nil {
@@ -296,18 +296,18 @@ func (el *EntityManager) AddPropertyToEntity(name string, propertyName string, d
 	}
 	if el.isUserInList(name) {
 		if propertyName == stc.AclPropertyName {
-			return fmt.Errorf("Error: can't add ACL property to %v, its ilegal", userTypeStr)
+			return fmt.Errorf("can't add ACL property to %v, its ilegal", userTypeStr)
 		}
 		return el.Users[name].addProperty(propertyName, data)
 	} else if el.isGroupInList(name) {
 		if propertyName == stc.AclPropertyName {
-			return fmt.Errorf("Error: can't add ACL property to %v, its ilegal", groupTypeStr)
+			return fmt.Errorf("can't add ACL property to %v, its ilegal", groupTypeStr)
 		}
 		return el.Groups[name].addProperty(propertyName, data)
 	} else if el.isResourceInList(name) {
 		return el.Resources[name].addProperty(propertyName, data)
 	}
-	return fmt.Errorf("Error: property '%v', can't be added, the entity '%v' is not in the entity list", propertyName, name)
+	return fmt.Errorf("property '%v', can't be added, the entity '%v' is not in the entity list", propertyName, name)
 }
 
 // Return the given property name property from the entity (User/Group/Resource)
@@ -323,7 +323,7 @@ func (el *EntityManager) GetPropertyAttachedToEntity(name string, propertyName s
 	} else if el.isResourceInList(name) {
 		return el.Resources[name].getProperty(propertyName)
 	}
-	return nil, fmt.Errorf("Error: Property '%v', can't be returned, the entiry '%v' is not in entity list", propertyName, name)
+	return nil, fmt.Errorf("property '%v', can't be returned, the entiry '%v' is not in entity list", propertyName, name)
 }
 
 // Remove the given property name property from the user
@@ -342,7 +342,7 @@ func (el *EntityManager) RemovePropertyFromEntity(name string, propertyName stri
 	} else if el.isResourceInList(name) {
 		return el.Resources[name].removeProperty(propertyName)
 	}
-	return fmt.Errorf("Error: Property '%v', can't be removed, the entity '%v' is not in the entity list", propertyName, name)
+	return fmt.Errorf("property '%v', can't be removed, the entity '%v' is not in the entity list", propertyName, name)
 }
 
 func getEntityStoreFmt(prefix string, propertyName string, entityName string) string {
@@ -362,7 +362,7 @@ func addUserResourceToStorage(typeStr string, name string, e Entity, prefix stri
 		data, _ := e.getProperty(propertyName)
 		err = stc.Serializers[propertyName].AddToStorage(getPropertyStoreFmt(propertyName, name), data, storage)
 		if err != nil {
-			return fmt.Errorf("Error while storing to property '%v', error: %v", propertyName, err)
+			return fmt.Errorf("while storing to property '%v', error: %v", propertyName, err)
 		}
 	}
 	return nil
@@ -377,7 +377,7 @@ func addGroupToStorage(typeStr string, name string, g *Group, prefix string, sto
 		data, _ := g.getProperty(propertyName)
 		err = stc.Serializers[propertyName].AddToStorage(getPropertyStoreFmt(propertyName, name), data, storage)
 		if err != nil {
-			return fmt.Errorf("Error while storing to property '%v', error: %v", propertyName, err)
+			return fmt.Errorf("while storing to property '%v', error: %v", propertyName, err)
 		}
 	}
 	return nil
@@ -388,7 +388,7 @@ func addGroupToStorage(typeStr string, name string, g *Group, prefix string, sto
 func LoadInfo(filePath string, secret []byte, el *EntityManager) error {
 	prefix := ""
 	if el == nil {
-		return fmt.Errorf("Internal error: Entity list is nil")
+		return fmt.Errorf("internal error: Entity list is nil")
 	}
 	stStorage, err := ss.LoadInfo(filePath, secret)
 	if err != nil {
@@ -397,7 +397,7 @@ func LoadInfo(filePath string, secret []byte, el *EntityManager) error {
 	}
 	storage := stStorage.GetDecryptStorageData()
 	if storage == nil {
-		return fmt.Errorf("Error in readEntityManagerFromStorage: Storage is nil")
+		return fmt.Errorf("loadInfo: Storage is nil")
 	}
 	for key, value := range storage.Data {
 		userType := strings.HasPrefix(key, getEntityStoreFmt(userTypeStr+prefix, entityToken, ""))
@@ -421,7 +421,7 @@ func LoadInfo(filePath string, secret []byte, el *EntityManager) error {
 			el.Resources[name] = &(Resource{Entity: *e})
 		}
 		if err != nil {
-			return fmt.Errorf("Error while reading file: '%s', string: '%s', error: %s", filePath, value, err)
+			return fmt.Errorf("while reading file: '%s', string: '%s', error: %s", filePath, value, err)
 		}
 		// fmt.Println("key:", key, "Value:", value, "error:", err)
 		if userType || groupType || resourceType {
@@ -430,7 +430,7 @@ func LoadInfo(filePath string, secret []byte, el *EntityManager) error {
 				if err == nil { // the item exist for this entity
 					err = el.AddPropertyToEntity(name, propertyName, data)
 					if err != nil {
-						fmt.Println("Error while reading property data", propertyName, "for entity", name, "error:", err)
+						fmt.Println("while reading property data", propertyName, "for entity", name, "error:", err)
 						return err
 					}
 				}

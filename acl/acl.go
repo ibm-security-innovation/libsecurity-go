@@ -106,7 +106,7 @@ func (a *Acl) IsEqual(acl Acl) bool {
 // Verify that an entry is valid, that is it's not nil and its entry name is valid
 func isValidEntry(entry *AclEntry) error {
 	if entry == nil {
-		return fmt.Errorf("Error: entry is nil")
+		return fmt.Errorf("entry is nil")
 	}
 	return en.IsEntityNameValid(entry.EntityName)
 }
@@ -132,7 +132,7 @@ func (a *Acl) addEntry(entry *AclEntry) error {
 	}
 	_, exist := a.Permissions[entry.EntityName]
 	if exist == true {
-		return fmt.Errorf("Error: Can't add entry '%v', it already exists in the ACL", entry.EntityName)
+		return fmt.Errorf("can't add entry '%v', it already exists in the ACL", entry.EntityName)
 	}
 	a.Permissions[entry.EntityName] = entry
 	logger.Trace.Println("Add entry:", entry, "to acl")
@@ -150,7 +150,7 @@ func (a *Acl) removeEntry(name string) error {
 	}
 	_, exist := a.Permissions[name]
 	if exist == false {
-		return fmt.Errorf("Error: Can't remove entry '%v', it does not exist in the ACL", name)
+		return fmt.Errorf("can't remove entry '%v', it does not exist in the ACL", name)
 	}
 	logger.Trace.Println("Remove entry:", name, "from acl")
 	delete(a.Permissions, name)
@@ -215,7 +215,7 @@ func GetUserPermissions(el *en.EntityManager, userName string, resourceName stri
 	defer lock.Unlock()
 
 	if el == nil {
-		return nil, fmt.Errorf("Error: EntityManager is nil")
+		return nil, fmt.Errorf("entityManager is nil")
 	}
 	err := en.IsEntityNameValid(userName)
 	if err != nil {
@@ -226,16 +226,16 @@ func GetUserPermissions(el *en.EntityManager, userName string, resourceName stri
 		return nil, err
 	}
 	if el.IsEntityInList(userName) == false {
-		return nil, fmt.Errorf("Error: Entity %q is not in the entity manager", userName)
+		return nil, fmt.Errorf("entity %q is not in the entity manager", userName)
 	}
 	permissions := make(PermissionsMap)
 	data, err := el.GetPropertyAttachedToEntity(resourceName, stc.AclPropertyName)
 	if err != nil {
-		return nil, fmt.Errorf("Resource '%v' dose not have an ACL property", resourceName)
+		return nil, fmt.Errorf("resource '%v' dose not have an ACL property", resourceName)
 	}
 	acl, ok := data.(*Acl)
 	if ok == false {
-		return nil, fmt.Errorf("Resource '%v' ACL property is in the wrong type", resourceName)
+		return nil, fmt.Errorf("resource '%v' ACL property is in the wrong type", resourceName)
 	}
 	for name, p := range acl.Permissions {
 		if name == userName || name == stc.AclAllEntryName || el.IsUserPartOfAGroup(name, userName) {
@@ -273,14 +273,14 @@ func (a *Acl) AddPermissionToResource(el *en.EntityManager, userName string, per
 	defer lock.Unlock()
 
 	if el == nil {
-		return fmt.Errorf("Error: entityManager is nil")
+		return fmt.Errorf("entityManager is nil")
 	}
 	err := en.IsEntityNameValid(userName)
 	if err != nil {
 		return err
 	}
 	if el.IsEntityInList(userName) == false {
-		return fmt.Errorf("Error: Can't add permission to entity '%v', it is not in the entity list", userName)
+		return fmt.Errorf("can't add permission to entity '%v', it is not in the entity list", userName)
 	}
 	e, exist := a.Permissions[userName]
 	if exist == false {
@@ -299,7 +299,7 @@ func (a *Acl) RemovePermissionFromEntity(entityName string, permission Permissio
 
 	e, exist := a.Permissions[entityName]
 	if exist == false {
-		return fmt.Errorf("The ACL doesn't contain an entry with the name '%v'", entityName)
+		return fmt.Errorf("the ACL doesn't contain an entry with the name '%v'", entityName)
 	}
 	logger.Trace.Println("Remove permission:", permission, "from:", entityName)
 	return e.RemovePermission(permission)
@@ -367,10 +367,10 @@ func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.Se
 
 	d, ok := data.(*Acl)
 	if ok == false {
-		return fmt.Errorf("Error: Can't store the ACL property as it has an illegal type")
+		return fmt.Errorf("can't store the ACL property as it has an illegal type")
 	}
 	if storage == nil {
-		return fmt.Errorf("Error: Can't add an ACL property to storage, storage is nil")
+		return fmt.Errorf("can't add an ACL property to storage, storage is nil")
 	}
 	value, err := json.Marshal(d)
 	err = storage.AddItem(prefix, string(value))
@@ -385,11 +385,11 @@ func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (inte
 	var user Acl
 
 	if storage == nil {
-		return nil, fmt.Errorf("Error: Can't read an ACL property from storage, storage is nil")
+		return nil, fmt.Errorf("can't read an ACL property from storage, storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if exist == false {
-		return nil, fmt.Errorf("Error: Key '%v' was not found", key)
+		return nil, fmt.Errorf("key '%v' was not found", key)
 	}
 	err := json.Unmarshal([]byte(value), &user)
 	if err != nil {

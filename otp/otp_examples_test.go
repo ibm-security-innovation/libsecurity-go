@@ -19,7 +19,7 @@ var (
 )
 
 func init() {
-	entityManager = en.NewEntityManager()
+	entityManager = en.New()
 }
 
 func addOtpUser(id string, secret []byte, startCounter int64) {

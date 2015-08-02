@@ -42,7 +42,7 @@ var (
 	resourcesName = []string{resourceName1, resourceName2}
 
 	stRestful  *libsecurity_restful.LibsecurityRestful
-	BasicUsers = en.NewEntityManager()
+	BasicUsers = en.New()
 )
 
 func init() {
@@ -55,7 +55,7 @@ func init() {
 	ResourceServicePath = EnServicePath + ResourcesPath
 	enPath = listener + EnServicePath
 
-	usersList := en.NewEntityManager()
+	usersList := en.New()
 
 	stRestful = libsecurity_restful.NewLibsecurityRestful()
 	stRestful.SetData(usersList, nil, nil, nil, nil)

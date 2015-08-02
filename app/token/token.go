@@ -55,7 +55,7 @@ type TokenData struct {
 func init() {
 	jwtUniqId = generateJwt(jwtLen)
 
-	usersList = en.NewEntityManager()
+	usersList = en.New()
 
 	usersList.AddGroup(stc.SuperUserGroupName)
 	usersList.AddGroup(stc.AdminGroupName)
@@ -83,12 +83,12 @@ func generateJwt(length int) string {
 func GetPrivateKey(privateKeyFilePath string) ([]byte, *rsa.PrivateKey, error) {
 	signKey, err := ioutil.ReadFile(privateKeyFilePath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Error reading private key file: '%v'", privateKeyFilePath)
+		return nil, nil, fmt.Errorf("reading private key file: '%v'", privateKeyFilePath)
 	}
 
 	block, _ := pem.Decode(signKey)
 	if block == nil {
-		return nil, nil, fmt.Errorf("Error found while decoding the private key")
+		return nil, nil, fmt.Errorf("found while decoding the private key")
 	}
 	r, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
@@ -103,12 +103,12 @@ func TokenSetUp(privateKeyFilePath string) ([]byte, []byte) {
 
 	signKey, pKey, err := GetPrivateKey(privateKeyFilePath)
 	if err != nil {
-		logger.Error.Fatal("Error reading private key file:", privateKeyFilePath)
+		logger.Error.Fatal("reading private key file:", privateKeyFilePath)
 	}
 
 	t, err := x509.MarshalPKIXPublicKey(&pKey.PublicKey)
 	if err != nil {
-		logger.Error.Fatal("Error while calculating public key")
+		logger.Error.Fatal("problems while calculating public key")
 	}
 	verifyKey := pem.EncodeToMemory(&pem.Block{
 		Type:  "RSA PUBLIC KEY",
@@ -149,16 +149,16 @@ func ParseToken(tokenString string, ipAddr string, verifyKey []byte) (*TokenData
 	token, err := jwt.Parse(tokenString,
 		func(token *jwt.Token) (interface{}, error) {
 			if token.Claims[tokenClaimsIssuerStr] != TrusteerSecurityStr {
-				return nil, fmt.Errorf("The token is not valid: it was not issued by trusteer")
+				return nil, fmt.Errorf("the token is not valid: it was not issued by trusteer")
 			}
 			if token.Claims[tokenClaimsJtiStr] != jwtUniqId {
-				return nil, fmt.Errorf("The token is not valid: wrong ID")
+				return nil, fmt.Errorf("the token is not valid: wrong ID")
 			}
 			if token.Claims[tokenClaimsIPAddr] != getIpFromAddrStr(ipAddr) {
-				return nil, fmt.Errorf("The token is not genuine")
+				return nil, fmt.Errorf("the token is not genuine")
 			}
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 			return verifyKey, nil
 		})
@@ -166,7 +166,7 @@ func ParseToken(tokenString string, ipAddr string, verifyKey []byte) (*TokenData
 	switch err.(type) {
 	case nil: // no error
 		if !token.Valid { // but may still be invalid
-			return nil, fmt.Errorf("Token is not valid")
+			return nil, fmt.Errorf("token is not valid")
 		}
 		userName := token.Claims[tokenClaimsAudienceStr].(string)
 		id := token.Claims[tokenClaimsJtiStr].(string)
@@ -177,13 +177,13 @@ func ParseToken(tokenString string, ipAddr string, verifyKey []byte) (*TokenData
 
 		switch vErr.Errors {
 		case jwt.ValidationErrorExpired:
-			return nil, fmt.Errorf("Token Expired, get a new one.")
+			return nil, fmt.Errorf("token Expired, get a new one.")
 		default:
-			return nil, fmt.Errorf("Error while Parsing Token! %v", err)
+			return nil, fmt.Errorf("problem was found while parsing token! %v", err)
 		}
 
 	default: // something else went wrong
-		return nil, fmt.Errorf("Error while Parsing Token! %v", err)
+		return nil, fmt.Errorf("problem was found while parsing token! %v", err)
 	}
 }
 
@@ -208,7 +208,7 @@ func IsPrivilegeOk(tokenString string, privilege string, ipAddr string, verifyKe
 	if usersList.IsUserPartOfAGroup(entityName, token.UserName) {
 		return true, nil
 	}
-	return false, fmt.Errorf("The privilege %v is not permited to this operation", token.Privilege)
+	return false, fmt.Errorf("the privilege %v is not permited to this operation", token.Privilege)
 }
 
 // Verify that the user associated with the token is the same as the given one

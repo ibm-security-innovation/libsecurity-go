@@ -53,7 +53,7 @@ var (
 func init() {
 	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard)
 
-	usersList := en.NewEntityManager()
+	usersList := en.New()
 	stRestful = libsecurity_restful.NewLibsecurityRestful()
 	stRestful.SetData(usersList, nil, nil, nil, nil)
 	stRestful.SetToFilterFlag(false)

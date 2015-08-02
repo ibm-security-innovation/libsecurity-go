@@ -28,7 +28,7 @@ var (
 )
 
 func initEntityManager() *en.EntityManager {
-	entityManager := en.NewEntityManager()
+	entityManager := en.New()
 	for _, name := range usersName {
 		entityManager.AddUser(name)
 	}
