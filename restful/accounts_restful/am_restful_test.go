@@ -59,7 +59,7 @@ func init() {
 	ServicePath = cr.ServicePathPrefix + cr.Version + AmPrefix
 	resourcePath = listener + ServicePath + UsersPath
 
-	usersList := en.NewEntityManager()
+	usersList := en.New()
 	signKey, verifyKey := app.TokenSetUp(*privateKeyFilePath)
 	loginKey := ss.GetSecureKey(*secureKeyFilePath)
 	en.LoadInfo(*usersDataPath, loginKey, usersList)

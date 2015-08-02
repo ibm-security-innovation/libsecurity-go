@@ -25,7 +25,7 @@ func (a AclEntry) String() string {
 
 func isPermissionValid(permission Permission) error {
 	if len(permission) == 0 {
-		return fmt.Errorf("Error: permission is not valid, its length must be larger than 0")
+		return fmt.Errorf("permission is not valid, its length must be larger than 0")
 	}
 	return nil
 }
@@ -50,7 +50,7 @@ func (a *AclEntry) AddPermission(permission Permission) (bool, error) {
 	}
 	_, exist := a.Permissions[permission]
 	if exist {
-		return false, fmt.Errorf("Error: Can't add permission: '%v', it already exists in the permission list", permission)
+		return false, fmt.Errorf("can't add permission: '%v', it already exists in the permission list", permission)
 	}
 	a.Permissions[permission] = ""
 	return true, nil
@@ -66,7 +66,7 @@ func (a *AclEntry) RemovePermission(permission Permission) error {
 	}
 	_, exist := a.Permissions[permission]
 	if exist == false {
-		return fmt.Errorf("Error: Can't remove permission: '%v', it does not exist in the permission list", permission)
+		return fmt.Errorf("can't remove permission: '%v', it does not exist in the permission list", permission)
 	}
 	delete(a.Permissions, permission)
 	return nil

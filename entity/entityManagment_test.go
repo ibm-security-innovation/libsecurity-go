@@ -92,25 +92,25 @@ func addEntities(el *EntityManager, typeStr string, names []string, expected boo
 			err = el.AddResource(name)
 		}
 		if expected == true && err != nil {
-			return false, fmt.Errorf("Error: Can't add a valid %v name '%v' to the entity list %v, error: %v", typeStr, name, el, err)
+			return false, fmt.Errorf("can't add a valid %v name '%v' to the entity list %v, error: %v", typeStr, name, el, err)
 		} else if expected == false && err == nil {
-			return false, fmt.Errorf("Error: Attempting to add an existing %v ('%v') to the entity list %v", typeStr, name, el)
+			return false, fmt.Errorf("attempting to add an existing %v ('%v') to the entity list %v", typeStr, name, el)
 		}
 		if el.IsEntityInList(name) == false {
-			return false, fmt.Errorf("Error: %v '%v' added to the entity list but was not found in %v", typeStr, name, el)
+			return false, fmt.Errorf("%v '%v' added to the entity list but was not found in %v", typeStr, name, el)
 		}
 		if typeStr == groupTypeStr {
 			for j, name1 := range names {
 				err := el.AddUserToGroup(groupName, name1)
 				if err == nil && i < j && expected == true {
-					return false, fmt.Errorf("Error: User '%v' is not part of the entity list %v but was added as a member", name1, el)
+					return false, fmt.Errorf("user '%v' is not part of the entity list %v but was added as a member", name1, el)
 				}
 				if err != nil && i >= j {
-					return false, fmt.Errorf("Error: User '%v' is part of the entity list %v but was not added as a member, error: %v", name1, el, err)
+					return false, fmt.Errorf("user '%v' is part of the entity list %v but was not added as a member, error: %v", name1, el, err)
 				}
 				_, err = el.getGroup(groupName)
 				if err != nil {
-					return false, fmt.Errorf("Error: %v '%v' added to the entity list but was not found in %v", typeStr, name, el)
+					return false, fmt.Errorf("%v '%v' added to the entity list but was not found in %v", typeStr, name, el)
 				}
 				el.RemoveUserFromGroup(groupName, name1)
 			}
@@ -132,9 +132,9 @@ func removeEntities(el *EntityManager, typeStr string, names []string, expected 
 			err = el.RemoveResource(name)
 		}
 		if expected == true && err != nil {
-			return false, fmt.Errorf("Error: Can't remove a valid %v '%v' from the entity list %v", typeStr, name, el)
+			return false, fmt.Errorf("can't remove a valid %v '%v' from the entity list %v", typeStr, name, el)
 		} else if expected == false && err == nil {
-			return false, fmt.Errorf("Error: Removed an already removed %v '%v' from entity list %v", typeStr, name, el)
+			return false, fmt.Errorf("removed an already removed %v '%v' from entity list %v", typeStr, name, el)
 		}
 		if typeStr == userTypeStr {
 			_, err = el.getUser(name)
@@ -144,7 +144,7 @@ func removeEntities(el *EntityManager, typeStr string, names []string, expected 
 			_, err = el.getResource(name)
 		}
 		if err == nil {
-			return false, fmt.Errorf("Error: %v '%v' found in entity list %v after it was removed", typeStr, name, el)
+			return false, fmt.Errorf("%v '%v' found in entity list %v after it was removed", typeStr, name, el)
 		}
 	}
 	return true, nil
@@ -171,7 +171,7 @@ func Test_AddGetRemoveEntity(t *testing.T) {
 	types := []string{userTypeStr, groupTypeStr, resourceTypeStr}
 
 	for _, typeStr := range types {
-		el := NewEntityManager()
+		el := New()
 		for _, exp := range expected {
 			_, err := addEntities(el, typeStr, names, exp)
 			if err != nil {
@@ -199,7 +199,7 @@ func Test_EntityManagerIsEqual(t *testing.T) {
 	var el [3]*EntityManager
 
 	for i := 0; i < len; i++ {
-		el[i] = NewEntityManager()
+		el[i] = New()
 		addEntities(el[i], groupTypeStr, names, true)
 		if i > 0 {
 			if el[i].IsEqual(el[i-1]) == false {
@@ -230,12 +230,12 @@ func Test_StoreLoad(t *testing.T) {
 	for i := 0; i < size; i++ {
 		usersName[i] = fmt.Sprintf("User%d", i)
 	}
-	usersList := NewEntityManager()
+	usersList := New()
 	GenerateUserData(usersList, usersName, secret, salt)
 	GenerateGroupList(usersList, usersName)
 	//GenerateAcl(st) // done in the acl_test
 	usersList.StoreInfo(filePath, secret)
-	usersList1 := NewEntityManager()
+	usersList1 := New()
 	err := LoadInfo(filePath, secret, usersList1)
 	if err != nil {
 		fmt.Println(err)

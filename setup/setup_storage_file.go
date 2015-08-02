@@ -84,7 +84,7 @@ func createBasicFile(stFilePath string, name string, pass string, key []byte) {
 	if err != nil {
 		log.Fatalf("Error: can't generate salted password for '%v' user, error: %v", name, err)
 	}
-	ul := en.NewEntityManager()
+	ul := en.New()
 	ul.AddUser(name)
 	amUser, _ := am.NewUserAm(am.SuperUserPermission, []byte(pass), saltStr)
 	ul.AddPropertyToEntity(name, stc.AmPropertyName, amUser)

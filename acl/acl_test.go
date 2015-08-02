@@ -44,7 +44,7 @@ func init() {
 }
 
 func initEntityManager() *en.EntityManager {
-	el := en.NewEntityManager()
+	el := en.New()
 	el.AddResource(resourceName)
 	return el
 }
@@ -65,7 +65,7 @@ func initAclAndEntries(length int) (*en.EntityManager, *Acl, map[*AclEntry]bool,
 			return nil, nil, entries, err
 		}
 		if e == nil {
-			return nil, nil, entries, fmt.Errorf("Error: Can't add the new entry '%v' to the ACL list", name)
+			return nil, nil, entries, fmt.Errorf("can't add the new entry '%v' to the ACL list", name)
 		}
 		entries[e] = true
 	}
@@ -77,9 +77,9 @@ func addEntries(a *Acl, entries map[*AclEntry]bool, expected bool) (bool, error)
 	for e, _ := range entries {
 		err := a.addEntry(e)
 		if expected == true && err != nil {
-			return false, fmt.Errorf("Error: Can't add the valid entry '%v', ACL list: %v", e, a)
+			return false, fmt.Errorf("can't add the valid entry '%v', ACL list: %v", e, a)
 		} else if expected == false && err == nil {
-			return false, fmt.Errorf("Error: Attempting to add an already existing entry '%v' to the ACL list: %v", e, a)
+			return false, fmt.Errorf("attempting to add an already existing entry '%v' to the ACL list: %v", e, a)
 		}
 	}
 	return true, nil
@@ -90,9 +90,9 @@ func removeEntries(a *Acl, entries map[*AclEntry]bool, expected bool) (bool, err
 	for e, _ := range entries {
 		err := a.removeEntry(e.EntityName)
 		if expected == true && err != nil {
-			return false, fmt.Errorf("Error: Can't remove the valid entry '%v' from ACL list: %v", e, a)
+			return false, fmt.Errorf("can't remove the valid entry '%v' from ACL list: %v", e, a)
 		} else if expected == false && err == nil {
-			return false, fmt.Errorf("Error: Attempting to remove the non existing entry '%v' from ACL list: %v", e, a)
+			return false, fmt.Errorf("attempting to remove the non existing entry '%v' from ACL list: %v", e, a)
 		}
 	}
 	return true, nil
@@ -414,7 +414,7 @@ func Test_StoreLoad(t *testing.T) {
 	filePath := "./try.txt"
 	secret := []byte("ABCDEFGH12345678")
 
-	el := en.NewEntityManager()
+	el := en.New()
 	for i := 0; i < 3; i++ {
 		el.AddUser(fmt.Sprintf("User %d", i+1))
 		resourceName := fmt.Sprintf("Disk %d", i+1)
@@ -429,7 +429,7 @@ func Test_StoreLoad(t *testing.T) {
 	}
 	el.StoreInfo(filePath, secret)
 
-	entityManager1 := en.NewEntityManager()
+	entityManager1 := en.New()
 	err := en.LoadInfo(filePath, secret, entityManager1)
 	if err != nil {
 		fmt.Println(err)

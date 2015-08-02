@@ -263,7 +263,7 @@ func (u *OtpUser) handleErrorCode(otpType OtpType) (bool, error) {
 	}
 	u.setBlockedState(true)
 	u.initAutoUnblockTimer()
-	return false, fmt.Errorf("Too many false attempts, locked out")
+	return false, fmt.Errorf("too many false attempts, locked out")
 }
 
 func (u *OtpUser) handleOkCode(code string, otpType OtpType, offset int32) (bool, error) {
@@ -302,7 +302,7 @@ func (u *OtpUser) VerifyCode(code string, otpType OtpType) (bool, error) {
 		found, offset, err = u.findHotpCodeMatch(code, int32(u.Throttle.CheckHotpWindow))
 	} else {
 		if u.Throttle.lastTotpCode == code { // avoid replay attack for totp
-			return false, fmt.Errorf("The TOTP Code was already used, you will have to wait for the next time period")
+			return false, fmt.Errorf("the TOTP Code was already used, you will have to wait for the next time period")
 		}
 		found, err = u.findTotpCodeMatch(code, int32(u.Throttle.CheckTotpWindowSec))
 	}
@@ -350,12 +350,12 @@ func (u *OtpUser) canCheckOtpCode(otpType OtpType, timeFactorSec time.Duration) 
 		timer = u.Throttle.throttlingTimerTotp
 	}
 	if timer.After(time.Now().Add(time.Duration(timeFactorSec) * time.Second)) {
-		return false, fmt.Errorf("User must wait till %v before trying again. The current time is: %v",
+		return false, fmt.Errorf("user must wait till %v before trying again. The current time is: %v",
 			timer, time.Now())
 	}
 	blocked, _ := u.isOtpUserBlockedHelper(timeFactorSec)
 	if blocked {
-		return false, fmt.Errorf("User is blocked (thus it was not checked), Please unblock the user first")
+		return false, fmt.Errorf("user is blocked (thus it was not checked), Please unblock the user first")
 	}
 	return true, nil
 }
@@ -383,7 +383,7 @@ func (u *OtpUser) IsEqual(u1 interface{}) bool {
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*OtpUser)
 	if ok == false {
-		return "Error: Can't print the OTP property it is not in the right type"
+		return "can't print the OTP property it is not in the right type"
 	}
 	return d.String()
 }
@@ -411,10 +411,10 @@ func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.SecureStorage) error {
 	d, ok := data.(*OtpUser)
 	if ok == false {
-		return fmt.Errorf("Error: Can't store the OTP property: its not in the right type")
+		return fmt.Errorf("can't store the OTP property: its not in the right type")
 	}
 	if storage == nil {
-		return fmt.Errorf("Error: can't add OTP property to storage, storage is nil")
+		return fmt.Errorf("can't add OTP property to storage, storage is nil")
 	}
 	value, _ := json.Marshal(d)
 	err := storage.AddItem(prefix, string(value))
@@ -429,11 +429,11 @@ func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (inte
 	var user OtpUser
 
 	if storage == nil {
-		return nil, fmt.Errorf("Error: can't read AM property from storage, storage is nil")
+		return nil, fmt.Errorf("can't read AM property from storage, storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if !exist {
-		return nil, fmt.Errorf("Error: key '%v' was not found in storage", key)
+		return nil, fmt.Errorf("key '%v' was not found in storage", key)
 	}
 	err := json.Unmarshal([]byte(value), &user)
 	if err != nil {

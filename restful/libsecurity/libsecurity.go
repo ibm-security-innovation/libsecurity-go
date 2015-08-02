@@ -118,7 +118,7 @@ func registerComponents(configFile string, secureKeyFilePath string, privateKeyF
 		os.Exit(1)
 	}
 	wsContainer := restful.NewContainer()
-	usersList := en.NewEntityManager()
+	usersList := en.New()
 
 	//	amUsers := am.NewAmUsersList()
 	signKey, verifyKey = app.TokenSetUp(privateKeyFilePath)

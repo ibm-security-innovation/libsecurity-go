@@ -35,7 +35,7 @@ func init() {
 // Verify that Add a property to user, remove the user, generate a new user with the same name and try to get the property returns an error
 func testAddCheckRemoveUserProperty(t *testing.T, propertyName string, moduleData interface{}) {
 	name := "name1"
-	usersList := en.NewEntityManager()
+	usersList := en.New()
 	_, err := usersList.GetPropertyAttachedToEntity(name, propertyName)
 	if err == nil {
 		t.Errorf("Test fail, Recived module '%v' of undefined user '%v'", propertyName, name)
