@@ -56,7 +56,7 @@ type ConfigS map[string]string
 
 func usage() {
 	_, file := filepath.Split(os.Args[0])
-	fmt.Fprintf(os.Stderr, "usage: %s\n", file)
+	fmt.Fprintf(os.Stderr, "usage: %v.go\n", file)
 	flag.PrintDefaults()
 	fmt.Fprintf(os.Stderr, "\nConfiguration file tokens are: %v\n", ConfigOptions)
 	fmt.Fprintf(os.Stderr, "Options to configure: ('%v', '%v')\n", basicToken, fullToken)
