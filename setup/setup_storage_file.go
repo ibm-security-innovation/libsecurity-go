@@ -19,6 +19,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	am "ibm-security-innovation/libsecurity-go/accounts"
@@ -52,8 +53,8 @@ func init() {
 }
 
 func usage() {
-	strs := strings.Split(os.Args[0], "/")
-	fmt.Fprintf(os.Stderr, "usage: %s\n", strs[len(strs)-1])
+	_, file := filepath.Split(os.Args[0])
+	fmt.Fprintf(os.Stderr, "usage: %v.go\n", file)
 	flag.PrintDefaults()
 	os.Exit(2)
 }
