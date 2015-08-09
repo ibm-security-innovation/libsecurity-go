@@ -19,25 +19,27 @@ const (
 
 var ()
 
-type entryS struct {
-	name        string // entry name
+type aclTestEntry struct {
+	name        string // aclAclEntry name
 	permissions []Permission
 }
 
-type expectS struct {
-	name        string // entry name
+type expectTest struct {
+	name        string // aclAclEntry name
 	permissions []Permission
 }
 
-type expectWhoUsePermissionsS struct {
+type expectWhoUsePermissions struct {
 	permission string
 	names      []string
 }
 
-type testGroupS struct {
+type testGroup struct {
 	name    string
 	members []string
 }
+
+type AclTestMap map[*AclEntry]bool
 
 func init() {
 	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard)
@@ -51,12 +53,12 @@ func initEntityManager() *en.EntityManager {
 
 // Create a new ACL, add a given number of entities to Entity list,
 // Add each new entity to the new ACL
-func initAclAndEntries(length int) (*en.EntityManager, *Acl, map[*AclEntry]bool, error) {
-	var entries map[*AclEntry]bool
+func initAclAndEntries(length int) (*en.EntityManager, *Acl, AclTestMap, error) {
+	var entries AclTestMap
 
 	el := initEntityManager()
 	a := NewACL()
-	entries = make(map[*AclEntry]bool)
+	entries = make(AclTestMap)
 	for i := 0; i < length; i++ {
 		name := "name[0]-a" + strconv.Itoa(i)
 		el.AddResource(name)
@@ -65,55 +67,55 @@ func initAclAndEntries(length int) (*en.EntityManager, *Acl, map[*AclEntry]bool,
 			return nil, nil, entries, err
 		}
 		if e == nil {
-			return nil, nil, entries, fmt.Errorf("can't add the new entry '%v' to the ACL list", name)
+			return nil, nil, entries, fmt.Errorf("can't add the new aclAclEntry '%v' to the ACL list", name)
 		}
 		entries[e] = true
 	}
 	return el, a, entries, nil
 }
 
-// Try to add a new entry to a given ACL and check if it functions as expected
-func addEntries(a *Acl, entries map[*AclEntry]bool, expected bool) (bool, error) {
+// Try to add a new AclEntry to a given ACL and check if it functions as expected
+func addEntries(a *Acl, entries AclTestMap, expected bool) (bool, error) {
 	for e, _ := range entries {
-		err := a.addEntry(e)
+		err := a.addAclEntry(e)
 		if expected == true && err != nil {
-			return false, fmt.Errorf("can't add the valid entry '%v', ACL list: %v", e, a)
+			return false, fmt.Errorf("can't add the valid aclAclEntry '%v', ACL list: %v", e, a)
 		} else if expected == false && err == nil {
-			return false, fmt.Errorf("attempting to add an already existing entry '%v' to the ACL list: %v", e, a)
+			return false, fmt.Errorf("attempting to add an already existing aclAclEntry '%v' to the ACL list: %v", e, a)
 		}
 	}
 	return true, nil
 }
 
-// Try to remove an entry from a given ACL and check if it functions as expected
-func removeEntries(a *Acl, entries map[*AclEntry]bool, expected bool) (bool, error) {
+// Try to remove an aclAclEntry from a given ACL and check if it functions as expected
+func removeEntries(a *Acl, entries AclTestMap, expected bool) (bool, error) {
 	for e, _ := range entries {
-		err := a.removeEntry(e.EntityName)
+		err := a.removeAclEntry(e.EntityName)
 		if expected == true && err != nil {
-			return false, fmt.Errorf("can't remove the valid entry '%v' from ACL list: %v", e, a)
+			return false, fmt.Errorf("can't remove the valid aclAclEntry '%v' from ACL list: %v", e, a)
 		} else if expected == false && err == nil {
-			return false, fmt.Errorf("attempting to remove the non existing entry '%v' from ACL list: %v", e, a)
+			return false, fmt.Errorf("attempting to remove the non existing aclAclEntry '%v' from ACL list: %v", e, a)
 		}
 	}
 	return true, nil
 }
 
 // Verify that empty entries can't be added
-// Verify that the same entry can be added to both lists: user and group
-// Verify that an entry is removed only from the relevant list
+// Verify that the same aclAclEntry can be added to both lists: user and group
+// Verify that an aclAclEntry is removed only from the relevant list
 // At the end of the test, the entries list must by empty
-func Test_AddRemoveAclEntry(t *testing.T) {
+func Test_AddRemoveaclEntry(t *testing.T) {
 	expected := []bool{true, false}
 
 	_, a, entries, err := initAclAndEntries(10)
 	if err != nil {
-		t.Error("Test fail: Can't initalize entry list, error:", err)
+		t.Error("Test fail: Can't initalize aclAclEntry list, error:", err)
 		t.FailNow()
 	}
 
-	err = a.addEntry(nil)
+	err = a.addAclEntry(nil)
 	if err == nil {
-		t.Error("Test fail: nil entry was added:", a)
+		t.Error("Test fail: nil aclAclEntry was added:", a)
 	}
 
 	for _, exp := range expected {
@@ -130,7 +132,7 @@ func Test_AddRemoveAclEntry(t *testing.T) {
 		}
 	}
 	if len(a.Permissions) != 0 {
-		t.Error("Test fail: The entry list of", a, "must be empty")
+		t.Error("Test fail: The aclAclEntry list of", a, "must be empty")
 	}
 }
 
@@ -145,7 +147,7 @@ func isPermissionExp(pVec []Permission, permission Permission) bool {
 
 // Create a new el, ACL and add to it users and groups. Initialize the permissions of each of the entries using predefined data
 // setPermissionData: Determines whether the permissions of the given entries should be set during initializion
-func setupCheckPermissions(setPermissionData bool) (*en.EntityManager, *Acl, []string, []entryS, []entryS, [][]expectS, [][]expectS, []expectWhoUsePermissionsS) {
+func setupCheckPermissions(setPermissionData bool) (*en.EntityManager, *Acl, []string, []aclTestEntry, []aclTestEntry, [][]expectTest, [][]expectTest, []expectWhoUsePermissions) {
 	a := NewACL()
 	el := initEntityManager()
 	numOfUsers := 5
@@ -162,34 +164,34 @@ func setupCheckPermissions(setPermissionData bool) (*en.EntityManager, *Acl, []s
 		groupsName[i] = "testGroup" + fmt.Sprintf("%d", i)
 		allNames[i+numOfUsers] = groupsName[i]
 	}
-	groupsData := []testGroupS{{groupsName[0], []string{usersName[0], usersName[2]}},
+	groupsData := []testGroup{{groupsName[0], []string{usersName[0], usersName[2]}},
 		{groupsName[1], []string{usersName[1]}}}
 
-	setEntries := []entryS{
+	setEntries := []aclTestEntry{
 		{usersName[0], []Permission{PerRead, PerWrite, PerExe}},
 		{groupsName[0], []Permission{PerRead}},
 		{groupsName[1], []Permission{PerExe, PerTake}},
 		{stc.AclAllEntryName, []Permission{PerAll}}}
-	resetEntries := []entryS{ // note the remove can be done for a single user/group in each step
+	resetEntries := []aclTestEntry{ // note the remove can be done for a single user/group in each step
 		{}, // check the setup
 		{groupsName[1], []Permission{PerExe}},
 		{usersName[0], []Permission{PerRead}},
 		{groupsName[0], []Permission{PerRead}},
 		{usersName[0], []Permission{PerWrite}}}
 	// test both that the expected permissions are set and that the others are clear
-	expectUserPermissions := [][]expectS{
+	expectUserPermissions := [][]expectTest{
 		{{usersName[0], []Permission{PerRead, PerWrite, PerExe, PerAll}}, {usersName[1], []Permission{PerExe, PerTake, PerAll}}},
 		{{usersName[0], []Permission{PerRead, PerWrite, PerExe, PerAll}}, {usersName[1], []Permission{PerAll, PerTake}}},
 		{{usersName[0], []Permission{PerWrite, PerExe, PerRead, PerAll}}, {usersName[1], []Permission{PerAll, PerTake}}},
 		{{usersName[0], []Permission{PerWrite, PerExe, PerAll}}, {usersName[1], []Permission{PerAll, PerTake}}},
 		{{usersName[0], []Permission{PerExe, PerAll}}, {usersName[1], []Permission{PerAll, PerTake}}}}
-	expectGroupPermissions := [][]expectS{
+	expectGroupPermissions := [][]expectTest{
 		{{groupsName[0], []Permission{PerRead, PerAll}}, {groupsName[1], []Permission{PerExe, PerTake, PerAll}}},
 		{{groupsName[0], []Permission{PerRead, PerAll}}, {groupsName[1], []Permission{PerTake, PerAll}}},
 		{{groupsName[0], []Permission{PerRead, PerAll}}, {groupsName[1], []Permission{PerTake, PerAll}}},
 		{{groupsName[0], []Permission{PerAll}}, {groupsName[1], []Permission{PerTake, PerAll}}},
 		{{groupsName[0], []Permission{PerAll}}, {groupsName[1], []Permission{PerTake, PerAll}}}}
-	expectWhoUsePermission := []expectWhoUsePermissionsS{
+	expectWhoUsePermission := []expectWhoUsePermissions{
 		{PerExe, []string{usersName[0], usersName[1], groupsName[1]}},
 		{PerAll, []string{usersName[0], usersName[1], usersName[2], groupsName[0], groupsName[1], stc.AclAllEntryName}},
 		{"aa", []string{}},
@@ -212,14 +214,14 @@ func setupCheckPermissions(setPermissionData bool) (*en.EntityManager, *Acl, []s
 				e.AddPermission(p)
 			}
 		}
-		a.addEntry(e)
+		a.addAclEntry(e)
 	}
 	el.AddPropertyToEntity(resourceName, stc.AclPropertyName, a)
 	//	el.PrintWithProperties()
 	return el, a, allNames, setEntries, resetEntries, expectUserPermissions, expectGroupPermissions, expectWhoUsePermission
 }
 
-func checkExp(t *testing.T, el *en.EntityManager, a *Acl, idx int, name string, expState []expectS) {
+func checkExp(t *testing.T, el *en.EntityManager, a *Acl, idx int, name string, expState []expectTest) {
 	for _, exp := range expState {
 		if exp.name == name {
 			for _, p := range permissionsVec {
@@ -241,17 +243,17 @@ func checkExp(t *testing.T, el *en.EntityManager, a *Acl, idx int, name string, 
 //    In each of the test's steps, permissions could be added or removed
 //    and the test checks that only the expected permissions, after the change, are set
 // 2 entries:
-// First entry a1: user: read, write, exe, group read
-// Second entry a2: user: nil, group exe
+// First aclAclEntry a1: user: read, write, exe, group read
+// Second aclAclEntry a2: user: nil, group exe
 // Tests:
-// setup: First entry: permissions: read, write, exe, no take
-//        Second entry: permissions: group exe only
+// setup: First AclEntry: permissions: read, write, exe, no take
+//        Second AclEntry: permissions: group exe only
 // Test that empty permission is allowed and results with the behaviour that is determined by the default
 // Note for all tests: test that the expected permissions are set and the others are clear
-// Step 1. Remove exe permission from the second entry => no permissions
-// Step 2. Remove read from the first entry of the users list => read, write, exe, no take
-// Step 3. Remove read from the first entry of the groups list => write, exe, no read, take
-// Step 4. Remove write from the first entry of the groups list => exe only
+// Step 1. Remove exe permission from the second aclAclEntry => no permissions
+// Step 2. Remove read from the first aclAclEntry of the users list => read, write, exe, no take
+// Step 3. Remove read from the first aclAclEntry of the groups list => write, exe, no read, take
+// Step 4. Remove write from the first aclAclEntry of the groups list => exe only
 func Test_Permissions(t *testing.T) {
 	el, a, usersName, _, resetEntries, expectUserPermissions, expectGroupPermissions, _ := setupCheckPermissions(true)
 
@@ -273,7 +275,7 @@ func Test_Permissions(t *testing.T) {
 }
 
 // THe same test as Test_Permissions, but in this test, the permissions are updated by
-// calling AddPermission/RemovePermission with the entry name/type and the updated permissions
+// calling AddPermission/RemovePermission with the aclAclEntry name/type and the updated permissions
 func Test_UpdatePermissions(t *testing.T) {
 	el, a, usersName, setEntries, resetEntries, expectUserPermissions, expectGroupPermissions, _ := setupCheckPermissions(false)
 
@@ -318,7 +320,7 @@ func Test_GroupListCorrectness(t *testing.T) {
 	el.AddUser(userName)
 	el.AddUserToGroup(groupName, userName)
 	e, _ := NewEntry(groupName)
-	a.addEntry(e)
+	a.addAclEntry(e)
 	a.AddPermissionToResource(el, groupName, PerRead)
 	if CheckUserPermission(el, userName, resourceName, PerRead) != true {
 		t.Errorf("Test fail: '%v' permission must be set, %v", PerRead, a)
@@ -353,14 +355,14 @@ func Test_CheckPermissionWhenUserIsRemovedAndAdded(t *testing.T) {
 	a := NewACL()
 	p := Permission(PerRead)
 	// create entity list with disk, user, group entities (user1 is part of group)
-	// set ACL to disk, add the group entry with read permission to disk ACL
+	// set ACL to disk, add the group aclAclEntry with read permission to disk ACL
 	el.AddUser(userName)
 	el.AddGroup(groupName)
 	el.AddUserToGroup(groupName, userName)
 	el.AddPropertyToEntity(resourceName, stc.AclPropertyName, a)
-	entry, _ := NewEntry(groupName)
-	a.addEntry(entry)
-	entry.AddPermission(p)
+	AclEntry, _ := NewEntry(groupName)
+	a.addAclEntry(AclEntry)
+	AclEntry.AddPermission(p)
 	if CheckUserPermission(el, userName, resourceName, p) != true {
 		t.Errorf("Test fail: '%v' permission must be set, %v", p, a)
 	}
@@ -368,9 +370,9 @@ func Test_CheckPermissionWhenUserIsRemovedAndAdded(t *testing.T) {
 	if CheckUserPermission(el, userName, resourceName, p) == true {
 		t.Errorf("Test fail: '%v' permission must not be allowed, %v", p, a)
 	}
-	entry, _ = NewEntry(userName)
-	a.addEntry(entry)
-	entry.AddPermission(p)
+	AclEntry, _ = NewEntry(userName)
+	a.addAclEntry(AclEntry)
+	AclEntry.AddPermission(p)
 	if CheckUserPermission(el, userName, resourceName, p) != true {
 		t.Errorf("Test fail: '%v' permission must be set, %v", p, a)
 	}
