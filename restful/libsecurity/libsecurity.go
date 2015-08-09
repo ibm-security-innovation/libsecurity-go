@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/emicklei/go-restful"
@@ -54,8 +55,8 @@ var (
 type ConfigS map[string]string
 
 func usage() {
-	strs := strings.Split(os.Args[0], "/")
-	fmt.Fprintf(os.Stderr, "usage: %s\n", strs[len(strs)-1])
+	_, file := filepath.Split(os.Args[0])
+	fmt.Fprintf(os.Stderr, "usage: %s\n", file)
 	flag.PrintDefaults()
 	fmt.Fprintf(os.Stderr, "\nConfiguration file tokens are: %v\n", ConfigOptions)
 	fmt.Fprintf(os.Stderr, "Options to configure: ('%v', '%v')\n", basicToken, fullToken)

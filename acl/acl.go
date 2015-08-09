@@ -2,16 +2,16 @@
 // The implementation should allow flexible types of access to resources (not limited to READ/WRITE/EXECUTE)
 //
 // The ACL property structure:
-// An ACL has a list of entries. Each ACL entry consists of the following fields:
-// - An entry name (obligatory, must be the name of an entity from the entity list)
+// An ACL has a list of entries. Each ACL AclEntry consists of the following fields:
+// - An AclEntry name (obligatory, must be the name of an entity from the entity list)
 // - List of permissions (optional)
 //
 //  A user has a given permission to the entity if:
-//    1. The user name is equal to the entry name and the permissions list of the relevant entry grants that permission
-//    2. The entry is a name of entity (group) that the user is member of and the permissions list of the relevant entry grants that permission
-//    3. The 'All' entry grants that permission
+//    1. The user name is equal to the AclEntry name and the permissions list of the relevant AclEntry grants that permission
+//    2. The AclEntry is a name of entity (group) that the user is member of and the permissions list of the relevant AclEntry grants that permission
+//    3. The 'All' AclEntry grants that permission
 // Notes:
-//    1. I'm not handling a Group of groups
+//    1. Group of groups are not handled
 //    2. If User1 is removed from the Entity list and then re added,
 // 	the only permission it will initially have is the 'All' permissions.
 // 	This is because a removed entity cannot be re-added,
@@ -34,11 +34,11 @@
 // 	3.The user-entity named User2 has the following permissions with relation to the resource-entity Disk: “can read” (via IBM) and “Execute” (via All)
 //
 // Entity Structure:
-//	Entity =======> ACL |===========> Entry
-//	                    |===========> Entry
-//	                    |===========> Entry
-// Entry structure:
-//	Entry  =======> name (entity name)
+//	Entity =======> ACL |===========> AclEntry
+//	                    |===========> AclEntry
+//	                    |===========> AclEntry
+// AclEntry structure:
+//	AclEntry  =======> name (entity name)
 //	       |======> list of permissions
 //
 package acl
@@ -65,17 +65,17 @@ var (
 )
 
 // Permission could be any string
-type AclEntryMap map[string]*AclEntry
+type aclEntryMap map[string]*AclEntry
 type PermissionSet map[string]interface{}
 
 type Serializer struct{}
 
 type Acl struct {
-	Permissions AclEntryMap
+	Permissions aclEntryMap
 }
 
 func (a Acl) String() string {
-	return fmt.Sprintf("ACL: Permission entries: %v\n", getEntryListItem(a.Permissions))
+	return fmt.Sprintf("ACL: Permission entries: %v\n", getAclEntryListItem(a.Permissions))
 }
 
 func init() {
@@ -87,7 +87,7 @@ func init() {
 
 // Generate a new ACL structure
 func NewACL() *Acl {
-	a := Acl{Permissions: make(AclEntryMap)}
+	a := Acl{Permissions: make(aclEntryMap)}
 	return &a
 }
 
@@ -103,15 +103,15 @@ func (a *Acl) IsEqual(acl Acl) bool {
 	return (reflect.DeepEqual(a.Permissions, acl.Permissions) == true)
 }
 
-// Verify that an entry is valid, that is it's not nil and its entry name is valid
-func isValidEntry(entry *AclEntry) error {
-	if entry == nil {
-		return fmt.Errorf("entry is nil")
+// Verify that an AclEntry is valid, that is it's not nil and its AclEntry name is valid
+func isValidAclEntry(aclEntry *AclEntry) error {
+	if aclEntry == nil {
+		return fmt.Errorf("aclEntry is nil")
 	}
-	return en.IsEntityNameValid(entry.EntityName)
+	return en.IsEntityNameValid(aclEntry.EntityName)
 }
 
-func getEntryListItem(eList AclEntryMap) string {
+func getAclEntryListItem(eList aclEntryMap) string {
 	uArray := make([]string, 0, len(eList))
 
 	for _, p := range eList {
@@ -120,27 +120,27 @@ func getEntryListItem(eList AclEntryMap) string {
 	return strings.Join(uArray, ",")
 }
 
-// Add a new entry to the Acl, Add it only if it's not nil and
-// 	the entry (entityName) is not alredy in the ACL
-func (a *Acl) addEntry(entry *AclEntry) error {
+// Add a new AclEntry to the Acl, Add it only if it's not nil and
+// 	the AclEntry (entityName) is not alredy in the ACL
+func (a *Acl) addAclEntry(aclEntry *AclEntry) error {
 	lock.Lock()
 	defer lock.Unlock()
 
-	err := isValidEntry(entry)
+	err := isValidAclEntry(aclEntry)
 	if err != nil {
 		return err
 	}
-	_, exist := a.Permissions[entry.EntityName]
+	_, exist := a.Permissions[aclEntry.EntityName]
 	if exist == true {
-		return fmt.Errorf("can't add entry '%v', it already exists in the ACL", entry.EntityName)
+		return fmt.Errorf("can't add aclEntry '%v', it already exists in the ACL", aclEntry.EntityName)
 	}
-	a.Permissions[entry.EntityName] = entry
-	logger.Trace.Println("Add entry:", entry, "to acl")
+	a.Permissions[aclEntry.EntityName] = aclEntry
+	logger.Trace.Println("Add aclEntry:", aclEntry, "to acl")
 	return nil
 }
 
-// Remove the given entry from the ACL
-func (a *Acl) removeEntry(name string) error {
+// Remove the given AclEntry from the ACL
+func (a *Acl) removeAclEntry(name string) error {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -150,9 +150,9 @@ func (a *Acl) removeEntry(name string) error {
 	}
 	_, exist := a.Permissions[name]
 	if exist == false {
-		return fmt.Errorf("can't remove entry '%v', it does not exist in the ACL", name)
+		return fmt.Errorf("can't remove AclEntry '%v', it does not exist in the ACL", name)
 	}
-	logger.Trace.Println("Remove entry:", name, "from acl")
+	logger.Trace.Println("Remove AclEntry:", name, "from acl")
 	delete(a.Permissions, name)
 	return nil
 }
@@ -184,7 +184,7 @@ func RemoveEntityFromAcl(el1 interface{}, userName string) {
 		}
 		for name, _ := range acl.Permissions {
 			if name == userName {
-				acl.removeEntry(userName)
+				acl.removeAclEntry(userName)
 			}
 		}
 	}
@@ -299,7 +299,7 @@ func (a *Acl) RemovePermissionFromEntity(entityName string, permission Permissio
 
 	e, exist := a.Permissions[entityName]
 	if exist == false {
-		return fmt.Errorf("the ACL doesn't contain an entry with the name '%v'", entityName)
+		return fmt.Errorf("the ACL doesn't contain an AclEntry with the name '%v'", entityName)
 	}
 	logger.Trace.Println("Remove permission:", permission, "from:", entityName)
 	return e.RemovePermission(permission)
@@ -346,7 +346,7 @@ func GetWhoUseAPermission(el *en.EntityManager, resourceName string, permission 
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*Acl)
 	if ok == false {
-		return "Error: Can't print the ACL property it is not in the right type"
+		return "can't print the ACL property it is not in the right type"
 	}
 	return d.String()
 }

@@ -167,7 +167,7 @@ func (u AmUserInfo) IsEqual(u2 *AmUserInfo, withExpiration bool) bool {
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*AmUserInfo)
 	if ok == false {
-		return "Error: Can't print the Account management property it is not in the right type"
+		return "can't print the Account management property it is not in the right type"
 	}
 	return d.String()
 }
