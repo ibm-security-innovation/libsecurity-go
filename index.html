@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <title>Libsecurity-go by ibm-security-innovation</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Libsecurity-go</h1>
+        <h2></h2>
+
+        <section id="downloads">
+          <a href="https://github.com/ibm-security-innovation/libsecurity-go/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/ibm-security-innovation/libsecurity-go/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/ibm-security-innovation/libsecurity-go" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>
+<a id="libsecurity-go" class="anchor" href="#libsecurity-go" aria-hidden="true"><span class="octicon octicon-link"></span></a>libsecurity-go</h1>
+
+<h2>
+<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview:</h2>
+
+<h3>
+<a id="the-goals-of-libsecurity-are" class="anchor" href="#the-goals-of-libsecurity-are" aria-hidden="true"><span class="octicon octicon-link"></span></a>The goals of libsecurity are:</h3>
+
+<p>Secure "things" that connect to the internet by providing a set of security libraries/services that fulfill the following requirements:
+1.  Complete (from a security point of view)
+2.  Can be easily integrated with existing IoTs' software.
+3.  Optimized for the IoTs' run time environment</p>
+
+<h3>
+<a id="out-of-scope" class="anchor" href="#out-of-scope" aria-hidden="true"><span class="octicon octicon-link"></span></a>Out of scope</h3>
+
+<ul>
+<li>Denial of service - this mainly refers to applicative implementation related weaknesses (like a poor hash function) which are beyond our reach</li>
+<li>Physical attacks</li>
+</ul>
+
+<h3>
+<a id="language" class="anchor" href="#language" aria-hidden="true"><span class="octicon octicon-link"></span></a>Language</h3>
+
+<ul>
+<li>Implemented in Go</li>
+</ul>
+
+<h2>
+<a id="provided-libraries" class="anchor" href="#provided-libraries" aria-hidden="true"><span class="octicon octicon-link"></span></a>Provided Libraries:</h2>
+
+<ul>
+<li>Initialization services including a utility that generates an initial secureStorage file to be used later by all other components</li>
+<li>Token services for allowing transfer of users' information between client and server using secure JSON Web Token (JWT) cookies.</li>
+<li>Account Management services:  User privileges and password management</li>
+<li>Secure storage services: Persistency mechanism that uses Encryption (AES) of key-value pairs within a signed file</li>
+<li>Entity management services to handle 3 types of entities: User, Group and Resource.</li>
+<li>Password services:  encryption, salting, reset, time expiration, Throttling mechanism</li>
+<li>OATH services: OCRA as defined by RFC 6287</li>
+<li>Authentication services as defined by OpenID connect</li>
+<li>Authorization services as defined by OAUTH 2.0</li>
+<li>Access Control List (ACL) services when access rights may be defined for resource entity. The  implementation should allow flexible types of access to resources (not limited to READ/WRITE/EXECUTE).</li>
+<li>One Time Password (OTP) services as defined by RFCs 4226 (HOTP), 6238 (TOTP)</li>
+</ul>
+
+<h2>
+<a id="higher-layers" class="anchor" href="#higher-layers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Higher layers:</h2>
+
+<ul>
+<li>RESTful layer: most of the above libraries have a RESTful layer</li>
+<li>Examples:
+
+<ol>
+<li>Each of the above libraries have usage examples</li>
+<li>All the above libraries are combined into libsecurity-go RESTful GUI (each library could be shown/hidden using the tool configuration file)</li>
+</ol>
+</li>
+</ul>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<h3>
+<a id="prerequisites" class="anchor" href="#prerequisites" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prerequisites</h3>
+
+<ul>
+<li>Installed Go environment</li>
+</ul>
+
+<h3>
+<a id="quick-start" class="anchor" href="#quick-start" aria-hidden="true"><span class="octicon octicon-link"></span></a>Quick Start</h3>
+
+<ul>
+<li>Under the $GOPATH, create the following directory (if does not exist yet): src, pkg, bin</li>
+<li>Under the src directory, create the following path: ibm-security-innovation/libsecurity-go</li>
+<li><strong>cd ibm-security-innovation/libsecurity-go</strong></li>
+<li>Clone the library with <strong>git clone <a href="https://github.com/ibm-security-innovation/libsecurity-go">https://github.com/ibm-security-innovation/libsecurity-go</a> .</strong>
+</li>
+<li>Copy all the needed external libraries using go get
+
+<ul>
+<li>e.g.
+
+<ul>
+<li><strong>cd libsecurity-go/entity</strong></li>
+<li><strong>go get</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Running a RESTful GUI example:
+
+<ul>
+<li>When entering for the first time, the following steps should be executed:</li>
+<li>Generate an RSA file (you can generate it also when generating the basic secure storage, see item 3) by running:
+
+<ul>
+<li>
+<strong>ssh-keygen</strong> (This will result with the following prompts filled with the user chosen values)
+
+<ul>
+<li><strong>Generating public/private rsa key pair.</strong></li>
+<li><strong>Enter file in which to save the key (~/.ssh/id_rsa): ./dist/test.rsa</strong></li>
+<li><strong>Enter passphrase (empty for no passphrase):</strong></li>
+<li><strong>Enter same passphrase again:</strong></li>
+<li><strong>Your identification has been saved in ./dist/test.rsa</strong></li>
+<li><strong>Your public key has been saved in ./dist/test.rsa.pub</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Create a secureKey file in the ./dist directory. The secureKey file should contain a strong password to be used for encryption of the setup storage file. It is recommended that the password will be based on a random value  which is at least 16 bytes long. Note that some additional manipulation will be done for further strengthening the initial password before it is used.</li>
+<li>Generate a minimal secure storage (a file that contains just the root user with its privilege and password) and RSA files by executing the following steps:
+
+<ul>
+<li><strong>cd setup</strong></li>
+<li>
+<strong>go run setup_storage_.go</strong>
+-storage-file="./dist/data.txt" -password="your new compliant
+password here" -secure-key="./dist/secureKey" -generate-rsa=true</li>
+<li>
+<strong>cd ..</strong>
+Note: if you generated the RSA files, copy them to the dist directory (the generated RSA files are: key.private and key.public)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>The following should be done any time the RESTful API browser is used:
+
+<ul>
+<li>Running the RESTful server
+
+<ul>
+<li>change directory to the restful/libsecurity directory</li>
+<li><strong>go run libsecurity.go</strong></li>
+<li> -config-file (default "./config.json"): Configuration information file</li>
+<li> -host (default "localhost:8080"): Listening host</li>
+<li> -protocol (default "https"): Using protocol: http ot https</li>
+<li> -rsa-private (default "./dist/key.private"): RSA private key file path</li>
+<li> -secure-key (default "./dist/secureKey"): password to encrypt the secure storage</li>
+<li> -server-cert (default "./dist/server.crt"): SSL server certificate file path for https</li>
+<li> -server-key (default "./dist/server.key"): SSL server key file path for https</li>
+<li> -storage-file (default "./dist/data.txt"): persistence storage file</li>
+</ul>
+</li>
+<li>In the browser address bar type: <strong>https://ip:port/forewind/doc</strong> (or <strong>http://ip:port/forewind/doc</strong>) (The default is: <a href="https://127.0.0.1:8080/forewind/doc">https://127.0.0.1:8080/forewind/doc</a>)
+
+<ul>
+<li>click on the <strong>/forewind/app/v1/accounts-manager</strong>
+</li>
+<li>click on the <strong>/forewind/app/v1/account-manager/user</strong> link in order to authenticate the user</li>
+<li>After filling the user name and password, click on the <strong>Try it out</strong> button.
+
+<ul>
+<li>If the account information is correct the "Response body" should contain the line <strong>"Match" : true</strong>.</li>
+</ul>
+</li>
+<li>Click on the directory link in order to Change/Update/Save the relevant data using the RESTful API</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<h3>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h3>
+
+<p>(c) Copyright IBM Corp. 2010, 2015
+This project is licensed under the Apache License 2.0. See the LICENSE file for more info.</p>
+
+<ul>
+<li>3rd party software used by libsecurity-go
+
+<ul>
+<li>jwt-go, <a href="https://github.com/dgrijalva/jwt-go">https://github.com/dgrijalva/jwt-go</a> , MIT</li>
+<li>swagger, <a href="https://github.com/swagger-api">https://github.com/swagger-api</a> , Apache v2</li>
+<li>go-restful <a href="https://github.com/emicklei/go-restful">https://github.com/emicklei/go-restful</a>,  MIT</li>
+<li>marked  <a href="https://github.com/chjj/marked">https://github.com/chjj/marked</a> , MIT</li>
+</ul>
+</li>
+</ul>
+
+<h1>
+<a id="libsecurity-go-architecture-and-high-level-design-document" class="anchor" href="#libsecurity-go-architecture-and-high-level-design-document" aria-hidden="true"><span class="octicon octicon-link"></span></a>libsecurity-go architecture and high level design document</h1>
+
+<h2>
+<a id="overview-1" class="anchor" href="#overview-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview:</h2>
+
+<p>The purpose of libsecurity-go is to provide an efficient solution for securing Internet Of Things end devices and gateways. This solution does not require any deep understanding of security and thus relieves IoT developers from the need to learn and understand the different aspects of security (e.g. how to create and maintain secure-storage, when to use One Time Password etc.).</p>
+
+<p>Libsecurity-go implementations targeted to Linux capable IoT platforms (e.g. ARM Cortex A). This implementation includes two additional layers: a RESTful layer and an Application layers.</p>
+
+<table>
+<thead>
+<tr>
+<th>__________</th>
+<th>___________</th>
+<th align="center">Architecture Layers</th>
+<th>____________</th>
+<th>_______________________________</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td align="center">Application Layer</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td align="center">Rrestful API</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td align="center">Account Management + Meta Data</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Access Control List</td>
+<td>Password (with salt)</td>
+<td align="center">One Time Password</td>
+<td>OAuth OCRA</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td align="center">Entity Manager</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td align="center">Secure Storage</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td align="center">Encryption</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<h2>
+<a id="architecture-and-high-level-design" class="anchor" href="#architecture-and-high-level-design" aria-hidden="true"><span class="octicon octicon-link"></span></a>Architecture and High level design:</h2>
+
+<p>The following diagram details the layers of libsecurity :</p>
+
+<ul>
+<li>The encryption layer is the lowest one (where either Go encryption or NaCl encryption library are used).</li>
+<li>The second layer, Secure Storage, implements secure storage for persistency. The secure storage is based on encrypted key value pairs stored in signed files to guarantee that the data is not altered or corrupted (more details will be presented later)</li>
+<li>The next layers are designed as entity centric, where entities must have a name and may have a list of associated properties and a list of members (see more details and example below)</li>
+</ul>
+
+<h3>
+<a id="possible-associated-properties" class="anchor" href="#possible-associated-properties" aria-hidden="true"><span class="octicon octicon-link"></span></a>Possible associated properties:</h3>
+
+<ul>
+<li>Account Management: the entity's privilege (Super user, Admin or User), password related information and handling methods including  current password, old passwords list, salt, whether it is a 'one time password' (after password reset), and password expiration time.</li>
+<li>Password handling (for cases when password mechanism other than the Account management is required). This may include: current password, old passwords list, salt, whether it is a 'one time password' (after password reset), password expiration time, whether the password is locked and more.</li>
+<li>Access control List (ACL): Permissions associated with the resource entity. Permissions are defined as a string to provide flexibility (in contrast with the old Read/Write/Execute model). The string may have any legal string value (e.g. "Can take", "can play")
+
+<ul>
+<li>Note: We chose to implement only a positive mechanism - listing what is allowed. We believe that this is more intuitive and easy to manage compared with a combination of positive assertions with negative ones. More details and examples below</li>
+</ul>
+</li>
+</ul>
+
+<h3>
+<a id="library-structure" class="anchor" href="#library-structure" aria-hidden="true"><span class="octicon octicon-link"></span></a>Library structure:</h3>
+
+<ul>
+<li>Each package includes the code, documentation and a usage example</li>
+<li>Linux capable systems:
+
+<ul>
+<li>RESTful API layer: Each of the components has its own RESTful layer providing interface with external calls (Built GUI interface to the RESTful API using Swagger)
+Application Layer: A set of “glue components” to ease the use of the security tool (e.g. addition of an ACL permission description)</li>
+</ul>
+</li>
+</ul>
+
+<h3>
+<a id="major-data-and-property-structures" class="anchor" href="#major-data-and-property-structures" aria-hidden="true"><span class="octicon octicon-link"></span></a>Major Data and Property Structures:</h3>
+
+<h4>
+<a id="secure-storage" class="anchor" href="#secure-storage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Secure Storage</h4>
+
+<pre><code>- Allows maintaining data persistently and securely. The implementation of the secure storage is based on encrypted key value pairs stored in signed files to guarantee that the data is not altered or corrupted.
+- Both the key and the value are encrypted when added to the storage using an Advanced Encryption Standard (AES) algorithm.
+- Each time a new secure storage is generated, a secret supplied by the user accompanies it and is used in all HMAC and AES calculations related to that storage .
+</code></pre>
+
+<p>In order to make it difficult for a third party to decipher or use the stored data we ensure that multiple independent encryptions of the same data (e.g. a block with the same piece of plain text) with the same key have different results. This is achieved by implementing the Cipher Block Chaining (CBC) mode.
+    - In order to implement a time efficient secure storage with keys (i.e. identify keys that are already stored without decrypting the entire storage, and when such a key is identified replacing its value) a two step mechanism is used. The first time a key is introduced, a new IV is drawn, the key is 'HMAC'ed with the secret and is stored with the IV as the value (1st step). Than the original key is encrypted with the drawn IV and stored again, this time with the (encrypted with its own random IV) value (2nd step).  The next time that same key is stored, the algorithm, identifies that it already exists in the storage, pulls out the random IV (stored in the 1st step), finds the 2nd step storage of that key and replaces its value with the new (encrypted) one.
+    - In order to guarantee that the data is not altered or corrupted the storage is signed using HMAC. The signature is added to the secure storage, when the storage is loaded, HMAC is calculated and compared with the stored signature to verify that the file is genuine.</p>
+
+<ul>
+<li>
+<p>Entity structure:</p>
+
+<ul>
+<li>There are three types of entities: User, Group and resource
+
+<ul>
+<li>Users have a name and a list of properties</li>
+<li>Groups have a name, list of members associated with it (each member is a name of an existing entity) and a list of properties</li>
+<li>Resources have a name and a list of properties</li>
+<li>There is a special group entity, that is not defined explicitly, with the name "All". This entity is used in the ACL when the resource has permission properties that applies to all the entities in the system</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Properties:</p>
+
+<ul>
+<li>
+<p>ACL property structure:</p>
+
+<ul>
+<li>
+<p>An ACL has a list of entries. Each ACL entry consists of the following fields:</p>
+
+<ul>
+<li>An entry name (obligatory, must be the name of an entity from the entity list)</li>
+<li>List of permissions (optional)</li>
+</ul>
+</li>
+<li>
+<p>Example:</p>
+
+<ul>
+<li>Consider the following entity list:
+
+<ul>
+<li>Name: User1</li>
+<li>Name: User2</li>
+<li>Name: User3</li>
+<li>Name: IBM, members: User2, User3</li>
+<li>Name: All (reserved token)</li>
+<li>Name: Disk, properties: ACL:</li>
+<li>ACL →
+
+<ul>
+<li>Name: User1, properties: “can write”, “can take”</li>
+<li>Name: IBM, properties: “can read”</li>
+<li>Name: All, Properties: “can execute”</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>In this example:</li>
+<li>The user-entity named User1 has the following permissions with relation to the resource-entity Disk: “can write”, “can take” and “can execute” (via All)</li>
+<li>The group-entity named IBM has the following permissions with relation to the resource-entity Disk: “can read” and “can execute” (via All)</li>
+<li><p>The user-entity named User2 has the following permissions with relation to the resource-entity Disk: “can read” (via IBM) and “can execute” (via All)</p></li>
+<li><p>Note: if User1 is removed from the Entity list and then re added, the only permission it will initially have is “execute” (via All). This is because a removed entity cannot be re-added, but a new entity with its name can be created. In this case, the new Entity User1 may be of a different user than the one that originally received the permissions.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>The OTP property:</p>
+
+<ul>
+<li>According to Wikipedia: A One Time Password (OTP) is a password that is valid for only one login session or transaction (and may be limited for a specific time period). The most important advantage that is addressed by OTPs is that, in contrast to static passwords, they are not vulnerable to replay attacks. A second major advantage is that a user who uses the same (or similar) password for multiple systems, is not made vulnerable on all of them, if the password for one of these is gained by an attacker.
+Libsecurity implements the 2 possible OTP implementations: A time based one time password algorithm (TOTP) and HMAC-based one time password algorithm (HOTP). Our OTP implementation is based on RFC 2289 for OTP in general, RFC 4226 for HOTP, and RFC 6238 for TOTP.</li>
+<li>The OTP implementation has three layers:
+
+<ul>
+<li>The base layer includes the secret, the digest (e.g. SHA256, SHA1) and the number of digits in the result.</li>
+<li>The second layer is the counting mechanism which is time based for TOTP and counter based for HOTP.</li>
+<li>The topmost layer includes the policy of handing unsuccessful authentication attempts. This includes blocking and throttling. The blocking mechanism allows blocking users for a given duration (or until a manual unblock) after they pass a threshold which a limit for the number of allowed consecutive unsuccessful authentication attempts. The throttling mechanism controls the delay between the authentication request and the response. This delay is increased as the number of consecutive unsuccessful attempts grows to avoid brute force password attacks. This layer also includes a time window for avoiding clock drifting errors when TOTPs are used.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>The OCRA property:</p>
+
+<ul>
+<li>According to Wikipedia: Challenge–response authentication: is a family of protocols in which one party presents a question ("challenge") and another party must provide a valid answer ("response") to be authenticated. It may be used for mutual authentication e.g. when a server needs to install a new version on a client. In the case of the example, the client has to verify that the server is the one it claims it is (otherwise a  malicious version may be downloaded) and the server has to verify that it sends the new version to the right client.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
