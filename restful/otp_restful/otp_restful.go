@@ -93,7 +93,7 @@ func (u otpRestful) restAddOtp(request *restful.Request, response *restful.Respo
 	}
 	err = u.st.UsersList.AddPropertyToEntity(name, stc.OtpPropertyName, data)
 	if err != nil {
-		l.setError(response, http.StatusNotFound, err)
+		u.setError(response, http.StatusNotFound, err)
 		return
 	}
 	response.WriteHeader(http.StatusCreated)
