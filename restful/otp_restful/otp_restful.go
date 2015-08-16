@@ -91,7 +91,11 @@ func (u otpRestful) restAddOtp(request *restful.Request, response *restful.Respo
 		u.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	u.st.UsersList.AddPropertyToEntity(name, stc.OtpPropertyName, data)
+	err = u.st.UsersList.AddPropertyToEntity(name, stc.OtpPropertyName, data)
+	if err != nil {
+		l.setError(response, http.StatusNotFound, err)
+		return
+	}
 	response.WriteHeader(http.StatusCreated)
 	response.WriteEntity(u.getUrlPath(request, name))
 }

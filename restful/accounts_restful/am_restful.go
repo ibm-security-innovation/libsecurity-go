@@ -192,7 +192,11 @@ func (l amRestful) restAddAm(request *restful.Request, response *restful.Respons
 		l.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	l.st.UsersList.AddPropertyToEntity(name, stc.AmPropertyName, data)
+	err = l.st.UsersList.AddPropertyToEntity(name, stc.AmPropertyName, data)
+	if err != nil {
+		l.setError(response, http.StatusNotFound, err)
+		return
+	}
 	response.WriteHeader(http.StatusCreated)
 	response.WriteEntity(l.getUrlPath(request, name))
 }

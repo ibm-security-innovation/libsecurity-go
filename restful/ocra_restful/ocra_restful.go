@@ -101,7 +101,11 @@ func (o ocraRestful) restAddOcra(request *restful.Request, response *restful.Res
 		o.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	o.st.UsersList.AddPropertyToEntity(name, stc.OcraPropertyName, data)
+	err = o.st.UsersList.AddPropertyToEntity(name, stc.OcraPropertyName, data)
+	if err != nil {
+		l.setError(response, http.StatusNotFound, err)
+		return
+	}
 	response.WriteHeader(http.StatusCreated)
 	response.WriteEntity(o.getUrlPath(request, name))
 }
