@@ -88,7 +88,7 @@ func (p pwdRestful) restAddPwd(request *restful.Request, response *restful.Respo
 	}
 	err = p.st.UsersList.AddPropertyToEntity(name, stc.PwdPropertyName, data)
 	if err != nil {
-		l.setError(response, http.StatusNotFound, err)
+		p.setError(response, http.StatusNotFound, err)
 		return
 	}
 	response.WriteHeader(http.StatusCreated)
