@@ -1,0 +1,432 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "",
+  "basePath": "/",
+  "resourcePath": "/forewind/app/v1/entity",
+  "apis": [
+   {
+    "path": "/forewind/app/v1/entity",
+    "description": "",
+    "operations": [
+     {
+      "type": "entityManagement.EntityManager",
+      "method": "GET",
+      "summary": "Get Entity management",
+      "nickname": "getEntityManager",
+      "parameters": [],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/entity/users/{user-name}",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PUT",
+      "summary": "Create user",
+      "nickname": "createUser",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "identifier of the user",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "entityManagement.Entity",
+      "method": "GET",
+      "summary": "Get user",
+      "nickname": "getUser",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "identifier of the user",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Delete user",
+      "nickname": "removeUser",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "identifier of the user",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/entity/users",
+    "description": "",
+    "operations": [
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Delete all users",
+      "nickname": "removeAllUsers",
+      "parameters": [],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/entity/groups/{group-name}",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PUT",
+      "summary": "Create a group",
+      "nickname": "createGroup",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "group-name",
+        "description": "identifier of the group",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "entityManagement.Group",
+      "method": "GET",
+      "summary": "Get a group",
+      "nickname": "getGroup",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "group-name",
+        "description": "identifier of the group",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Delete a group",
+      "nickname": "removeGroup",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "group-name",
+        "description": "identifier of the group",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/entity/groups",
+    "description": "",
+    "operations": [
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Delete all groups",
+      "nickname": "deleteAllGroups",
+      "parameters": [],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/entity/{group-name}/users/{user-name}",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PUT",
+      "summary": "Add a user to a group",
+      "nickname": "addUserToGroup",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "group-name",
+        "description": "identifier of the group",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "identifier of the user",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "common_restful.Url",
+      "method": "DELETE",
+      "summary": "Remove a user from a group",
+      "nickname": "removeUserToGroup",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "group-name",
+        "description": "identifier of the group",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "identifier of the user",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/entity/resources/{resource-name}",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PUT",
+      "summary": "Create resource",
+      "nickname": "createResource",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "identifier of the resource",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "entityManagement.Entity",
+      "method": "GET",
+      "summary": "Get resource",
+      "nickname": "getResource",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "identifier of the resource",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Delete resource",
+      "nickname": "removeResource",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "identifier of the resource",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/entity/resources",
+    "description": "",
+    "operations": [
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Delete all resources",
+      "nickname": "removeAllResources",
+      "parameters": [],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   }
+  ],
+  "models": {
+   "entityManagement.EntityManager": {
+    "id": "entityManagement.EntityManager",
+    "required": [
+     "Users",
+     "Groups",
+     "Resources"
+    ],
+    "properties": {
+     "Users": {
+      "type": "any"
+     },
+     "Groups": {
+      "type": "any"
+     },
+     "Resources": {
+      "type": "any"
+     }
+    }
+   },
+   "common_restful.Url": {
+    "id": "common_restful.Url",
+    "required": [
+     "Url"
+    ],
+    "properties": {
+     "Url": {
+      "type": "string"
+     }
+    }
+   },
+   "entityManagement.Entity": {
+    "id": "entityManagement.Entity",
+    "required": [
+     "Name",
+     "EntityProperties"
+    ],
+    "properties": {
+     "Name": {
+      "type": "string"
+     },
+     "EntityProperties": {
+      "type": "any"
+     }
+    }
+   },
+   "entityManagement.Group": {
+    "id": "entityManagement.Group",
+    "required": [
+     "Name",
+     "EntityProperties",
+     "Group"
+    ],
+    "properties": {
+     "Name": {
+      "type": "string"
+     },
+     "EntityProperties": {
+      "type": "any"
+     },
+     "Group": {
+      "type": "any"
+     }
+    }
+   }
+  }
+ }

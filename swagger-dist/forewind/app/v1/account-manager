@@ -1,0 +1,360 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "",
+  "basePath": "/",
+  "resourcePath": "/forewind/app/v1/account-manager",
+  "apis": [
+   {
+    "path": "/forewind/app/v1/account-manager/user",
+    "description": "",
+    "operations": [
+     {
+      "type": "void",
+      "method": "PUT",
+      "summary": "Authenticate a user",
+      "nickname": "authenticate",
+      "parameters": [
+       {
+        "type": "accounts_restful.pUserData",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/account-manager/logout",
+    "description": "",
+    "operations": [
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Logout the current user",
+      "nickname": "logout",
+      "parameters": [],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/account-manager/users/{user-name}",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PUT",
+      "summary": "Add Account Management",
+      "nickname": "AddNewAm",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "accounts_restful.privilegePwd",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "accounts.AmUserInfo",
+      "method": "GET",
+      "summary": "Get Account Management",
+      "nickname": "getAm",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Remove Account Management",
+      "nickname": "deleteAm",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/account-manager/users/{user-name}/privilege",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PATCH",
+      "summary": "Update Account Management privilege",
+      "nickname": "updatePrivilege",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "accounts_restful.privilegeInfo",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/account-manager/users/{user-name}/password",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PATCH",
+      "summary": "Update Account Management password",
+      "nickname": "updatePwd",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "common_restful.UpdateSecret",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/account-manager/verify",
+    "description": "",
+    "operations": [
+     {
+      "type": "void",
+      "method": "GET",
+      "summary": "Verify token",
+      "nickname": "verifyToken",
+      "parameters": [],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   }
+  ],
+  "models": {
+   "accounts_restful.pUserData": {
+    "id": "accounts_restful.pUserData",
+    "required": [
+     "Name",
+     "Password"
+    ],
+    "properties": {
+     "Name": {
+      "type": "string"
+     },
+     "Password": {
+      "type": "string"
+     }
+    }
+   },
+   "accounts_restful.privilegePwd": {
+    "id": "accounts_restful.privilegePwd",
+    "required": [
+     "Password",
+     "Privilege"
+    ],
+    "properties": {
+     "Password": {
+      "type": "string"
+     },
+     "Privilege": {
+      "type": "string"
+     }
+    }
+   },
+   "common_restful.Url": {
+    "id": "common_restful.Url",
+    "required": [
+     "Url"
+    ],
+    "properties": {
+     "Url": {
+      "type": "string"
+     }
+    }
+   },
+   "accounts.AmUserInfo": {
+    "id": "accounts.AmUserInfo",
+    "required": [
+     "Pwd",
+     "Privilege"
+    ],
+    "properties": {
+     "Pwd": {
+      "$ref": "password.UserPwd"
+     },
+     "Privilege": {
+      "type": "string"
+     }
+    }
+   },
+   "password.UserPwd": {
+    "id": "password.UserPwd",
+    "required": [
+     "Password",
+     "Salt",
+     "Expiration",
+     "ErrorsCounter",
+     "OneTimePwd",
+     "OldPasswords"
+    ],
+    "properties": {
+     "Password": {
+      "type": "array",
+      "items": {
+       "$ref": "integer"
+      }
+     },
+     "Salt": {
+      "type": "array",
+      "items": {
+       "$ref": "integer"
+      }
+     },
+     "Expiration": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "ErrorsCounter": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "OneTimePwd": {
+      "type": "boolean"
+     },
+     "OldPasswords": {
+      "type": "array",
+      "items": {
+       "$ref": "password.UserPwd.OldPasswords"
+      }
+     }
+    }
+   },
+   "integer": {
+    "id": "integer",
+    "properties": {}
+   },
+   "password.UserPwd.OldPasswords": {
+    "id": "password.UserPwd.OldPasswords",
+    "properties": {}
+   },
+   "accounts_restful.privilegeInfo": {
+    "id": "accounts_restful.privilegeInfo",
+    "required": [
+     "Privilege"
+    ],
+    "properties": {
+     "Privilege": {
+      "type": "string"
+     }
+    }
+   },
+   "common_restful.UpdateSecret": {
+    "id": "common_restful.UpdateSecret",
+    "required": [
+     "OldPassword",
+     "NewPassword"
+    ],
+    "properties": {
+     "OldPassword": {
+      "type": "string"
+     },
+     "NewPassword": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }
