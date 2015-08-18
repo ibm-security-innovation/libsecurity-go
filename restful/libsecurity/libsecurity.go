@@ -214,8 +214,11 @@ func generateJson(path string, distPath string) {
 	}
 	_, file = filepath.Split(path)
 	prefix1 := strings.Replace(p1, "/", "/../", 1)
-	newS := strings.Replace(jsonD, p1, prefix1, -1)
-	fmt.Println("File is in", fmt.Sprintf(fileFmt, distPath, file))
+	obj["apiVersion"] = "2.02"
+	a := obj["info"].(map[string]interface{})
+	a["title"] = "Libsecurity API"
+	j, _ := json.Marshal(obj)
+	newS := strings.Replace(string(j), p1, prefix1, -1)
 	ioutil.WriteFile(fmt.Sprintf(fileFmt, distPath, file), []byte(newS), 0777)
 }
 
