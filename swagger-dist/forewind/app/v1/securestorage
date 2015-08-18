@@ -1,0 +1,215 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "",
+  "basePath": "/",
+  "resourcePath": "/forewind/app/v1/securestorage",
+  "apis": [
+   {
+    "path": "/forewind/app/v1/securestorage/storage",
+    "description": "Secure Storage",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PUT",
+      "summary": "Create a new secure storage",
+      "nickname": "CreateSecureStorage",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "header",
+        "name": "secret",
+        "description": "secret val",
+        "required": false,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Remove the current secure storage",
+      "nickname": "RemoveSecureStorage",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "header",
+        "name": "secret",
+        "description": "secret val",
+        "required": false,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "void",
+      "method": "GET",
+      "summary": "Get a secure storage",
+      "nickname": "getSecureStorage",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "header",
+        "name": "secret",
+        "description": "secret val",
+        "required": false,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/securestorage/item",
+    "description": "Secure Storage",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PATCH",
+      "summary": "Add a new item to the secure storage",
+      "nickname": "addANewItemToTheSecureStorage",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "header",
+        "name": "secret",
+        "description": "secret val",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "storage_restful.itemData",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "storage_restful.itemValue",
+      "method": "GET",
+      "summary": "Get an item from the secure storage",
+      "nickname": "getAnItemFromTheSecureStorage",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "header",
+        "name": "secret",
+        "description": "secret val",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "header",
+        "name": "key-id",
+        "description": "key val",
+        "required": false,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Delete item from a secure storage",
+      "nickname": "deleteItemFromSecureStorage",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "header",
+        "name": "secret",
+        "description": "secret val",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "header",
+        "name": "key-id",
+        "description": "key val",
+        "required": false,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   }
+  ],
+  "models": {
+   "common_restful.Url": {
+    "id": "common_restful.Url",
+    "required": [
+     "Url"
+    ],
+    "properties": {
+     "Url": {
+      "type": "string"
+     }
+    }
+   },
+   "storage_restful.itemData": {
+    "id": "storage_restful.itemData",
+    "required": [
+     "Key",
+     "Value"
+    ],
+    "properties": {
+     "Key": {
+      "type": "string"
+     },
+     "Value": {
+      "type": "string"
+     }
+    }
+   },
+   "storage_restful.itemValue": {
+    "id": "storage_restful.itemValue",
+    "required": [
+     "Data"
+    ],
+    "properties": {
+     "Data": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }

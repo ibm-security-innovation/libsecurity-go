@@ -1,0 +1,347 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "",
+  "basePath": "/",
+  "resourcePath": "/forewind/app/v1/acl",
+  "apis": [
+   {
+    "path": "/forewind/app/v1/acl/resource/{resource-name}",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PUT",
+      "summary": "Add ACL to resource",
+      "nickname": "addAclToResource",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "Resource (Entity) name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "acl.Acl",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "acl.Acl",
+      "method": "GET",
+      "summary": "Get ACL attached to resource",
+      "nickname": "getAcl",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "Resource (Entity) name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Remove ACL from resource",
+      "nickname": "deleteAcl",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "Resource (Entity) name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/acl/entity/{entity-name}/resource/{resource-name}/permissions/{permission}",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PUT",
+      "summary": "Grant the premission to the given entity for a given resource",
+      "nickname": "setPermission",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "entity-name",
+        "description": "Entity name (All for 'world')",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "Resource (Entity) name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "permission",
+        "description": "permission",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "common_restful.Match",
+      "method": "GET",
+      "summary": "Check if the entity has the given permission to the resource",
+      "nickname": "checkEntityPermissionToResource",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "entity-name",
+        "description": "Entity name (All for 'world')",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "Resource (Entity) name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "permission",
+        "description": "permission",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Revoke the permission of the given entity for the given resource",
+      "nickname": "deleteEntityPermissionFromAResource",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "entity-name",
+        "description": "Entity name (All for 'world')",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "Resource (Entity) name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "permission",
+        "description": "permission",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/acl/permissions/resource/{resource-name}",
+    "description": "",
+    "operations": [
+     {
+      "type": "void",
+      "method": "GET",
+      "summary": "Get all the permissions of the given resource",
+      "nickname": "getUserGroupPermissions",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "Resource (Entity) name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/acl/entity/{entity-name}/resource/{resource-name}",
+    "description": "",
+    "operations": [
+     {
+      "type": "void",
+      "method": "GET",
+      "summary": "Get all the permissions of the entity",
+      "nickname": "getAllEntityPermission",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "entity-name",
+        "description": "Entity name (All for 'world')",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "Resource (Entity) name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/acl/resource/{resource-name}/permissions/{permission}",
+    "description": "",
+    "operations": [
+     {
+      "type": "void",
+      "method": "GET",
+      "summary": "Get all the entities that have the permission to the resource",
+      "nickname": "getAllEntitiesOfPermission",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "resource-name",
+        "description": "Resource (Entity) name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "permission",
+        "description": "permission",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   }
+  ],
+  "models": {
+   "acl.Acl": {
+    "id": "acl.Acl",
+    "required": [
+     "Permissions"
+    ],
+    "properties": {
+     "Permissions": {
+      "type": "any"
+     }
+    }
+   },
+   "common_restful.Url": {
+    "id": "common_restful.Url",
+    "required": [
+     "Url"
+    ],
+    "properties": {
+     "Url": {
+      "type": "string"
+     }
+    }
+   },
+   "common_restful.Match": {
+    "id": "common_restful.Match",
+    "required": [
+     "Match",
+     "Message"
+    ],
+    "properties": {
+     "Match": {
+      "type": "boolean"
+     },
+     "Message": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }

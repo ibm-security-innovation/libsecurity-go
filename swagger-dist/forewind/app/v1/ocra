@@ -1,0 +1,418 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "",
+  "basePath": "/",
+  "resourcePath": "/forewind/app/v1/ocra",
+  "apis": [
+   {
+    "path": "/forewind/app/v1/ocra/users/{user-name}",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PUT",
+      "summary": "Add OCRA",
+      "nickname": "addOcra",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "ocra_restful.OcraUserData",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "ocra.UserOcra",
+      "method": "GET",
+      "summary": "Get OCRA",
+      "nickname": "getOcra",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Remove OCRA",
+      "nickname": "deleteOcra",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/ocra/users/{user-name}/key",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PATCH",
+      "summary": "Update OCRA secret key",
+      "nickname": "updtaeKey",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "common_restful.Secret",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/ocra/users/{user-name}/ocraSuite",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PATCH",
+      "summary": "Update OCRA suite",
+      "nickname": "updtaeOcraSuite",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "common_restful.StringMessage",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/ocra/users/{user-name}/verify-oneway",
+    "description": "",
+    "operations": [
+     {
+      "type": "ocra_restful.OcraData",
+      "method": "GET",
+      "summary": "Verify the user identity using OCRA, one way",
+      "nickname": "verifyUserIdentity",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/ocra/users/{user-name}/verify-oneway-otp",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Match",
+      "method": "PUT",
+      "summary": "Check the user OTP challenge response using OCRA",
+      "nickname": "verifyUserIdentityOtp",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "ocra_restful.OcraData",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/ocra/users/{user-name}/verify-mutual-step1",
+    "description": "",
+    "operations": [
+     {
+      "type": "ocra_restful.OcraData",
+      "method": "PUT",
+      "summary": "Verify the user identity using OCRA, mutual chalange, Step 1",
+      "nickname": "verifyUserIdentityMutualChallenge",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "common_restful.StringMessage",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/ocra/users/{user-name}/verify-mutual-step2",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Match",
+      "method": "PUT",
+      "summary": "Verify the user identity using OCRA, mutual chalange, Step 2",
+      "nickname": "verifyUserIdentityMutualChallenge",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "ocra_restful.OcraData",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   }
+  ],
+  "models": {
+   "ocra_restful.OcraUserData": {
+    "id": "ocra_restful.OcraUserData",
+    "required": [
+     "Secret",
+     "OcraSuite"
+    ],
+    "properties": {
+     "Secret": {
+      "type": "string"
+     },
+     "OcraSuite": {
+      "type": "string"
+     }
+    }
+   },
+   "common_restful.Url": {
+    "id": "common_restful.Url",
+    "required": [
+     "Url"
+    ],
+    "properties": {
+     "Url": {
+      "type": "string"
+     }
+    }
+   },
+   "ocra.UserOcra": {
+    "id": "ocra.UserOcra",
+    "required": [
+     "OcraSuite",
+     "Key"
+    ],
+    "properties": {
+     "OcraSuite": {
+      "type": "string"
+     },
+     "Key": {
+      "type": "array",
+      "items": {
+       "$ref": "integer"
+      }
+     }
+    }
+   },
+   "integer": {
+    "id": "integer",
+    "properties": {}
+   },
+   "common_restful.Secret": {
+    "id": "common_restful.Secret",
+    "required": [
+     "Secret"
+    ],
+    "properties": {
+     "Secret": {
+      "type": "string"
+     }
+    }
+   },
+   "common_restful.StringMessage": {
+    "id": "common_restful.StringMessage",
+    "required": [
+     "Str"
+    ],
+    "properties": {
+     "Str": {
+      "type": "string"
+     }
+    }
+   },
+   "ocra_restful.OcraData": {
+    "id": "ocra_restful.OcraData",
+    "required": [
+     "ServerQuestion",
+     "ClientQuestion",
+     "Counter",
+     "Password",
+     "SessionId",
+     "TimeStamp",
+     "Otp"
+    ],
+    "properties": {
+     "ServerQuestion": {
+      "type": "string"
+     },
+     "ClientQuestion": {
+      "type": "string"
+     },
+     "Counter": {
+      "type": "string"
+     },
+     "Password": {
+      "type": "string"
+     },
+     "SessionId": {
+      "type": "string"
+     },
+     "TimeStamp": {
+      "type": "string"
+     },
+     "Otp": {
+      "type": "string"
+     }
+    }
+   },
+   "common_restful.Match": {
+    "id": "common_restful.Match",
+    "required": [
+     "Match",
+     "Message"
+    ],
+    "properties": {
+     "Match": {
+      "type": "boolean"
+     },
+     "Message": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }

@@ -22,11 +22,18 @@
 
   <!-- enabling this will enable oauth2 implicit scope support -->
   <script src='lib/swagger-oauth.js' type='text/javascript'></script>
-
   <script type="text/javascript">
     $(function () {
+      /* url=window.location.pathname+'/../security.json' */
+      path = window.location.pathname
+      val = path.indexOf("dist");
+      if (path.indexOf("dist") > 0 || path.indexOf("rawgit") > 0) {
+        url = path.substring(0, path.lastIndexOf('/')+1)+'security.json';
+      }else {
+        url="/forewind/security.json";
+      }
       window.swaggerUi = new SwaggerUi({
-      url: "/forewind/security.json",
+      url: url,
       dom_id: "swagger-ui-container",
       supportedSubmitMethods: ['get', 'post', 'put', 'patch', 'delete'],
       onComplete: function(swaggerApi, swaggerUi){

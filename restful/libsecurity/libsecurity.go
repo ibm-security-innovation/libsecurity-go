@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful/swagger"
@@ -18,7 +19,7 @@ import (
 	logger "ibm-security-innovation/libsecurity-go/logger"
 	"ibm-security-innovation/libsecurity-go/restful/accounts_restful"
 	"ibm-security-innovation/libsecurity-go/restful/acl_restful"
-	"ibm-security-innovation/libsecurity-go/restful/common_restful"
+	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
 	en_restful "ibm-security-innovation/libsecurity-go/restful/entity_restful"
 	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
 	"ibm-security-innovation/libsecurity-go/restful/ocra_restful"
@@ -50,6 +51,7 @@ var (
 
 	verifyKey, loginKey, signKey                []byte
 	host, protocol, sslServerCert, sslServerKey *string
+	generateJsonFlag                            *bool
 )
 
 type ConfigS map[string]string
@@ -65,10 +67,11 @@ func usage() {
 }
 
 func init() {
-	common_restful.ServicePathPrefix = "/forewind/app"
+	cr.ServicePathPrefix = "/forewind/app"
 	ConfigOptions = []string{amToken, umToken, aclToken, appAclToken, otpToken, ocraToken, passwordToken, secureStorageToken}
 	protocol = flag.String("protocol", "https", "Using protocol: http ot https")
 	host = flag.String("host", "localhost:8080", "Listening host")
+	generateJsonFlag = flag.Bool("generate", false, "generate static json")
 	sslServerCert = flag.String("server-cert", "./dist/server.crt", "SSL server certificate file path for https")
 	sslServerKey = flag.String("server-key", "./dist/server.key", "SSL server key file path for https")
 }
@@ -85,7 +88,9 @@ func runRestApi(wsContainer *restful.Container) {
 	}
 
 	swagger.RegisterSwaggerService(config, wsContainer)
-
+	if *generateJsonFlag {
+		go generateJson(config.ApiPath, config.SwaggerFilePath+"/")
+	}
 	log.Printf("start listening on %v", *host)
 	var err error
 	if strings.HasPrefix(strings.ToLower(*protocol), HTTPS_STR) {
@@ -179,6 +184,39 @@ func registerComponents(configFile string, secureKeyFilePath string, privateKeyF
 		fmt.Println("Load info error:", err)
 	}
 	runRestApi(wsContainer)
+}
+
+func generateJson(path string, distPath string) {
+	var obj map[string]interface{}
+	baseUrl := fmt.Sprintf("%v://%v%v", *protocol, *host, path)
+	fileFmt := "%v/%v"
+
+	time.Sleep(100 * time.Millisecond)
+	_, jsonD, _ := cr.HttpDataMethod(cr.GET_STR, baseUrl, "")
+	err := json.Unmarshal([]byte(jsonD), &obj)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var prefix, p1, file string
+	for i, v := range obj["apis"].([]interface{}) {
+		casted := v.(map[string]interface{})
+		url1 := fmt.Sprintf("%v%v", baseUrl, casted["path"])
+		_, u, _ := cr.HttpDataMethod(cr.GET_STR, url1, "")
+		p1, file = filepath.Split(fmt.Sprintf("%v", casted["path"]))
+		if i == 0 {
+			prefix = strings.Replace(p1, "/", distPath, 1)
+			err := os.MkdirAll(prefix, 0777)
+			if err != nil {
+				log.Fatalf("Fatal error while generating static JSON path: %v", err)
+			}
+		}
+		ioutil.WriteFile(fmt.Sprintf(fileFmt, prefix, file), []byte(u), 0777)
+	}
+	_, file = filepath.Split(path)
+	prefix1 := strings.Replace(p1, "/", "/../", 1)
+	newS := strings.Replace(jsonD, p1, prefix1, -1)
+	fmt.Println("File is in", fmt.Sprintf(fileFmt, distPath, file))
+	ioutil.WriteFile(fmt.Sprintf(fileFmt, distPath, file), []byte(newS), 0777)
 }
 
 func main() {

@@ -1,0 +1,412 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "",
+  "basePath": "/",
+  "resourcePath": "/forewind/app/v1/otp",
+  "apis": [
+   {
+    "path": "/forewind/app/v1/otp/users/{user-name}",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Url",
+      "method": "PUT",
+      "summary": "Add OTP",
+      "nickname": "addOtp",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "common_restful.Secret",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "otp.OtpUser",
+      "method": "GET",
+      "summary": "Get the OTP",
+      "nickname": "getOtp",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "void",
+      "method": "DELETE",
+      "summary": "Remove the OTP",
+      "nickname": "deleteOTP",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/otp/users/{user-name}/blocked-state",
+    "description": "",
+    "operations": [
+     {
+      "type": "otp_restful.userState",
+      "method": "GET",
+      "summary": "Check if OTP is blocked",
+      "nickname": "isOtpBlocked",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     },
+     {
+      "type": "common_restful.Url",
+      "method": "PUT",
+      "summary": "Set the OTP blocked state",
+      "nickname": "setOtpBlockedState",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "otp_restful.userState",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/otp/users/{user-name}/verify-hotp",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Match",
+      "method": "POST",
+      "summary": "Verify that a given OTP is as expected, counter base",
+      "nickname": "verifyHotpUserCode",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "common_restful.Secret",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   },
+   {
+    "path": "/forewind/app/v1/otp/users/{user-name}/verify-totp",
+    "description": "",
+    "operations": [
+     {
+      "type": "common_restful.Match",
+      "method": "POST",
+      "summary": "Verify that a given code is as expected, time base",
+      "nickname": "verifyTotpUserCode",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "path",
+        "name": "user-name",
+        "description": "user name",
+        "required": true,
+        "allowMultiple": false
+       },
+       {
+        "type": "common_restful.Secret",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "produces": [
+       "application/json"
+      ],
+      "consumes": [
+       "application/json"
+      ]
+     }
+    ]
+   }
+  ],
+  "models": {
+   "common_restful.Secret": {
+    "id": "common_restful.Secret",
+    "required": [
+     "Secret"
+    ],
+    "properties": {
+     "Secret": {
+      "type": "string"
+     }
+    }
+   },
+   "common_restful.Url": {
+    "id": "common_restful.Url",
+    "required": [
+     "Url"
+    ],
+    "properties": {
+     "Url": {
+      "type": "string"
+     }
+    }
+   },
+   "otp.OtpUser": {
+    "id": "otp.OtpUser",
+    "required": [
+     "Secret",
+     "Blocked",
+     "Throttle",
+     "BaseHotp",
+     "BaseTotp"
+    ],
+    "properties": {
+     "Secret": {
+      "type": "array",
+      "items": {
+       "$ref": "integer"
+      }
+     },
+     "Blocked": {
+      "type": "boolean"
+     },
+     "Throttle": {
+      "$ref": "otp.throtteling"
+     },
+     "BaseHotp": {
+      "$ref": "otp.Hotp"
+     },
+     "BaseTotp": {
+      "$ref": "otp.Totp"
+     }
+    }
+   },
+   "integer": {
+    "id": "integer",
+    "properties": {}
+   },
+   "otp.throtteling": {
+    "id": "otp.throtteling",
+    "required": [
+     "Cliff",
+     "DurationSec",
+     "throttlingTimerHotp",
+     "throttlingTimerTotp",
+     "CheckHotpWindow",
+     "consErrorCounter",
+     "AutoUnblockSec",
+     "unblockTimer",
+     "CheckTotpWindowSec",
+     "lastTotpCode"
+    ],
+    "properties": {
+     "Cliff": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "DurationSec": {
+      "$ref": "time.Duration"
+     },
+     "throttlingTimerHotp": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "throttlingTimerTotp": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "CheckHotpWindow": {
+      "$ref": "time.Duration"
+     },
+     "consErrorCounter": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "AutoUnblockSec": {
+      "$ref": "time.Duration"
+     },
+     "unblockTimer": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "CheckTotpWindowSec": {
+      "$ref": "time.Duration"
+     },
+     "lastTotpCode": {
+      "type": "string"
+     }
+    }
+   },
+   "otp.Hotp": {
+    "id": "otp.Hotp",
+    "required": [
+     "Count",
+     "BaseOtp"
+    ],
+    "properties": {
+     "Count": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "BaseOtp": {
+      "$ref": "otp.Otp"
+     }
+    }
+   },
+   "otp.Otp": {
+    "id": "otp.Otp",
+    "required": [
+     "Secret",
+     "Digits",
+     "digest"
+    ],
+    "properties": {
+     "Secret": {
+      "type": "array",
+      "items": {
+       "$ref": "integer"
+      }
+     },
+     "Digits": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "digest": {
+      "$ref": "otp.Otp.digest"
+     }
+    }
+   },
+   "otp.Otp.digest": {
+    "id": "otp.Otp.digest",
+    "properties": {}
+   },
+   "otp.Totp": {
+    "id": "otp.Totp",
+    "required": [
+     "Interval",
+     "BaseOtp"
+    ],
+    "properties": {
+     "Interval": {
+      "$ref": "time.Duration"
+     },
+     "BaseOtp": {
+      "$ref": "otp.Otp"
+     }
+    }
+   },
+   "otp_restful.userState": {
+    "id": "otp_restful.userState",
+    "required": [
+     "Blocked"
+    ],
+    "properties": {
+     "Blocked": {
+      "type": "boolean"
+     }
+    }
+   },
+   "common_restful.Match": {
+    "id": "common_restful.Match",
+    "required": [
+     "Match",
+     "Message"
+    ],
+    "properties": {
+     "Match": {
+      "type": "boolean"
+     },
+     "Message": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }
