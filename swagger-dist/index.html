@@ -26,7 +26,6 @@
     $(function () {
       /* url=window.location.pathname+'/../security.json' */
       path = window.location.pathname
-      val = path.indexOf("dist");
       if (path.indexOf("dist") > 0 || path.indexOf("rawgit") > 0) {
         url = path.substring(0, path.lastIndexOf('/')+1)+'security.json';
       }else {
@@ -38,7 +37,9 @@
       supportedSubmitMethods: ['get', 'post', 'put', 'patch', 'delete'],
       onComplete: function(swaggerApi, swaggerUi){
         log("Loaded SwaggerUI");
-
+        if (path.indexOf("dist") > 0 || path.indexOf("rawgit") > 0) {
+          $('input.submit').prop('disabled', true);
+        }
         if(typeof initOAuth == "function") {
           /*
           initOAuth({
