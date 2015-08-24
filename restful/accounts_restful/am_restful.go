@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	am "ibm-security-innovation/libsecurity-go/accounts"
@@ -156,16 +157,19 @@ func (l amRestful) restAm(request *restful.Request, response *restful.Response) 
 		l.setError(response, http.StatusMethodNotAllowed, fmt.Errorf("Error with the password for user '%v': %v", userInfo.Name, err))
 		return
 	}
-	tokenStr, err := app.GenerateToken(userInfo.Name, data.Privilege, request.Request.RemoteAddr, l.st.SignKey)
+	tokenStr, err := app.GenerateToken(userInfo.Name, data.Privilege, getIPAddress(request), l.st.SignKey)
 	if err != nil {
 		l.setError(response, http.StatusInternalServerError, err)
 		return
 	}
-	fmt.Println("User:", userInfo.Name, "is authenticated")
 	logger.Info.Println("User:", userInfo.Name, "is authenticated")
 	addLoginCookie(response, tokenStr)
 	response.WriteHeader(http.StatusOK)
 	response.WriteEntity(cr.Match{Match: true, Message: fmt.Sprintf("User '%v' is authenticated", userInfo.Name)})
+}
+
+func getIPAddress(request *restful.Request) string {
+	return strings.Split(request.Request.RemoteAddr, ":")[0]
 }
 
 func (l amRestful) restLogout(request *restful.Request, response *restful.Response) {

@@ -30,12 +30,12 @@ func Test_GenerateToken(t *testing.T) {
 	for _, name := range usersName {
 		for _, ip := range ipsStr {
 			for p, _ := range usersPrivilege {
-				token1, _ := GenerateToken(name, p, ip, []byte(signKey))
+				token1, _ := GenerateToken(name, p, ip, signKey)
 				data, err := ParseToken(token1, ip, verifyKey)
 				if err != nil || data.UserName != name || data.Privilege != p {
 					t.Errorf("Test fail: the parsed token != generated token, error: %v", err)
 				}
-				_, err = ParseToken(token1, ip+"1", signKey)
+				_, err = ParseToken(token1, ip+"1", verifyKey)
 				if err == nil {
 					t.Errorf("Test fail: return successful from parsed token but the IPs are different")
 				}
@@ -63,20 +63,18 @@ func Test_CheckPrivilegeAndSameUser(t *testing.T) {
 		}
 	}
 	for i, name := range usersName {
-		token1, _ := GenerateToken(name, permissions[i], defaultIp, []byte(signKey))
+		token1, _ := GenerateToken(name, permissions[i], defaultIp, signKey)
 		for j, _ := range usersName {
 			ok, err := IsPrivilegeOk(token1, permissions[j], defaultIp, verifyKey)
 			if j > i && ok == true {
 				t.Errorf("Test fail: Is privilege returns %v but the token privilege is '%v' and the check was for '%v', error %v", ok, usersName[i], permissions[j], err)
-				t.FailNow()
 			} else if j <= i && ok == false {
 				t.Errorf("Test fail: Is privilege returns %v but the token privilege is '%v' and the check was for '%v', error %v", ok, usersName[i], permissions[j], err)
-				t.FailNow()
 			}
 		}
 	}
 	for _, name1 := range usersName {
-		token1, _ := GenerateToken(name1, name1, defaultIp, []byte(signKey))
+		token1, _ := GenerateToken(name1, name1, defaultIp, signKey)
 		for _, name2 := range usersName {
 			ok, _ := IsItTheSameUser(token1, name2, defaultIp, verifyKey)
 			if name1 != name2 && ok == true {

@@ -1,9 +1,11 @@
 package libsecurity_restful
 
 import (
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/emicklei/go-restful"
 	am "ibm-security-innovation/libsecurity-go/accounts"
@@ -30,9 +32,9 @@ var (
 
 type LibsecurityRestful struct {
 	UsersList     *en.EntityManager
-	verifyKey     []byte
+	verifyKey     *rsa.PublicKey
 	loginKey      []byte
-	SignKey       []byte
+	SignKey       *rsa.PrivateKey
 	SecureStorage *ss.SecureStorage
 }
 
@@ -80,7 +82,7 @@ func (l LibsecurityRestful) verifyUserPermissions(req *restful.Request, resp *re
 		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("You need to authenticate first"))
 		return false
 	}
-	isPrivilegeOk, err := app.IsPrivilegeOk(tokenStr, userPermission, req.Request.RemoteAddr, l.verifyKey)
+	isPrivilegeOk, err := app.IsPrivilegeOk(tokenStr, userPermission, getIPAddress(req), l.verifyKey)
 	if err != nil {
 		l.setError(resp, http.StatusMethodNotAllowed, err)
 		return false
@@ -113,14 +115,14 @@ func (l LibsecurityRestful) SameUserFilter(req *restful.Request, resp *restful.R
 		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("You need to authenticate first"))
 		return
 	}
-	isUserMatch, err := app.IsItTheSameUser(tokenStr, name, req.Request.RemoteAddr, l.verifyKey)
+	isUserMatch, err := app.IsItTheSameUser(tokenStr, name, getIPAddress(req), l.verifyKey)
 	if err != nil {
 		l.setError(resp, http.StatusMethodNotAllowed, err)
 		return
 	}
-	isPrivilegeOk, _ := app.IsPrivilegeOk(tokenStr, am.SuperUserPermission, req.Request.RemoteAddr, l.verifyKey)
+	isPrivilegeOk, _ := app.IsPrivilegeOk(tokenStr, am.SuperUserPermission, getIPAddress(req), l.verifyKey)
 	if isPrivilegeOk == false && isUserMatch == false {
-		tokenData, _ := app.ParseToken(tokenStr, req.Request.RemoteAddr, l.verifyKey)
+		tokenData, _ := app.ParseToken(tokenStr, getIPAddress(req), l.verifyKey)
 		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("User '%v' is not permited to do the operation, only the same user or root can execute it", tokenData.UserName))
 		return
 	}
@@ -133,7 +135,7 @@ func (l LibsecurityRestful) VerifyToken(req *restful.Request, resp *restful.Resp
 		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("You need to authenticate first"))
 		return
 	}
-	_, err := app.ParseToken(tokenStr, req.Request.RemoteAddr, l.verifyKey)
+	_, err := app.ParseToken(tokenStr, getIPAddress(req), l.verifyKey)
 	if err != nil {
 		l.setError(resp, http.StatusMethodNotAllowed, err)
 		return
@@ -141,7 +143,7 @@ func (l LibsecurityRestful) VerifyToken(req *restful.Request, resp *restful.Resp
 	chain.ProcessFilter(req, resp)
 }
 
-func (s *LibsecurityRestful) SetData(el *en.EntityManager, loginKeyVal []byte, verifyKeyval []byte, signKeyVal []byte, secureStorage *ss.SecureStorage) {
+func (s *LibsecurityRestful) SetData(el *en.EntityManager, loginKeyVal []byte, verifyKeyval *rsa.PublicKey, signKeyVal *rsa.PrivateKey, secureStorage *ss.SecureStorage) {
 	s.UsersList = el
 	s.loginKey = loginKeyVal
 	s.verifyKey = verifyKeyval
@@ -196,4 +198,8 @@ func (s LibsecurityRestful) restLoadData(request *restful.Request, response *res
 	}
 	response.WriteHeader(http.StatusCreated)
 	response.WriteEntity(fileData.FilePath)
+}
+
+func getIPAddress(request *restful.Request) string {
+	return strings.Split(request.Request.RemoteAddr, ":")[0]
 }

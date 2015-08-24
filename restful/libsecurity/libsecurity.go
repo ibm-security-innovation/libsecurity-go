@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rsa"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -49,7 +50,9 @@ const (
 var (
 	ConfigOptions []string
 
-	verifyKey, loginKey, signKey                []byte
+	verifyKey                                   *rsa.PublicKey
+	signKey                                     *rsa.PrivateKey
+	loginKey                                    []byte
 	host, protocol, sslServerCert, sslServerKey *string
 	generateJsonFlag                            *bool
 )
