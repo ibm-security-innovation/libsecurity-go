@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -80,58 +79,36 @@ func generateJwt(length int) string {
 }
 
 // Return the RSA private key from the given file
-func GetPrivateKey(privateKeyFilePath string) ([]byte, *rsa.PrivateKey, error) {
+func getPrivateKey(privateKeyFilePath string) (*rsa.PrivateKey, error) {
 	signKey, err := ioutil.ReadFile(privateKeyFilePath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("reading private key file: '%v'", privateKeyFilePath)
+		return nil, fmt.Errorf("reading private key file: '%v'", privateKeyFilePath)
 	}
 
 	block, _ := pem.Decode(signKey)
 	if block == nil {
-		return nil, nil, fmt.Errorf("found while decoding the private key")
+		return nil, fmt.Errorf("found while decoding the private key")
 	}
-	r, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return signKey, r, nil
+	return privateKey, nil
 }
 
-// Get from the given file a private key, calculate public keys based on that key and return all these (private and public) keys
-func TokenSetUp(privateKeyFilePath string) ([]byte, []byte) {
+// Read the given private key PEM file and extract an RSA private key (signing
+// key) the corresponding RSA public key (verifying key)
+func TokenSetUp(privateKeyFilePath string) (*rsa.PrivateKey, *rsa.PublicKey) {
 	var err error
-
-	signKey, pKey, err := GetPrivateKey(privateKeyFilePath)
+	pKey, err := getPrivateKey(privateKeyFilePath)
 	if err != nil {
 		logger.Error.Fatal("reading private key file:", privateKeyFilePath)
 	}
-
-	t, err := x509.MarshalPKIXPublicKey(&pKey.PublicKey)
-	if err != nil {
-		logger.Error.Fatal("problems while calculating public key")
-	}
-	verifyKey := pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PUBLIC KEY",
-		Bytes: t,
-	})
-	return signKey, verifyKey
-}
-
-func getIpFromAddrStr(ipAddr string) string {
-	addr := strings.Split(ipAddr, ":")
-	if len(addr) >= 2 {
-		val := addr[len(addr)-2]
-		if strings.Contains(val, "localhost") {
-			return "127.0.0.1"
-		} else {
-			return val
-		}
-	}
-	return ""
+	return pKey, &pKey.PublicKey
 }
 
 // Generate a new signed token
-func GenerateToken(name string, privilege string, ipAddr string, signKey []byte) (string, error) {
+func GenerateToken(name string, privilege string, ipAddr string, signKey *rsa.PrivateKey) (string, error) {
 	// create a signer for rsa 256
 	token := jwt.New(jwt.SigningMethodRS256)
 
@@ -140,12 +117,12 @@ func GenerateToken(name string, privilege string, ipAddr string, signKey []byte)
 	token.Claims[tokenClaimsAudienceStr] = name
 	token.Claims[tokenClaimsJtiStr] = jwtUniqId
 	token.Claims[tokenClaimsPrivilegeStr] = privilege
-	token.Claims[tokenClaimsIPAddr] = getIpFromAddrStr(ipAddr)
+	token.Claims[tokenClaimsIPAddr] = ipAddr
 	return token.SignedString(signKey)
 }
 
 // Parse the given token and verify that it holds the mandatory data
-func ParseToken(tokenString string, ipAddr string, verifyKey []byte) (*TokenData, error) {
+func ParseToken(tokenString string, ipAddr string, verifyKey *rsa.PublicKey) (*TokenData, error) {
 	token, err := jwt.Parse(tokenString,
 		func(token *jwt.Token) (interface{}, error) {
 			if token.Claims[tokenClaimsIssuerStr] != TrusteerSecurityStr {
@@ -154,8 +131,8 @@ func ParseToken(tokenString string, ipAddr string, verifyKey []byte) (*TokenData
 			if token.Claims[tokenClaimsJtiStr] != jwtUniqId {
 				return nil, fmt.Errorf("the token is not valid: wrong ID")
 			}
-			if token.Claims[tokenClaimsIPAddr] != getIpFromAddrStr(ipAddr) {
-				return nil, fmt.Errorf("the token is not genuine")
+			if token.Claims[tokenClaimsIPAddr] != ipAddr {
+				return nil, fmt.Errorf("the IP address (%v) doesn't match the IP address in the token (%v)", ipAddr, token.Claims[tokenClaimsIPAddr])
 			}
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -188,7 +165,7 @@ func ParseToken(tokenString string, ipAddr string, verifyKey []byte) (*TokenData
 }
 
 // Verify that the given privilege matches the one that is associated with the user defined in the token
-func IsPrivilegeOk(tokenString string, privilege string, ipAddr string, verifyKey []byte) (bool, error) {
+func IsPrivilegeOk(tokenString string, privilege string, ipAddr string, verifyKey *rsa.PublicKey) (bool, error) {
 	err := am.IsValidPrivilege(privilege)
 	if err != nil {
 		return false, err
@@ -212,7 +189,7 @@ func IsPrivilegeOk(tokenString string, privilege string, ipAddr string, verifyKe
 }
 
 // Verify that the user associated with the token is the same as the given one
-func IsItTheSameUser(tokenString string, userName string, ipAddr string, verifyKey []byte) (bool, error) {
+func IsItTheSameUser(tokenString string, userName string, ipAddr string, verifyKey *rsa.PublicKey) (bool, error) {
 	tokenData, err := ParseToken(tokenString, ipAddr, verifyKey)
 
 	if err != nil {
