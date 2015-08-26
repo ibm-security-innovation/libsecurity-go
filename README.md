@@ -13,6 +13,9 @@ Secure "things" that connect to the internet by providing a set of security libr
 ### Language
 - Implemented in Go
 
+### API
+[API](./swagger-dist/index.html)
+
 ## Provided Libraries:
   - Initialization services including a utility that generates an initial secureStorage file to be used later by all other components
   - Token services for allowing transfer of users' information between client and server using secure JSON Web Token (JWT) cookies.
