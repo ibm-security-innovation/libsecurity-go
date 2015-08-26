@@ -26,7 +26,7 @@
      $(function () {
        /* url=window.location.pathname+'/../security.json' */
        function read_only_mode() {
-         return window.location.protocol.indexOf("file") > 0 || window.location.host.indexOf("rawgit") > 0;
+         return window.location.protocol.indexOf("file") > -1 || window.location.host.indexOf("rawgit") > -1;
        }
 
        if ( read_only_mode() ) {
