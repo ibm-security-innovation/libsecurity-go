@@ -24,12 +24,11 @@
     <script src='lib/swagger-oauth.js' type='text/javascript'></script>
     <script type="text/javascript">
      $(function () {
-       /* url=window.location.pathname+'/../security.json' */
        function read_only_mode() {
-         return window.location.protocol("file") > 0 || window.location.host.indexOf("rawgit") > 0;
+         return window.location.protocol.indexOf("file") >= 0 || window.location.hostname.indexOf("rawgit") >= 0;
        }
-
-       if ( read_only_mode() ) {
+       path = window.location.pathname
+       if ( read_only_mode()) {
          url = path.substring(0, path.lastIndexOf('/')+1)+'security.json';
        }else {
          url="/forewind/security.json";
@@ -40,10 +39,12 @@
          supportedSubmitMethods: ['get', 'post', 'put', 'patch', 'delete'],
          onComplete: function(swaggerApi, swaggerUi){
            log("Loaded SwaggerUI");
-           if ( read_only_mode() > 0) {
-             $('input:text').hide();
+           if ( read_only_mode()) {
+			 $('input:text').hide();
              $('textarea').hide();
              $('input.submit').hide();
+	         $('div.response-content-type').hide();
+	         $('div.parameter-content-type').hide();
            }
            if(typeof initOAuth == "function") {
              /*
