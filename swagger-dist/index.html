@@ -26,11 +26,11 @@
      $(function () {
        /* url=window.location.pathname+'/../security.json' */
        function read_only_mode() {
-         return window.location.protocol.indexOf("file") > -1 || window.location.host.indexOf("rawgit") > -1;
+         return window.location.protocol.indexOf("file") > -1 || window.location.hostname.indexOf("rawgit") > -1;
        }
 
        if ( read_only_mode() ) {
-         url = path.substring(0, path.lastIndexOf('/')+1)+'security.json';
+         url = './security.json';
        }else {
          url="/forewind/security.json";
        }
