@@ -58,7 +58,7 @@ func createBasicFile(stFilePath string, name string, pass string, key []byte) {
 	}
 	ul := en.New()
 	ul.AddUser(name)
-	amUser, _ := am.NewUserAm(am.SuperUserPermission, []byte(pass), saltStr)
+	amUser, _ := am.NewUserAm(am.SuperUserPermission, []byte(pass), saltStr, true)
 	ul.AddPropertyToEntity(name, stc.AmPropertyName, amUser)
 	ul.StoreInfo(stFilePath, key)
 }

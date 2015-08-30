@@ -48,10 +48,9 @@ const (
 
 	extraCharStr  = "@#%^&()'-_+=;:"
 	digitStr      = "0123456789"
-	minRegularCnt = 4
 	minUpperCase  = 1
 	minLowerCase  = 1
-	minDigits     = 2
+	minDigits     = 1
 	minExtraChars = 1
 )
 
@@ -92,9 +91,13 @@ func isPwdLengthValid(pwd []byte) error {
 }
 
 // Verify that the password is legal: its length is OK and it wasn't recently used
-func (u UserPwd) IsNewPwdValid(pwd []byte) error {
+func (u UserPwd) IsNewPwdValid(pwd []byte, checkPwdStrength bool) error {
 	err := isPwdLengthValid(pwd)
 	if err != nil {
+		return err
+	}
+	err = CheckPasswordStrength(string(pwd))
+	if err != nil && checkPwdStrength {
 		return err
 	}
 	newPwd := GetHashedPwd(pwd)
@@ -123,9 +126,13 @@ func compareHashedPwd(pwd1 []byte, pwd2 []byte) bool {
 
 // Generate a new UserPwd for a given password
 // The generated password is with a default expiration time
-func NewUserPwd(pwd []byte, saltData []byte) (*UserPwd, error) {
+func NewUserPwd(pwd []byte, saltData []byte, checkPwdStrength bool) (*UserPwd, error) {
 	err := isPwdLengthValid(pwd)
 	if err != nil {
+		return nil, err
+	}
+	err = CheckPasswordStrength(string(pwd))
+	if err != nil && checkPwdStrength {
 		return nil, err
 	}
 	newPwd, err := salt.GenerateSaltedPassword(pwd, MinPasswordLength, MaxPasswordLength, saltData, -1)
@@ -145,17 +152,21 @@ func (u *UserPwd) SetOneTimePwd(flag bool) {
 }
 
 // Update password and expiration time
-func (u *UserPwd) UpdatePassword(currentPwd []byte, pwd []byte) ([]byte, error) {
-	return u.updatePasswordHandler(currentPwd, pwd, getNewDefaultPasswordExpirationTime(), defaultOneTimePwd)
+func (u *UserPwd) UpdatePassword(currentPwd []byte, pwd []byte, checkPwdStrength bool) ([]byte, error) {
+	return u.updatePasswordHandler(currentPwd, pwd, getNewDefaultPasswordExpirationTime(), defaultOneTimePwd, checkPwdStrength)
 }
 
 // Update the password, it's expioration time and it's state (is it a one-time-password or a regular one)
-func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiration time.Time, oneTimePwd bool) ([]byte, error) {
+func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiration time.Time, oneTimePwd bool, checkPwdStrength bool) ([]byte, error) {
 	pLock.Lock()
 	defer pLock.Unlock()
 
 	err := isPwdLengthValid(pwd)
 	if err != nil {
+		return nil, err
+	}
+	err = CheckPasswordStrength(string(pwd))
+	if err != nil && checkPwdStrength {
 		return nil, err
 	}
 	err = u.isPasswordMatchHandler(currentPwd, true)
@@ -166,7 +177,7 @@ func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiratio
 	if err != nil {
 		return nil, fmt.Errorf("problems while generating the new password: %v", err)
 	}
-	err = u.IsNewPwdValid(tmpPwd)
+	err = u.IsNewPwdValid(tmpPwd, false)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +235,7 @@ func (u *UserPwd) ResetPasword() ([]byte, error) {
 	pass := GenerateNewValidPassword()
 	expiration := time.Now().Add(time.Duration(defaultOneTimePwdExpirationMinutes) * time.Second * 60)
 	u.ErrorsCounter = 0
-	_, err := u.updatePasswordHandler(u.Password, pass, expiration, true)
+	_, err := u.updatePasswordHandler(u.Password, pass, expiration, true, true)
 	u.SetOneTimePwd(true)
 	u.Expiration = expiration // to override the one time password setting
 	if err != nil {
@@ -234,7 +245,7 @@ func (u *UserPwd) ResetPasword() ([]byte, error) {
 }
 
 func (u *UserPwd) UpdatePasswordAfterReset(currentPwd []byte, pwd []byte, expiration time.Time) ([]byte, error) {
-	return u.updatePasswordHandler(currentPwd, pwd, expiration, false)
+	return u.updatePasswordHandler(currentPwd, pwd, expiration, false, true)
 }
 
 func CheckPasswordStrength(pass string) error {
@@ -258,8 +269,9 @@ func CheckPasswordStrength(pass string) error {
 		}
 	}
 	if len(pass) < MinPasswordLength || extraCnt < minExtraChars || digitCnt < minDigits ||
-		len(pass)-extraCnt-digitCnt < minRegularCnt || upperCaseCnt < minUpperCase || lowerCaseCnt < minLowerCase {
-		return fmt.Errorf("The password is not strong enough: it must contains a minimum of %v characters, include at least %v digits, at least %v letters (with at least %v uppercase and %v lowercase letters) and at least %v extra charachters from the following list %v", MinPasswordLength, minDigits, minRegularCnt, minUpperCase, minLowerCase, minExtraChars, extraCharStr)
+		upperCaseCnt < minUpperCase || lowerCaseCnt < minLowerCase {
+		return fmt.Errorf("The checked password does not pass the password strength test. In order to be strong, the password must contain at least %v characters, and include at least: %v digits, %v letters (%v must be upper-case and %v must be lower-case) and %v extra character from the list bellow.\nList of possible extra characters: '%v'",
+			MinPasswordLength, minDigits, minUpperCase+minLowerCase, minUpperCase, minLowerCase, minExtraChars, extraCharStr)
 	}
 	return nil
 }

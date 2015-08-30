@@ -13,11 +13,11 @@ import (
 
 func GenerateUserData(el *EntityManager, usersName []string, secret []byte, salt []byte) {
 	el.AddUser(usersName[0])
-	amData, _ := am.NewUserAm(am.SuperUserPermission, secret, salt)
+	amData, _ := am.NewUserAm(am.SuperUserPermission, secret, salt, false)
 	el.AddPropertyToEntity(usersName[0], stc.AmPropertyName, amData)
-	otpData, _ := otp.NewSimpleOtpUser(secret)
+	otpData, _ := otp.NewSimpleOtpUser(secret, false)
 	el.AddPropertyToEntity(usersName[0], stc.OtpPropertyName, otpData)
-	pwdData, _ := password.NewUserPwd(secret, salt)
+	pwdData, _ := password.NewUserPwd(secret, salt, false)
 	el.AddPropertyToEntity(usersName[0], stc.PwdPropertyName, pwdData)
 	ocraData, _ := ocra.NewOcraUser([]byte("ABCD1234"), "OCRA-1:HOTP-SHA512-8:C-QH08-T1M-S064-PSHA256")
 	el.AddPropertyToEntity(usersName[0], stc.OcraPropertyName, ocraData)

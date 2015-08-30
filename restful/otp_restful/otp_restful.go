@@ -34,7 +34,8 @@ const (
 )
 
 var (
-	ServicePath string // = cr.ServicePathPrefix + OtpPrefix
+	ServicePath         string // = cr.ServicePathPrefix + OtpPrefix
+	CheckSecretStrength = true // Allow only strength passwords
 )
 
 type otpRestful struct {
@@ -86,7 +87,7 @@ func (u otpRestful) restAddOtp(request *restful.Request, response *restful.Respo
 		u.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	data, err := otp.NewSimpleOtpUser([]byte(secret.Secret))
+	data, err := otp.NewSimpleOtpUser([]byte(secret.Secret), CheckSecretStrength)
 	if err != nil {
 		u.setError(response, http.StatusBadRequest, err)
 		return

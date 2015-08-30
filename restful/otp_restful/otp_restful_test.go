@@ -26,7 +26,7 @@ const (
 	userName1 = "User1"
 	userName2 = "User2"
 
-	secretCode = "12345678"
+	secretCode = "A1b2@345678"
 	emptyRes   = "{}"
 )
 
@@ -171,7 +171,7 @@ func TestVerifyHotpCode(t *testing.T) {
 	url := resourcePath + "/" + userName
 	okUrlJ := cr.Url{Url: fmt.Sprintf("%v/%v", ServicePath, userName)}
 	exeCommandCheckRes(t, cr.PUT_STR, url, http.StatusCreated, string(secret), okUrlJ) // TODO fix it
-	user, _ := otp.NewSimpleOtpUser([]byte(secretCode))
+	user, _ := otp.NewSimpleOtpUser([]byte(secretCode), false)
 
 	for i := 0; i < 2; i++ {
 		if i == 0 { // HOTP

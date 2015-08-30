@@ -207,7 +207,7 @@ func Test_EntityManagerIsEqual(t *testing.T) {
 			}
 		}
 	}
-	a1, _ := am.NewUserAm(am.UserPermission, []byte("123456"), []byte("abcd"))
+	a1, _ := am.NewUserAm(am.UserPermission, []byte("123456"), []byte("abcd"), false)
 	el[0].AddPropertyToEntity(getGroupFormat(names[1]), stc.AmPropertyName, a1)
 	el[2].AddPropertyToEntity(getGroupFormat(names[1]), stc.AmPropertyName, a1)
 	el[1].AddUser(userName)

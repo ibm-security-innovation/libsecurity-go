@@ -36,7 +36,8 @@ const (
 )
 
 var (
-	ServicePath string // = cr.ServicePathPrefix + "/accountmanager"
+	ServicePath           string // = cr.ServicePathPrefix + "/accountmanager"
+	CheckPasswordStrength = true // Allow only strength passwords
 )
 
 type amRestful struct {
@@ -191,7 +192,7 @@ func (l amRestful) restAddAm(request *restful.Request, response *restful.Respons
 	}
 	saltStr, _ := salt.GetRandomSalt(SaltLen)
 
-	data, err := am.NewUserAm(privilege.Privilege, []byte(privilege.Password), saltStr)
+	data, err := am.NewUserAm(privilege.Privilege, []byte(privilege.Password), saltStr, CheckPasswordStrength)
 	if err != nil {
 		l.setError(response, http.StatusBadRequest, err)
 		return
@@ -277,7 +278,7 @@ func (l amRestful) restUpdatePwd(request *restful.Request, response *restful.Res
 	}
 	tPwd, err := salt.GenerateSaltedPassword([]byte(secrets.OldPassword), password.MinPasswordLength, password.MaxPasswordLength, data.Pwd.Salt, -1)
 	oldPwd := password.GetHashedPwd(tPwd)
-	err = data.UpdateUserPwd(userName, oldPwd, []byte(secrets.NewPassword))
+	err = data.UpdateUserPwd(userName, oldPwd, []byte(secrets.NewPassword), false)
 	if err != nil {
 		l.setError(response, http.StatusBadRequest, err)
 		return

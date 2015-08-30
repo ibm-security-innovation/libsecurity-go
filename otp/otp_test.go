@@ -28,7 +28,7 @@ import (
 // 1. System check: Client provider
 // 2. Resync message in the event based HMAC OTP
 
-var BaseSecret = []byte("ABCDEFGH12345678")
+var BaseSecret = []byte("Aa@bCDEFGH12345678")
 
 type TotpRun struct {
 	totp   *Totp

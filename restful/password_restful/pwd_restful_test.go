@@ -27,7 +27,7 @@ const (
 	userName1 = "User1"
 	userName2 = "User2"
 
-	secretCode    = "12345678"
+	secretCode    = "1AaB@2345678"
 	getMessageStr = "get-data"
 )
 
@@ -125,7 +125,7 @@ func initAListOfUsers(t *testing.T, usersList []string) string {
 
 // Add Ocra property and get it
 // Remove the propert and verify an error when try to get it
-func Test_addRemoveOcra(t *testing.T) {
+func Test_addRemovePwd(t *testing.T) {
 	name := usersName[0]
 	initAListOfUsers(t, usersName)
 

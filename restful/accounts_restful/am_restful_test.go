@@ -33,7 +33,7 @@ const (
 	userName1 = "User1"
 	userName2 = "User2"
 
-	secretCode     = "12345678"
+	secretCode     = "123456Aa@b"
 	getMessageStr  = "get-data"
 	emptyRes       = "{}"
 	rootUserFactor = 1 // the root user can't be deleted
