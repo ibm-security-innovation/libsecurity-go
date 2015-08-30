@@ -22,11 +22,12 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
-	// "golang.org/x/crypto/bcrypt"
 	"io"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	stc "ibm-security-innovation/libsecurity-go/defs"
 	"ibm-security-innovation/libsecurity-go/salt"
@@ -42,10 +43,16 @@ const (
 	defaultPwdAttempts                 = 10
 	defaultOneTimePwdExpirationMinutes = 60
 
-	extraChars = "!@#$%^&()-_.,"
-
-	MinPasswordLength = 6
+	MinPasswordLength = 8
 	MaxPasswordLength = 256
+
+	extraCharStr  = "@#%^&()'-_+=;:"
+	digitStr      = "0123456789"
+	minRegularCnt = 4
+	minUpperCase  = 1
+	minLowerCase  = 1
+	minDigits     = 2
+	minExtraChars = 1
 )
 
 var (
@@ -230,13 +237,40 @@ func (u *UserPwd) UpdatePasswordAfterReset(currentPwd []byte, pwd []byte, expira
 	return u.updatePasswordHandler(currentPwd, pwd, expiration, false)
 }
 
+func CheckPasswordStrength(pass string) error {
+	extraCnt := 0
+	digitCnt := 0
+	upperCaseCnt := 0
+	lowerCaseCnt := 0
+
+	for _, c := range extraCharStr {
+		extraCnt += strings.Count(pass, string(c))
+	}
+	for _, c := range digitStr {
+		digitCnt += strings.Count(pass, string(c))
+	}
+	for _, c := range pass {
+		if unicode.IsUpper(c) {
+			upperCaseCnt++
+		}
+		if unicode.IsLower(c) {
+			lowerCaseCnt++
+		}
+	}
+	if len(pass) < MinPasswordLength || extraCnt < minExtraChars || digitCnt < minDigits ||
+		len(pass)-extraCnt-digitCnt < minRegularCnt || upperCaseCnt < minUpperCase || lowerCaseCnt < minLowerCase {
+		return fmt.Errorf("The password is not strong enough: it must contains a minimum of %v characters, include at least %v digits, at least %v letters (with at least %v uppercase and %v lowercase letters) and at least %v extra charachters from the following list %v", MinPasswordLength, minDigits, minRegularCnt, minUpperCase, minLowerCase, minExtraChars, extraCharStr)
+	}
+	return nil
+}
+
 // Generate a valid password that includes defaultPasswordLen characters
 // with 2 Upper case characters, 2 numbers and 2 characters from "!@#$&-+;"
 // The other method of select random byte array and verify if it fits the rules may take a lot of
 // iterations to fit the rules
 // The entropy is not perfect but its good enougth for one time reset password
 func GenerateNewValidPassword() []byte {
-	extraChars := []byte(extraChars)
+	extraChars := []byte(extraCharStr)
 	pwd := make([]byte, defaultPasswordLen)
 	_, err := io.ReadFull(rand.Reader, pwd)
 	if err != nil {

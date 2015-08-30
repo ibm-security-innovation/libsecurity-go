@@ -20,7 +20,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	am "ibm-security-innovation/libsecurity-go/accounts"
 	stc "ibm-security-innovation/libsecurity-go/defs"
@@ -31,25 +30,15 @@ import (
 )
 
 const (
-	minPassLen    = 10
-	extraCharStr  = "@#%^&()'-_+=;:"
-	digitStr      = "0123456789"
-	minRegularCnt = 4
-	minDigits     = 2
-	minExtraChars = 2
-	saltLen       = 8
+	saltLen = 8
 
 	rsaPrivateKeyFileName = "key.private"
 	rsaPublicKeyFileName  = "key.pub"
 )
 
-var (
-	passwordRules string
-)
+var ()
 
 func init() {
-	passwordRules = fmt.Sprintf("Password must include at least %v characters, with at least %v regular charachters, %v extra characters from: '%v' and at least %v digits",
-		minPassLen, minRegularCnt, minExtraChars, extraCharStr, minDigits)
 }
 
 func usage() {
@@ -57,24 +46,6 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "usage: %v.go\n", file)
 	flag.PrintDefaults()
 	os.Exit(2)
-}
-
-func checkRootPasswordStrength(pass string) bool {
-	extraCnt := 0
-	digitCnt := 0
-
-	for _, c := range extraCharStr {
-		extraCnt += strings.Count(pass, string(c))
-	}
-	for _, c := range digitStr {
-		digitCnt += strings.Count(pass, string(c))
-	}
-	if len(pass) < minPassLen || extraCnt < minExtraChars || digitCnt < minDigits ||
-		len(pass)-extraCnt-digitCnt < minRegularCnt {
-		fmt.Printf("Error: password: '%v', password length: %v, number of extra characters: %v, number of digits: %v\n", pass, len(pass), extraCnt, digitCnt)
-		return false
-	}
-	return true
 }
 
 // Generate a new secure storage minimal file that includes the root user with
@@ -134,8 +105,9 @@ func main() {
 		fmt.Printf("Error: The root password must be set (and not to '%v')\n", defaultRootPassword)
 		usage()
 	}
-	if checkRootPasswordStrength(*rootPassword) == false {
-		log.Fatalf("Error: The root password must be more complex: %v", passwordRules)
+	err := password.CheckPasswordStrength(*rootPassword)
+	if err != nil {
+		log.Fatalf("Error: The root password must be more complex: %v", err)
 	}
 
 	key := ss.GetSecureKey(*secureKeyFileNamePath)

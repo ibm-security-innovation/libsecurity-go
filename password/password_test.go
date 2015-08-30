@@ -11,9 +11,13 @@ import (
 )
 
 var (
-	defaultPassword = []byte("a1b2c3d")
+	defaultPassword []byte
 	defaultSaltStr  = []byte("abcd")
 )
+
+func init() {
+	defaultPassword = []byte(GenerateNewValidPassword())
+}
 
 func checkValidPasswordLen(t *testing.T, user *UserPwd) {
 	pwd := ""
@@ -151,7 +155,7 @@ func Test_UseOfOneTimePwd(t *testing.T) {
 // and will be checked again only after new password setting
 // Verify that successful attemt resets the attempts counter
 func Test_VerifyPwdBlocked(t *testing.T) {
-	wrongPwd := []byte("aaaaaaa")
+	wrongPwd := []byte(GenerateNewValidPassword())
 	user, err := NewUserPwd(defaultPassword, defaultSaltStr)
 	if err != nil {
 		t.Error("Test fail, can't initialized user password structure, error:", err)
@@ -239,6 +243,11 @@ func Test_GenerateRandomPassword(t *testing.T) {
 			}
 		} else {
 			vec[pass] = true
+		}
+		err := CheckPasswordStrength(pass)
+		if err != nil {
+			t.Errorf("Test fail: The generated password '%v' dose not match the password strength test, error %v", pass, err)
+			t.FailNow()
 		}
 	}
 	if cnt > 1 {

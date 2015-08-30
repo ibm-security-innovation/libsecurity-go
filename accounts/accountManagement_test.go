@@ -14,12 +14,13 @@ const ()
 
 var (
 	defaultUserName = "User1"
-	defaultPassword = []byte("abc123")
+	defaultPassword []byte
 	defaultSalt     = []byte("salt123")
 )
 
 func init() {
 	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard)
+	defaultPassword = []byte(password.GenerateNewValidPassword())
 }
 
 // Test that a new user AM is generated only when all the parameters are valid
