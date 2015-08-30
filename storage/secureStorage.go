@@ -35,6 +35,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"unicode"
 
 	logger "ibm-security-innovation/libsecurity-go/logger"
 	"ibm-security-innovation/libsecurity-go/salt"
@@ -45,9 +46,15 @@ const (
 	MaxSaltLen      = 16
 	SaltLen         = 8
 	SecretLen       = 16
-	minSecretLen    = 1
+	minSecretLen    = 8
 	maxSecretLen    = 255
 	SaltData        = "Ravid"
+
+	extraCharStr  = "@#%^&()'-_+=;:"
+	minUpperCase  = 2
+	minLowerCase  = 2
+	minDigits     = 2
+	minExtraChars = 1
 )
 
 var (
@@ -93,9 +100,13 @@ func getSaltedPass(secret, saltData []byte) []byte {
 }
 
 // Create a new storage using the given secret
-func NewStorage(secret []byte) (*SecureStorage, error) {
+func NewStorage(secret []byte, checkSecretStrength bool) (*SecureStorage, error) {
 	err := isValidData(secret)
 	if err != nil {
+		return nil, err
+	}
+	err = isSecretStrengthOk(string(secret))
+	if err != nil && checkSecretStrength {
 		return nil, err
 	}
 	saltData, _ := salt.GetRandomSalt(SaltLen)
@@ -382,7 +393,7 @@ func (s SecureStorage) GetDecryptStorageData() *SecureStorage {
 			data[key] = val
 		}
 	}
-	storage, err := NewStorage([]byte("a junk secret!!!"))
+	storage, err := NewStorage([]byte("aA12Bc@ junk secret!!!"), true)
 	if err != nil {
 		fmt.Printf("Internal Error: Can't generate storage, error: %v\n", err)
 		return nil
@@ -395,4 +406,30 @@ func (s SecureStorage) GetDecryptStorageData() *SecureStorage {
 		}
 	}
 	return storage
+}
+
+func isSecretStrengthOk(pass string) error {
+	extraCnt := 0
+	digitCnt := 0
+	upperCaseCnt := 0
+	lowerCaseCnt := 0
+
+	for _, c := range extraCharStr {
+		extraCnt += strings.Count(pass, string(c))
+	}
+	for _, c := range pass {
+		if unicode.IsUpper(c) {
+			upperCaseCnt++
+		} else if unicode.IsLower(c) {
+			lowerCaseCnt++
+		} else if unicode.IsDigit(c) {
+			digitCnt++
+		}
+	}
+	if len(pass) < minSecretLen || extraCnt < minExtraChars || digitCnt < minDigits ||
+		upperCaseCnt < minUpperCase || lowerCaseCnt < minLowerCase {
+		return fmt.Errorf("The secure storage secret does not pass the secret strength test. In order to be strong, the password must contain at least %v characters, and include at least: %v digits, %v letters (%v must be upper-case and %v must be lower-case) and %v extra character from the list bellow.\nList of possible extra characters: '%v'",
+			minSecretLen, minDigits, minUpperCase+minLowerCase, minUpperCase, minLowerCase, minExtraChars, extraCharStr)
+	}
+	return nil
 }

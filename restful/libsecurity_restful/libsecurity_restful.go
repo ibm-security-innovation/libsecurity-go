@@ -28,6 +28,8 @@ var (
 	ServicePath string
 
 	toFilterFlag bool = true
+
+	CheckSecretStrength = true // Allow only strength secrets
 )
 
 type LibsecurityRestful struct {
@@ -173,7 +175,7 @@ func (s LibsecurityRestful) restStoreData(request *restful.Request, response *re
 		s.setError(response, http.StatusNotFound, err)
 		return
 	}
-	err = s.UsersList.StoreInfo(fileData.FilePath, []byte(fileData.Secret))
+	err = s.UsersList.StoreInfo(fileData.FilePath, []byte(fileData.Secret), CheckSecretStrength)
 	if err != nil {
 		s.setError(response, http.StatusInternalServerError, err)
 		return

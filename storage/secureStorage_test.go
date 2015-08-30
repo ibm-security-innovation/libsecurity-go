@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	baseSecret  = "1234567890123456"
-	baseSecret1 = "1234567890111111"
+	baseSecret  = "AaBb@1234567890123456"
+	baseSecret1 = "AaBc;1234567890111111"
 )
 
 var (
@@ -33,7 +33,7 @@ func Test_checkAddRemoveItemToSecureStorage(t *testing.T) {
 	values := []string{"v1", "v2 is the answer to the question of k2", "v3", RandomStr}
 	secret := []byte(baseSecret)
 
-	s, _ := NewStorage(secret)
+	s, _ := NewStorage(secret, true)
 	for i, key := range keys {
 		s.AddItem(key, values[i])
 		val, err := s.GetItem(key)
@@ -72,7 +72,7 @@ func Test_checkStoreLoadSecureStorageFile(t *testing.T) {
 	fileName := "./tmp.txt"
 	secret1 := []byte(baseSecret1)
 
-	s, _ := NewStorage(secret)
+	s, _ := NewStorage(secret, true)
 	for i, key := range keys {
 		s.AddItem(key, values[i])
 	}

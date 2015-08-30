@@ -9,6 +9,8 @@ const (
 	RootUserName    = "root"
 	AclAllEntryName = "All" // Saved name for ACL, the same as in Linux
 
+	ExtraCharStr = "@#%^&()'-_+=;:"
+
 	SuperUserGroupName = "Super-users"
 	AdminGroupName     = "Admin"
 	UsersGroupName     = "Users"

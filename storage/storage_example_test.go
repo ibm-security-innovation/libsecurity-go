@@ -26,7 +26,7 @@ func generateSecureStorage() (*ss.SecureStorage, []byte) {
 
 	secret = make([]byte, aesSecretLen)
 	io.ReadFull(rand.Reader, secret)
-	storage, _ := ss.NewStorage(secret)
+	storage, _ := ss.NewStorage(secret, false)
 	for i := 0; i < 10; i++ {
 		keyText := fmt.Sprintf(keyFmt, i)
 		dataText := fmt.Sprintf(dataFmt, i*10+1)

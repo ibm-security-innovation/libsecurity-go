@@ -23,7 +23,7 @@ const (
 	port     = ":8082"
 	listener = host + port
 
-	secretCode = "1234567890123456"
+	secretCode = "aBCc1@234567890123456"
 	emptyRes   = "{}"
 )
 
@@ -48,7 +48,7 @@ func init() {
 
 	usersList := en.New()
 	stRestful = libsecurity_restful.NewLibsecurityRestful()
-	secureStorage, _ := ss.NewStorage([]byte(secretCode))
+	secureStorage, _ := ss.NewStorage([]byte(secretCode), true)
 	stRestful.SetData(usersList, nil, nil, nil, secureStorage)
 	stRestful.SetToFilterFlag(false)
 

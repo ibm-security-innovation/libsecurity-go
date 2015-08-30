@@ -429,8 +429,7 @@ func Test_StoreLoad(t *testing.T) {
 		t.Error("Test fail, can't generate ACL")
 		t.FailNow()
 	}
-	el.StoreInfo(filePath, secret)
-
+	el.StoreInfo(filePath, secret, false)
 	entityManager1 := en.New()
 	err := en.LoadInfo(filePath, secret, entityManager1)
 	if err != nil {

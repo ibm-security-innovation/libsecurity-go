@@ -24,6 +24,8 @@ const (
 
 var (
 	ServicePath string // = cr.ServicePathPrefix + SsPrefix
+
+	CheckSecretStrength = true // Allow only strength secrets
 )
 
 type itemData struct {
@@ -79,7 +81,7 @@ func (s ssRestful) isSecretMatch(request *restful.Request, response *restful.Res
 
 func (s *ssRestful) restCreateSecureStorage(request *restful.Request, response *restful.Response) {
 	secret := request.HeaderParameter(secretIdParam)
-	data, err := ss.NewStorage([]byte(secret))
+	data, err := ss.NewStorage([]byte(secret), CheckSecretStrength)
 	if err != nil {
 		s.setError(response, http.StatusBadRequest, err)
 		return

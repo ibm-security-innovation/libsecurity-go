@@ -46,8 +46,6 @@ const (
 	MinPasswordLength = 8
 	MaxPasswordLength = 256
 
-	extraCharStr  = "@#%^&()'-_+=;:"
-	digitStr      = "0123456789"
 	minUpperCase  = 1
 	minLowerCase  = 1
 	minDigits     = 1
@@ -254,24 +252,22 @@ func CheckPasswordStrength(pass string) error {
 	upperCaseCnt := 0
 	lowerCaseCnt := 0
 
-	for _, c := range extraCharStr {
+	for _, c := range stc.ExtraCharStr {
 		extraCnt += strings.Count(pass, string(c))
-	}
-	for _, c := range digitStr {
-		digitCnt += strings.Count(pass, string(c))
 	}
 	for _, c := range pass {
 		if unicode.IsUpper(c) {
 			upperCaseCnt++
-		}
-		if unicode.IsLower(c) {
+		} else if unicode.IsLower(c) {
 			lowerCaseCnt++
+		} else if unicode.IsDigit(c) {
+			digitCnt++
 		}
 	}
 	if len(pass) < MinPasswordLength || extraCnt < minExtraChars || digitCnt < minDigits ||
 		upperCaseCnt < minUpperCase || lowerCaseCnt < minLowerCase {
 		return fmt.Errorf("The checked password does not pass the password strength test. In order to be strong, the password must contain at least %v characters, and include at least: %v digits, %v letters (%v must be upper-case and %v must be lower-case) and %v extra character from the list bellow.\nList of possible extra characters: '%v'",
-			MinPasswordLength, minDigits, minUpperCase+minLowerCase, minUpperCase, minLowerCase, minExtraChars, extraCharStr)
+			MinPasswordLength, minDigits, minUpperCase+minLowerCase, minUpperCase, minLowerCase, minExtraChars, stc.ExtraCharStr)
 	}
 	return nil
 }
@@ -282,7 +278,7 @@ func CheckPasswordStrength(pass string) error {
 // iterations to fit the rules
 // The entropy is not perfect but its good enougth for one time reset password
 func GenerateNewValidPassword() []byte {
-	extraChars := []byte(extraCharStr)
+	extraChars := []byte(stc.ExtraCharStr)
 	pwd := make([]byte, defaultPasswordLen)
 	_, err := io.ReadFull(rand.Reader, pwd)
 	if err != nil {
