@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/emicklei/go-restful"
-	am "ibm-security-innovation/libsecurity-go/accounts"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
+	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
 )
 
 const (

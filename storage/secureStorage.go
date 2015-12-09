@@ -37,8 +37,8 @@ import (
 	"sync"
 	"unicode"
 
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	"ibm-security-innovation/libsecurity-go/salt"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
 )
 
 const (

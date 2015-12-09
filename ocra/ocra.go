@@ -63,10 +63,10 @@ import (
 	"strconv"
 	"strings"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	"ibm-security-innovation/libsecurity-go/otp"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	"github.com/ibm-security-innovation/libsecurity-go/otp"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 type appendSide int

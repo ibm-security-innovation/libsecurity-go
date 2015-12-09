@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (

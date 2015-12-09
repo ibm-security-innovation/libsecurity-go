@@ -9,7 +9,7 @@ import (
 	"hash"
 	"io"
 
-	logger "ibm-security-innovation/libsecurity-go/logger"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 )
 
 const (

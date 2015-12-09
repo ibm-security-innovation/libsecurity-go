@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	am "ibm-security-innovation/libsecurity-go/accounts"
+	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
 	//	"ibm-security-innovation/libsecurity-go/acl"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	logger "ibm-security-innovation/libsecurity-go/logger"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 )
 
 const (

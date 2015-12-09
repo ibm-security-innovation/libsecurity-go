@@ -3,12 +3,12 @@ package entityManagement
 import (
 	"fmt"
 
-	am "ibm-security-innovation/libsecurity-go/accounts"
-	// "ibm-security-innovation/libsecurity-go/acl"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	"ibm-security-innovation/libsecurity-go/ocra"
-	"ibm-security-innovation/libsecurity-go/otp"
-	"ibm-security-innovation/libsecurity-go/password"
+	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
+	// "github.com/ibm-security-innovation/libsecurity-go/acl"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	"github.com/ibm-security-innovation/libsecurity-go/ocra"
+	"github.com/ibm-security-innovation/libsecurity-go/otp"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
 )
 
 func GenerateUserData(el *EntityManager, usersName []string, secret []byte, salt []byte) {

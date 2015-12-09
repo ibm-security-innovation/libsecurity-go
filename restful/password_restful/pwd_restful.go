@@ -6,11 +6,11 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	"ibm-security-innovation/libsecurity-go/password"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
-	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
-	"ibm-security-innovation/libsecurity-go/salt"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
+	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
 )
 
 const (

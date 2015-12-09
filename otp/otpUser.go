@@ -21,9 +21,9 @@ import (
 	"reflect"
 	"time"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	"ibm-security-innovation/libsecurity-go/password"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 type OtpType int

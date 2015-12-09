@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	//	um "ibm-security-innovation/libsecurity-go/usersManagement"
+	//	um "github.com/ibm-security-innovation/libsecurity-go/usersManagement"
 )
 
 const (

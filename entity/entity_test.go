@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
 )
 
 const (

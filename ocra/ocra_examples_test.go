@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"ibm-security-innovation/libsecurity-go/ocra"
+	"github.com/ibm-security-innovation/libsecurity-go/ocra"
 )
 
 const (

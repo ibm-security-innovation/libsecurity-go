@@ -21,12 +21,12 @@ import (
 	"os"
 	"path/filepath"
 
-	am "ibm-security-innovation/libsecurity-go/accounts"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	"ibm-security-innovation/libsecurity-go/password"
-	"ibm-security-innovation/libsecurity-go/salt"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (

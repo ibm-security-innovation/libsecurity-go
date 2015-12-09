@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"ibm-security-innovation/libsecurity-go/salt"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
 )
 
 var (

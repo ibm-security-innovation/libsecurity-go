@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math/rand"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	"ibm-security-innovation/libsecurity-go/otp"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	"github.com/ibm-security-innovation/libsecurity-go/otp"
 )
 
 const (

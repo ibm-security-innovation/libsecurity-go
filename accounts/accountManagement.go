@@ -19,11 +19,11 @@ import (
 	"sync"
 	"time"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	"ibm-security-innovation/libsecurity-go/password"
-	"ibm-security-innovation/libsecurity-go/salt"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (

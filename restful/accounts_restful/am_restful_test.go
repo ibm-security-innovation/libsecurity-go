@@ -11,16 +11,16 @@ import (
 	"time"
 
 	"github.com/emicklei/go-restful"
-	am "ibm-security-innovation/libsecurity-go/accounts"
-	app "ibm-security-innovation/libsecurity-go/app/token"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	// "ibm-security-innovation/libsecurity-go/password"
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
-	//	"ibm-security-innovation/libsecurity-go/restful/libsecurity"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
+	app "github.com/ibm-security-innovation/libsecurity-go/app/token"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	// "github.com/ibm-security-innovation/libsecurity-go/password"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
+	//	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (

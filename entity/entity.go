@@ -15,8 +15,8 @@ import (
 	"fmt"
 	"strings"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (

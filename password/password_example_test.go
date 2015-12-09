@@ -3,8 +3,8 @@ package password_test
 import (
 	"fmt"
 
-	"ibm-security-innovation/libsecurity-go/password"
-	"ibm-security-innovation/libsecurity-go/salt"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
 )
 
 var (

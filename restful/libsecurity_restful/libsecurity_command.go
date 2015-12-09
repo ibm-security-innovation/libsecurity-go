@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	//	en "ibm-security-innovation/libsecurity-go/entity"
+	//	en "github.com/ibm-security-innovation/libsecurity-go/entity"
 	"github.com/emicklei/go-restful"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
 )
 
 const (

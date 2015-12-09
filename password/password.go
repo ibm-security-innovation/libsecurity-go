@@ -29,9 +29,9 @@ import (
 	"time"
 	"unicode"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	"ibm-security-innovation/libsecurity-go/salt"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 // Note: Secure storage and the strength of the password are not handled by this package
@@ -208,7 +208,11 @@ func (u *UserPwd) isPasswordMatchHandler(pwd []byte, overrideChecks bool) error 
 		if err != nil {
 			return err
 		}
-		// If the password expired, don't check it
+		if compareHashedPwd(pwd, u.Password) == false {
+			u.ErrorsCounter = u.ErrorsCounter + 1
+			return fmt.Errorf("password is wrong, please try again")
+		}
+		// Check expiration only for valid password: to hide the information that the user is valid
 		if time.Now().After(u.Expiration) {
 			return fmt.Errorf("password has expired, please replace it.")
 		}
