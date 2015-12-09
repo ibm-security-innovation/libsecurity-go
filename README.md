@@ -35,17 +35,10 @@ Secure "things" that connect to the internet by providing a set of security libr
 
 ## Installation
 ### Prerequisites
-- Installed Go environment
+- Installed Go environment with `$GOPATH` properly set.
 
 ### Quick Start
-- Under the $GOPATH, create the following directory (if does not exist yet): src, pkg, bin
-- Under the src directory, create the following path: ibm-security-innovation/libsecurity-go
-- **cd ibm-security-innovation/libsecurity-go**
-- Clone the library with **git clone https://github.com/ibm-security-innovation/libsecurity-go .**
-- Copy all the needed external libraries using go get
-  - e.g.
-    - **cd libsecurity-go/entity**
-    - **go get**
+- Get libsecurity-go and its dependencies: `go get github.com/ibm-security-innovation/libsecurity-go/...`
 - Running a RESTful GUI example:
   - When entering for the first time, the following steps should be executed:
   1. Generate an RSA file (you can generate it also when generating the basic secure storage, see item 3) by running:
