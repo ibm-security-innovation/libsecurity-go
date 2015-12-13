@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	am "ibm-security-innovation/libsecurity-go/accounts"
-	stc "ibm-security-innovation/libsecurity-go/defs"
+	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
 )
 
 var (
@@ -207,7 +207,7 @@ func Test_EntityManagerIsEqual(t *testing.T) {
 			}
 		}
 	}
-	a1, _ := am.NewUserAm(am.UserPermission, []byte("123456"), []byte("abcd"))
+	a1, _ := am.NewUserAm(am.UserPermission, []byte("123456"), []byte("abcd"), false)
 	el[0].AddPropertyToEntity(getGroupFormat(names[1]), stc.AmPropertyName, a1)
 	el[2].AddPropertyToEntity(getGroupFormat(names[1]), stc.AmPropertyName, a1)
 	el[1].AddUser(userName)
@@ -234,7 +234,7 @@ func Test_StoreLoad(t *testing.T) {
 	GenerateUserData(usersList, usersName, secret, salt)
 	GenerateGroupList(usersList, usersName)
 	//GenerateAcl(st) // done in the acl_test
-	usersList.StoreInfo(filePath, secret)
+	usersList.StoreInfo(filePath, secret, false)
 	usersList1 := New()
 	err := LoadInfo(filePath, secret, usersList1)
 	if err != nil {

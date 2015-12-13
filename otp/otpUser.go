@@ -21,8 +21,9 @@ import (
 	"reflect"
 	"time"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 type OtpType int
@@ -129,11 +130,15 @@ func (t throtteling) isValid() error {
 	return nil
 }
 
-func NewSimpleOtpUser(secret []byte) (*OtpUser, error) {
-	return NewOtpUser(secret, false, defaultThrottlingLen, defaultThrottlingSec, defaultUnblockSec, defaultHotpWindowsSize, defaultTotpWindowsSizeSec, defaultStartCounter)
+func NewSimpleOtpUser(secret []byte, checkSecretStrength bool) (*OtpUser, error) {
+	return NewOtpUser(secret, checkSecretStrength, false, defaultThrottlingLen, defaultThrottlingSec, defaultUnblockSec, defaultHotpWindowsSize, defaultTotpWindowsSizeSec, defaultStartCounter)
 }
 
-func NewOtpUser(secret []byte, lock bool, cliffLen int32, thrTimeSec time.Duration, autoUnblockSec time.Duration, hotpWindowSize time.Duration, totpWindowSize time.Duration, startCount int64) (*OtpUser, error) {
+func NewOtpUser(secret []byte, checkSecretStrength bool, lock bool, cliffLen int32, thrTimeSec time.Duration, autoUnblockSec time.Duration, hotpWindowSize time.Duration, totpWindowSize time.Duration, startCount int64) (*OtpUser, error) {
+	err := password.CheckPasswordStrength(string(secret))
+	if err != nil && checkSecretStrength {
+		return nil, err
+	}
 	hotp, err := NewHotp(secret, startCount)
 	if err != nil {
 		return nil, err

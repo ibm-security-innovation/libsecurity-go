@@ -7,13 +7,17 @@ import (
 	"testing"
 	"time"
 
-	"ibm-security-innovation/libsecurity-go/salt"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
 )
 
 var (
-	defaultPassword = []byte("a1b2c3d")
+	defaultPassword []byte
 	defaultSaltStr  = []byte("abcd")
 )
+
+func init() {
+	defaultPassword = []byte(GenerateNewValidPassword())
+}
 
 func checkValidPasswordLen(t *testing.T, user *UserPwd) {
 	pwd := ""
@@ -44,7 +48,7 @@ func checkUnusabledOldPasswords(t *testing.T, user *UserPwd) {
 		}
 		idx := int(buf[0]) % (defaultNumberOfOldPasswords * 2)
 		pwd := []byte(string(defaultPassword) + fmt.Sprintf("%d", idx))
-		err = user.IsNewPwdValid(pwd)
+		err = user.IsNewPwdValid(pwd, false)
 		if err == nil && idx < defaultNumberOfOldPasswords-unused {
 			t.Errorf("Test fail: password '%v' was already used, but it was accepted, user data: %v", pwd, user)
 			t.FailNow()
@@ -59,7 +63,7 @@ func checkUnusabledOldPasswords(t *testing.T, user *UserPwd) {
 // Valid password must be: with length of at least MinPasswordLength and not more than MaxPasswordLength,
 // was not used before in the last defaultNumberOfOldPasswords
 func Test_ValidPwd(t *testing.T) {
-	user, err := NewUserPwd(defaultPassword, defaultSaltStr)
+	user, err := NewUserPwd(defaultPassword, defaultSaltStr, true)
 	if err != nil {
 		t.Error("Test fail, can't initialized user password structure, error:", err)
 		t.FailNow()
@@ -72,20 +76,20 @@ func Test_ValidPwd(t *testing.T) {
 // and add it the previus password to the old passwords list
 // and reject the previus password for the next defaultNumberOfOldPasswords passwords updates
 func Test_UpdatePwd(t *testing.T) {
-	user, err := NewUserPwd(defaultPassword, defaultSaltStr)
+	user, err := NewUserPwd(defaultPassword, defaultSaltStr, true)
 	if err != nil {
 		t.Error("Test fail, can't initialized user password structure, error:", err)
 		t.FailNow()
 	}
 	for i := 0; i < defaultNumberOfOldPasswords*2; i++ {
 		pwd := []byte(string(defaultPassword) + fmt.Sprintf("%d", i))
-		newPwd, err := user.UpdatePassword(user.Password, pwd)
+		newPwd, err := user.UpdatePassword(user.Password, pwd, true)
 		if err != nil {
 			t.Errorf("Test fail: user: %v, password %v, ('%v') rejected, but it was't used, error: %v", user, newPwd, string(pwd), err)
 		}
 		for j := i; j >= i-defaultNumberOfOldPasswords && j >= 0; j-- {
 			pwd := []byte(string(defaultPassword) + fmt.Sprintf("%d", j))
-			newPwd, err := user.UpdatePassword(user.Password, pwd)
+			newPwd, err := user.UpdatePassword(user.Password, pwd, true)
 			if err == nil {
 				t.Errorf("Test fail: password %v ('%v') was already used, but it was accepted, user data: %v", newPwd, string(pwd), user)
 			}
@@ -96,7 +100,7 @@ func Test_UpdatePwd(t *testing.T) {
 // Check that verify password works ok: it return true only if the following requiremnts are OK:
 // The password is equal to the current password and the password is not expired
 func Test_VerifyPwd(t *testing.T) {
-	uPwd, err := NewUserPwd(defaultPassword, defaultSaltStr)
+	uPwd, err := NewUserPwd(defaultPassword, defaultSaltStr, true)
 	if err != nil {
 		t.Error("Test fail, can't initialized user password structure, error:", err)
 		t.FailNow()
@@ -129,7 +133,7 @@ func Test_VerifyPwd(t *testing.T) {
 
 // Check that one time password can be used exctly once
 func Test_UseOfOneTimePwd(t *testing.T) {
-	user, err := NewUserPwd(defaultPassword, defaultSaltStr)
+	user, err := NewUserPwd(defaultPassword, defaultSaltStr, true)
 	if err != nil {
 		t.Error("Test fail, can't initialized user password structure, error:", err)
 		t.FailNow()
@@ -151,8 +155,8 @@ func Test_UseOfOneTimePwd(t *testing.T) {
 // and will be checked again only after new password setting
 // Verify that successful attemt resets the attempts counter
 func Test_VerifyPwdBlocked(t *testing.T) {
-	wrongPwd := []byte("aaaaaaa")
-	user, err := NewUserPwd(defaultPassword, defaultSaltStr)
+	wrongPwd := []byte(GenerateNewValidPassword())
+	user, err := NewUserPwd(defaultPassword, defaultSaltStr, true)
 	if err != nil {
 		t.Error("Test fail, can't initialized user password structure, error:", err)
 		t.FailNow()
@@ -169,7 +173,7 @@ func Test_VerifyPwdBlocked(t *testing.T) {
 		} else if err != nil && i >= maxPwdAttempts {
 			pwd := GenerateNewValidPassword()
 			expiration := time.Now().Add(time.Duration(defaultOneTimePwdExpirationMinutes) * time.Second * 60)
-			user.updatePasswordHandler(user.Password, pwd, expiration, false)
+			user.updatePasswordHandler(user.Password, pwd, expiration, false, true)
 			err = user.IsPasswordMatch(user.Password)
 			if err != nil {
 				t.Errorf("Test fail: password errorCoounter must be cleared after password set, counter attempts: %v", user.ErrorsCounter)
@@ -182,7 +186,7 @@ func Test_VerifyPwdBlocked(t *testing.T) {
 // it not OK, the new temporary password is OK only once
 // and after password update, the new password is valid
 func Test_ResetPassword(t *testing.T) {
-	user, _ := NewUserPwd(defaultPassword, defaultSaltStr)
+	user, _ := NewUserPwd(defaultPassword, defaultSaltStr, true)
 	tPwd, _ := salt.GenerateSaltedPassword(defaultPassword, MinPasswordLength, MaxPasswordLength, user.Salt, -1)
 	pass := GetHashedPwd(tPwd)
 	err := user.IsPasswordMatch(pass)
@@ -208,7 +212,7 @@ func Test_ResetPassword(t *testing.T) {
 		t.Errorf("Test fail: The one time pwd: '%v' accepted twice", newPwd)
 	}
 	for i := 0; i < 3; i++ {
-		pass = []byte(string(pass) + "a")
+		pass = []byte(string(pass) + "a1^A")
 		expiration := time.Now().Add(time.Duration(defaultOneTimePwdExpirationMinutes) * time.Second * 60)
 		newPwd, err := user.UpdatePasswordAfterReset(user.Password, pass, expiration)
 		if err != nil {
@@ -239,6 +243,11 @@ func Test_GenerateRandomPassword(t *testing.T) {
 			}
 		} else {
 			vec[pass] = true
+		}
+		err := CheckPasswordStrength(pass)
+		if err != nil {
+			t.Errorf("Test fail: The generated password '%v' dose not match the password strength test, error %v", pass, err)
+			t.FailNow()
 		}
 	}
 	if cnt > 1 {

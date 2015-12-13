@@ -7,13 +7,13 @@ import (
 	"io"
 	"net/http"
 
-	// en "ibm-security-innovation/libsecurity-go/entity"
+	// en "github.com/ibm-security-innovation/libsecurity-go/entity"
 	"github.com/emicklei/go-restful"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	"ibm-security-innovation/libsecurity-go/ocra"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
-	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	"github.com/ibm-security-innovation/libsecurity-go/ocra"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
+	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
 )
 
 const (

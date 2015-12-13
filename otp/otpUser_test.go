@@ -13,7 +13,7 @@ const (
 )
 
 func testGenerateOtpUser(t *testing.T, thrTimeSec time.Duration) *OtpUser {
-	otpUser, err := NewOtpUser(BaseSecret, false, defaultThrottlingLen, thrTimeSec, manuelUnblockSec, defaultHotpWindowsSize, defaultTotpWindowsSizeSec, defaultStartCounter)
+	otpUser, err := NewOtpUser(BaseSecret, true, false, defaultThrottlingLen, thrTimeSec, manuelUnblockSec, defaultHotpWindowsSize, defaultTotpWindowsSizeSec, defaultStartCounter)
 	if err != nil {
 		t.Errorf("Test fail, can't generate otpUser, error: %v", err)
 		t.FailNow()

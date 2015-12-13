@@ -5,9 +5,9 @@ import (
 	"strings"
 	"sync"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (
@@ -441,12 +441,12 @@ func LoadInfo(filePath string, secret []byte, el *EntityManager) error {
 }
 
 // Store all the data of all the entities in the list including their properties in the secure storage
-func (el *EntityManager) StoreInfo(filePath string, secret []byte) error {
+func (el *EntityManager) StoreInfo(filePath string, secret []byte, checkSecretStrength bool) error {
 	lock.Lock()
 	defer lock.Unlock()
 
 	prefix := ""
-	storage, err := ss.NewStorage(secret)
+	storage, err := ss.NewStorage(secret, checkSecretStrength)
 	if err != nil {
 		logger.Error.Printf("Fatal error: can't create storage, error: %v", err)
 		return fmt.Errorf("Fatal error: can't create storage, error: %v", err)

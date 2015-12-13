@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	en "ibm-security-innovation/libsecurity-go/entity"
-	logger "ibm-security-innovation/libsecurity-go/logger"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 )
 
 const (

@@ -5,21 +5,22 @@ import (
 	"testing"
 	"time"
 
-	en "ibm-security-innovation/libsecurity-go/entity"
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	"ibm-security-innovation/libsecurity-go/password"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
 )
 
 const ()
 
 var (
 	defaultUserName = "User1"
-	defaultPassword = []byte("abc123")
+	defaultPassword []byte
 	defaultSalt     = []byte("salt123")
 )
 
 func init() {
 	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard)
+	defaultPassword = []byte(password.GenerateNewValidPassword())
 }
 
 // Test that a new user AM is generated only when all the parameters are valid
@@ -30,22 +31,22 @@ func Test_addValidAM(t *testing.T) {
 		privilege[k] = v
 	}
 	privilege["undef"] = ""
-	userPwd, _ := password.NewUserPwd(defaultPassword, defaultSalt)
+	userPwd, _ := password.NewUserPwd(defaultPassword, defaultSalt, true)
 	pwd := ""
 	for _, userName := range usersName {
 		for p, _ := range privilege {
 			for i := 0; i < password.MaxPasswordLength; i++ {
 				ok := en.IsEntityNameValid(userName) == nil &&
 					IsValidPrivilege(p) == nil &&
-					userPwd.IsNewPwdValid([]byte(pwd)) == nil
-				_, err := NewUserAm(p, []byte(pwd), defaultSalt)
+					userPwd.IsNewPwdValid([]byte(pwd), false) == nil
+				_, err := NewUserAm(p, []byte(pwd), defaultSalt, false)
 				if ok == false && err == nil {
 					t.Errorf("Test fail: Successfully generated new AM with invalid parameters: user name '%v' (%v), privilege '%v' (%v) password '%v' (%v)",
-						userName, en.IsEntityNameValid(userName), p, IsValidPrivilege(p), pwd, userPwd.IsNewPwdValid([]byte(pwd)))
+						userName, en.IsEntityNameValid(userName), p, IsValidPrivilege(p), pwd, userPwd.IsNewPwdValid([]byte(pwd), false))
 					t.FailNow()
 				} else if ok == true && err != nil {
 					t.Errorf("Test fail: Error while generated new AM with valid parameters: user name '%v' (%v), privilege '%v' (%v) password '%v' (%v), error: %v",
-						userName, en.IsEntityNameValid(userName), p, IsValidPrivilege(p), pwd, userPwd.IsNewPwdValid([]byte(pwd)), err)
+						userName, en.IsEntityNameValid(userName), p, IsValidPrivilege(p), pwd, userPwd.IsNewPwdValid([]byte(pwd), false), err)
 					t.FailNow()
 				}
 				pwd += "a"
@@ -61,16 +62,16 @@ func Test_updateAM(t *testing.T) {
 		privilege[k] = v
 	}
 	privilege["undef"] = ""
-	userPwd, _ := password.NewUserPwd(defaultPassword, defaultSalt)
-	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt)
+	userPwd, _ := password.NewUserPwd(defaultPassword, defaultSalt, true)
+	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
 	pwd := ""
 	for p, _ := range privilege {
 		for i := 0; i < password.MaxPasswordLength; i++ {
 			pOk := IsValidPrivilege(p)
-			pwdOk := userPwd.IsNewPwdValid([]byte(pwd))
+			pwdOk := userPwd.IsNewPwdValid([]byte(pwd), false)
 			ok := pOk == nil && pwdOk == nil
 			updatePOk := userAm.UpdateUserPrivilege(p)
-			updatePwdOk := userAm.UpdateUserPwd(defaultUserName, userAm.Pwd.Password, []byte(pwd))
+			updatePwdOk := userAm.UpdateUserPwd(defaultUserName, userAm.Pwd.Password, []byte(pwd), false)
 			updateOk := updatePOk == nil && updatePwdOk == nil
 			if ok == false && updateOk == true {
 				t.Errorf("Test fail: Successfully updated user AM with invalid parameters: privilege '%v' (%v) password '%v' (%v)",
@@ -89,13 +90,13 @@ func Test_updateAM(t *testing.T) {
 // Test that only equal AM returns true
 func Test_equalAM(t *testing.T) {
 	pwd := []string{string(defaultPassword), string(defaultPassword) + "a"}
-	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt)
-	userAm1, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt)
+	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
+	userAm1, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
 
 	for p, _ := range usersPrivilege {
 		userAm1.UpdateUserPrivilege(p)
 		for _, pass := range pwd {
-			userAm1.UpdateUserPwd(defaultUserName, userAm.Pwd.Password, []byte(pass))
+			userAm1.UpdateUserPwd(defaultUserName, userAm.Pwd.Password, []byte(pass), false)
 			for exp := 0; exp < 2; exp++ {
 				if exp > 0 {
 					userAm1.Pwd.Expiration = time.Now().Add(time.Duration(100*24) * time.Hour)
@@ -122,7 +123,7 @@ func Test_equalAM(t *testing.T) {
 // Test that the same password returns true
 func Test_IsPasswordMatch(t *testing.T) {
 	pwd := []string{string(defaultPassword), string(defaultPassword) + "a", ""}
-	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt)
+	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
 
 	for _, pass := range pwd {
 		err := userAm.IsPasswordMatch([]byte(pass))

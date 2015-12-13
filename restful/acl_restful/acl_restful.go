@@ -6,11 +6,11 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
-	"ibm-security-innovation/libsecurity-go/acl"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	//	en "ibm-security-innovation/libsecurity-go/entity"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
-	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
+	"github.com/ibm-security-innovation/libsecurity-go/acl"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	//	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
+	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
 )
 
 const (

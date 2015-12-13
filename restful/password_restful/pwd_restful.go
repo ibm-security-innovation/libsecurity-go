@@ -6,11 +6,11 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	"ibm-security-innovation/libsecurity-go/password"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
-	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
-	"ibm-security-innovation/libsecurity-go/salt"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
+	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
 )
 
 const (
@@ -25,6 +25,8 @@ var (
 	ServicePath string // = cr.ServicePathPrefix + PwdPrefix
 
 	saltLen int = 10
+
+	CheckPasswordStrength = true // Allow only strength passwords
 )
 
 type pwdRestful struct {
@@ -81,7 +83,7 @@ func (p pwdRestful) restAddPwd(request *restful.Request, response *restful.Respo
 		p.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	data, err := password.NewUserPwd([]byte(secret.Password), p.saltStr)
+	data, err := password.NewUserPwd([]byte(secret.Password), p.saltStr, CheckPasswordStrength)
 	if err != nil {
 		p.setError(response, http.StatusBadRequest, err)
 		return
@@ -136,7 +138,7 @@ func (p pwdRestful) restUpdatePassword(request *restful.Request, response *restf
 		p.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	_, err = data.UpdatePassword(pass, []byte(secrets.NewPassword))
+	_, err = data.UpdatePassword(pass, []byte(secrets.NewPassword), CheckPasswordStrength)
 	if err != nil {
 		p.setError(response, http.StatusBadRequest, err)
 		return

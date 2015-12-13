@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"testing"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	logger "ibm-security-innovation/libsecurity-go/logger"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 )
 
 const (
@@ -429,8 +429,7 @@ func Test_StoreLoad(t *testing.T) {
 		t.Error("Test fail, can't generate ACL")
 		t.FailNow()
 	}
-	el.StoreInfo(filePath, secret)
-
+	el.StoreInfo(filePath, secret, false)
 	entityManager1 := en.New()
 	err := en.LoadInfo(filePath, secret, entityManager1)
 	if err != nil {

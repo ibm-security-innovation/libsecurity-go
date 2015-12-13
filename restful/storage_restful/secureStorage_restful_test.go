@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/emicklei/go-restful"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
-	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
+	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 	port     = ":8082"
 	listener = host + port
 
-	secretCode = "1234567890123456"
+	secretCode = "aBCc1@234567890123456"
 	emptyRes   = "{}"
 )
 
@@ -48,7 +48,7 @@ func init() {
 
 	usersList := en.New()
 	stRestful = libsecurity_restful.NewLibsecurityRestful()
-	secureStorage, _ := ss.NewStorage([]byte(secretCode))
+	secureStorage, _ := ss.NewStorage([]byte(secretCode), true)
 	stRestful.SetData(usersList, nil, nil, nil, secureStorage)
 	stRestful.SetToFilterFlag(false)
 

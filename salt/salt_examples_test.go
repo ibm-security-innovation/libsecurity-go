@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"hash"
 
-	"ibm-security-innovation/libsecurity-go/salt"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
 )
 
 const (

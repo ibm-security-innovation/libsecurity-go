@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/emicklei/go-restful"
-	am "ibm-security-innovation/libsecurity-go/accounts"
-	app "ibm-security-innovation/libsecurity-go/app/token"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
+	app "github.com/ibm-security-innovation/libsecurity-go/app/token"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (
@@ -28,6 +28,8 @@ var (
 	ServicePath string
 
 	toFilterFlag bool = true
+
+	CheckSecretStrength = true // Allow only strength secrets
 )
 
 type LibsecurityRestful struct {
@@ -173,7 +175,7 @@ func (s LibsecurityRestful) restStoreData(request *restful.Request, response *re
 		s.setError(response, http.StatusNotFound, err)
 		return
 	}
-	err = s.UsersList.StoreInfo(fileData.FilePath, []byte(fileData.Secret))
+	err = s.UsersList.StoreInfo(fileData.FilePath, []byte(fileData.Secret), CheckSecretStrength)
 	if err != nil {
 		s.setError(response, http.StatusInternalServerError, err)
 		return

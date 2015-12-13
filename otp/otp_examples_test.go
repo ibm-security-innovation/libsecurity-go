@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math/rand"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	"ibm-security-innovation/libsecurity-go/otp"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	"github.com/ibm-security-innovation/libsecurity-go/otp"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 
 var (
 	entityManager *en.EntityManager
-	secret        = []byte("ABCDABCD12341234")
+	secret        = []byte("AaB1@CDABCD12341234")
 )
 
 func init() {
@@ -24,7 +24,7 @@ func init() {
 
 func addOtpUser(id string, secret []byte, startCounter int64) {
 	entityManager.AddUser(id)
-	otpUser, _ := otp.NewOtpUser(secret, false, 10, 1, 100, 2, 0, startCounter)
+	otpUser, _ := otp.NewOtpUser(secret, true, false, 10, 1, 100, 2, 0, startCounter)
 	entityManager.AddPropertyToEntity(id, stc.OtpPropertyName, otpUser)
 }
 

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
-	// en "ibm-security-innovation/libsecurity-go/entity"
+	// en "github.com/ibm-security-innovation/libsecurity-go/entity"
 	"github.com/emicklei/go-restful"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	"ibm-security-innovation/libsecurity-go/otp"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
-	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	"github.com/ibm-security-innovation/libsecurity-go/otp"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
+	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
 )
 
 const (
@@ -34,7 +34,8 @@ const (
 )
 
 var (
-	ServicePath string // = cr.ServicePathPrefix + OtpPrefix
+	ServicePath         string // = cr.ServicePathPrefix + OtpPrefix
+	CheckSecretStrength = true // Allow only strength passwords
 )
 
 type otpRestful struct {
@@ -86,7 +87,7 @@ func (u otpRestful) restAddOtp(request *restful.Request, response *restful.Respo
 		u.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	data, err := otp.NewSimpleOtpUser([]byte(secret.Secret))
+	data, err := otp.NewSimpleOtpUser([]byte(secret.Secret), CheckSecretStrength)
 	if err != nil {
 		u.setError(response, http.StatusBadRequest, err)
 		return

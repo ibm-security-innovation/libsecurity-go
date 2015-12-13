@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	logger "ibm-security-innovation/libsecurity-go/logger"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 )
 
 // This example show the following:

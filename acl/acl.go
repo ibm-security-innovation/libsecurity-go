@@ -52,10 +52,10 @@ import (
 	"strings"
 	"sync"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const ()

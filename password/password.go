@@ -22,15 +22,16 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
-	// "golang.org/x/crypto/bcrypt"
 	"io"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
+	"unicode"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	"ibm-security-innovation/libsecurity-go/salt"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 // Note: Secure storage and the strength of the password are not handled by this package
@@ -42,10 +43,13 @@ const (
 	defaultPwdAttempts                 = 10
 	defaultOneTimePwdExpirationMinutes = 60
 
-	extraChars = "!@#$%^&()-_.,"
-
-	MinPasswordLength = 6
+	MinPasswordLength = 8
 	MaxPasswordLength = 256
+
+	minUpperCase  = 1
+	minLowerCase  = 1
+	minDigits     = 1
+	minExtraChars = 1
 )
 
 var (
@@ -85,9 +89,13 @@ func isPwdLengthValid(pwd []byte) error {
 }
 
 // Verify that the password is legal: its length is OK and it wasn't recently used
-func (u UserPwd) IsNewPwdValid(pwd []byte) error {
+func (u UserPwd) IsNewPwdValid(pwd []byte, checkPwdStrength bool) error {
 	err := isPwdLengthValid(pwd)
 	if err != nil {
+		return err
+	}
+	err = CheckPasswordStrength(string(pwd))
+	if err != nil && checkPwdStrength {
 		return err
 	}
 	newPwd := GetHashedPwd(pwd)
@@ -116,9 +124,13 @@ func compareHashedPwd(pwd1 []byte, pwd2 []byte) bool {
 
 // Generate a new UserPwd for a given password
 // The generated password is with a default expiration time
-func NewUserPwd(pwd []byte, saltData []byte) (*UserPwd, error) {
+func NewUserPwd(pwd []byte, saltData []byte, checkPwdStrength bool) (*UserPwd, error) {
 	err := isPwdLengthValid(pwd)
 	if err != nil {
+		return nil, err
+	}
+	err = CheckPasswordStrength(string(pwd))
+	if err != nil && checkPwdStrength {
 		return nil, err
 	}
 	newPwd, err := salt.GenerateSaltedPassword(pwd, MinPasswordLength, MaxPasswordLength, saltData, -1)
@@ -138,17 +150,21 @@ func (u *UserPwd) SetOneTimePwd(flag bool) {
 }
 
 // Update password and expiration time
-func (u *UserPwd) UpdatePassword(currentPwd []byte, pwd []byte) ([]byte, error) {
-	return u.updatePasswordHandler(currentPwd, pwd, getNewDefaultPasswordExpirationTime(), defaultOneTimePwd)
+func (u *UserPwd) UpdatePassword(currentPwd []byte, pwd []byte, checkPwdStrength bool) ([]byte, error) {
+	return u.updatePasswordHandler(currentPwd, pwd, getNewDefaultPasswordExpirationTime(), defaultOneTimePwd, checkPwdStrength)
 }
 
 // Update the password, it's expioration time and it's state (is it a one-time-password or a regular one)
-func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiration time.Time, oneTimePwd bool) ([]byte, error) {
+func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiration time.Time, oneTimePwd bool, checkPwdStrength bool) ([]byte, error) {
 	pLock.Lock()
 	defer pLock.Unlock()
 
 	err := isPwdLengthValid(pwd)
 	if err != nil {
+		return nil, err
+	}
+	err = CheckPasswordStrength(string(pwd))
+	if err != nil && checkPwdStrength {
 		return nil, err
 	}
 	err = u.isPasswordMatchHandler(currentPwd, true)
@@ -159,7 +175,7 @@ func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiratio
 	if err != nil {
 		return nil, fmt.Errorf("problems while generating the new password: %v", err)
 	}
-	err = u.IsNewPwdValid(tmpPwd)
+	err = u.IsNewPwdValid(tmpPwd, false)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +208,11 @@ func (u *UserPwd) isPasswordMatchHandler(pwd []byte, overrideChecks bool) error 
 		if err != nil {
 			return err
 		}
-		// If the password expired, don't check it
+		if compareHashedPwd(pwd, u.Password) == false {
+			u.ErrorsCounter = u.ErrorsCounter + 1
+			return fmt.Errorf("password is wrong, please try again")
+		}
+		// Check expiration only for valid password: to hide the information that the user is valid
 		if time.Now().After(u.Expiration) {
 			return fmt.Errorf("password has expired, please replace it.")
 		}
@@ -217,7 +237,7 @@ func (u *UserPwd) ResetPasword() ([]byte, error) {
 	pass := GenerateNewValidPassword()
 	expiration := time.Now().Add(time.Duration(defaultOneTimePwdExpirationMinutes) * time.Second * 60)
 	u.ErrorsCounter = 0
-	_, err := u.updatePasswordHandler(u.Password, pass, expiration, true)
+	_, err := u.updatePasswordHandler(u.Password, pass, expiration, true, true)
 	u.SetOneTimePwd(true)
 	u.Expiration = expiration // to override the one time password setting
 	if err != nil {
@@ -227,7 +247,33 @@ func (u *UserPwd) ResetPasword() ([]byte, error) {
 }
 
 func (u *UserPwd) UpdatePasswordAfterReset(currentPwd []byte, pwd []byte, expiration time.Time) ([]byte, error) {
-	return u.updatePasswordHandler(currentPwd, pwd, expiration, false)
+	return u.updatePasswordHandler(currentPwd, pwd, expiration, false, true)
+}
+
+func CheckPasswordStrength(pass string) error {
+	extraCnt := 0
+	digitCnt := 0
+	upperCaseCnt := 0
+	lowerCaseCnt := 0
+
+	for _, c := range stc.ExtraCharStr {
+		extraCnt += strings.Count(pass, string(c))
+	}
+	for _, c := range pass {
+		if unicode.IsUpper(c) {
+			upperCaseCnt++
+		} else if unicode.IsLower(c) {
+			lowerCaseCnt++
+		} else if unicode.IsDigit(c) {
+			digitCnt++
+		}
+	}
+	if len(pass) < MinPasswordLength || extraCnt < minExtraChars || digitCnt < minDigits ||
+		upperCaseCnt < minUpperCase || lowerCaseCnt < minLowerCase {
+		return fmt.Errorf("The checked password does not pass the password strength test. In order to be strong, the password must contain at least %v characters, and include at least: %v digits, %v letters (%v must be upper-case and %v must be lower-case) and %v extra character from the list bellow.\nList of possible extra characters: '%v'",
+			MinPasswordLength, minDigits, minUpperCase+minLowerCase, minUpperCase, minLowerCase, minExtraChars, stc.ExtraCharStr)
+	}
+	return nil
 }
 
 // Generate a valid password that includes defaultPasswordLen characters
@@ -236,7 +282,7 @@ func (u *UserPwd) UpdatePasswordAfterReset(currentPwd []byte, pwd []byte, expira
 // iterations to fit the rules
 // The entropy is not perfect but its good enougth for one time reset password
 func GenerateNewValidPassword() []byte {
-	extraChars := []byte(extraChars)
+	extraChars := []byte(stc.ExtraCharStr)
 	pwd := make([]byte, defaultPasswordLen)
 	_, err := io.ReadFull(rand.Reader, pwd)
 	if err != nil {

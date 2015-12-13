@@ -3,8 +3,8 @@ package password_test
 import (
 	"fmt"
 
-	"ibm-security-innovation/libsecurity-go/password"
-	"ibm-security-innovation/libsecurity-go/salt"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
 )
 
 var (
@@ -22,10 +22,10 @@ var (
 //     (at least not as long as it remains in the old passwords list)
 func ExampleUserPwd() {
 	id := "User-1"
-	pwd := []byte("a1b2c3d")
+	pwd := []byte("a1B2c3d^@")
 	saltStr, _ := salt.GetRandomSalt(8)
 
-	userPwd, _ := password.NewUserPwd(pwd, saltStr)
+	userPwd, _ := password.NewUserPwd(pwd, saltStr, true)
 	tPwd, _ := salt.GenerateSaltedPassword(pwd, minPasswordLength, maxPasswordLength, saltStr, -1)
 	newPwd := password.GetHashedPwd(tPwd)
 	err := userPwd.IsPasswordMatch(newPwd)
@@ -33,7 +33,7 @@ func ExampleUserPwd() {
 		fmt.Println("Ravid: error", err)
 	}
 	userNewPwd := []byte(string(pwd) + "a")
-	newPwd, err = userPwd.UpdatePassword(userPwd.Password, userNewPwd)
+	newPwd, err = userPwd.UpdatePassword(userPwd.Password, userNewPwd, true)
 	if err != nil {
 		fmt.Printf("Password update for user %v to new password '%v' (%v) failed, error: %v\n", id, newPwd, string(userNewPwd), err)
 	} else {
@@ -51,7 +51,7 @@ func ExampleUserPwd() {
 	} else {
 		fmt.Printf("User: '%v', Note that the old password '%v' (%v) can't be used anymore\n", id, pwd, string(pwd))
 	}
-	newPwd, err = userPwd.UpdatePassword(userPwd.Password, pwd)
+	newPwd, err = userPwd.UpdatePassword(userPwd.Password, pwd, true)
 	if err == nil {
 		fmt.Printf("Error: Password '%v' (typed password %v) for user %v was alredy used\n", newPwd, string(pwd), id)
 	} else {
@@ -65,10 +65,10 @@ func ExampleUserPwd() {
 // and lets the user use it exactly once
 func ExampleUserPwd_ResetPasword() {
 	id := "User1"
-	pwd := []byte("a1b2c3d")
+	pwd := []byte("a1b2C@3d4")
 
 	saltStr, _ := salt.GetRandomSalt(10)
-	userPwd, _ := password.NewUserPwd(pwd, saltStr)
+	userPwd, _ := password.NewUserPwd(pwd, saltStr, false)
 	tmpPwd, _ := userPwd.ResetPasword()
 	tPwd, _ := salt.GenerateSaltedPassword(tmpPwd, 1, 100, saltStr, -1)
 	newPwd := password.GetHashedPwd(tPwd)

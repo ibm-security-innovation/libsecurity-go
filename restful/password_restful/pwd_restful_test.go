@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/emicklei/go-restful"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	"ibm-security-innovation/libsecurity-go/password"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
-	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
+	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
 )
 
 const (
@@ -27,7 +27,7 @@ const (
 	userName1 = "User1"
 	userName2 = "User2"
 
-	secretCode    = "12345678"
+	secretCode    = "1AaB@2345678"
 	getMessageStr = "get-data"
 )
 
@@ -125,7 +125,7 @@ func initAListOfUsers(t *testing.T, usersList []string) string {
 
 // Add Ocra property and get it
 // Remove the propert and verify an error when try to get it
-func Test_addRemoveOcra(t *testing.T) {
+func Test_addRemovePwd(t *testing.T) {
 	name := usersName[0]
 	initAListOfUsers(t, usersName)
 

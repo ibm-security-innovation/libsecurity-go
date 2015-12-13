@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
-	cr "ibm-security-innovation/libsecurity-go/restful/common_restful"
-	"ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common_restful"
+	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity_restful"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (
@@ -24,6 +24,8 @@ const (
 
 var (
 	ServicePath string // = cr.ServicePathPrefix + SsPrefix
+
+	CheckSecretStrength = true // Allow only strength secrets
 )
 
 type itemData struct {
@@ -79,7 +81,7 @@ func (s ssRestful) isSecretMatch(request *restful.Request, response *restful.Res
 
 func (s *ssRestful) restCreateSecureStorage(request *restful.Request, response *restful.Response) {
 	secret := request.HeaderParameter(secretIdParam)
-	data, err := ss.NewStorage([]byte(secret))
+	data, err := ss.NewStorage([]byte(secret), CheckSecretStrength)
 	if err != nil {
 		s.setError(response, http.StatusBadRequest, err)
 		return

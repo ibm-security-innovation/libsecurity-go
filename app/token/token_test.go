@@ -4,8 +4,8 @@ import (
 	//	"fmt"
 	"testing"
 
-	am "ibm-security-innovation/libsecurity-go/accounts"
-	stc "ibm-security-innovation/libsecurity-go/defs"
+	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
 )
 
 const (

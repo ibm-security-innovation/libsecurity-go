@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	en "ibm-security-innovation/libsecurity-go/entity"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
 )
 
 // Permission could be any string

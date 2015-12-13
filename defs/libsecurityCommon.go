@@ -2,12 +2,14 @@
 package defs
 
 import (
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (
 	RootUserName    = "root"
 	AclAllEntryName = "All" // Saved name for ACL, the same as in Linux
+
+	ExtraCharStr = "@#%^&()'-_+=;:"
 
 	SuperUserGroupName = "Super-users"
 	AdminGroupName     = "Admin"

@@ -3,14 +3,14 @@ package libsecurity_restful
 import (
 	"testing"
 
-	am "ibm-security-innovation/libsecurity-go/accounts"
-	"ibm-security-innovation/libsecurity-go/acl"
-	//	"ibm-security-innovation/libsecurity-go/application/app_acl"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	en "ibm-security-innovation/libsecurity-go/entity"
-	"ibm-security-innovation/libsecurity-go/ocra"
-	"ibm-security-innovation/libsecurity-go/otp"
-	"ibm-security-innovation/libsecurity-go/password"
+	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
+	"github.com/ibm-security-innovation/libsecurity-go/acl"
+	//	"github.com/ibm-security-innovation/libsecurity-go/application/app_acl"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
+	"github.com/ibm-security-innovation/libsecurity-go/ocra"
+	"github.com/ibm-security-innovation/libsecurity-go/otp"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
 )
 
 const ()

@@ -3,9 +3,9 @@ package acl_test
 import (
 	"fmt"
 
-	"ibm-security-innovation/libsecurity-go/acl"
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	en "ibm-security-innovation/libsecurity-go/entity"
+	"github.com/ibm-security-innovation/libsecurity-go/acl"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
 )
 
 const (

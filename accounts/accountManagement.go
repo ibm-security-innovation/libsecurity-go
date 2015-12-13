@@ -19,11 +19,11 @@ import (
 	"sync"
 	"time"
 
-	stc "ibm-security-innovation/libsecurity-go/defs"
-	logger "ibm-security-innovation/libsecurity-go/logger"
-	"ibm-security-innovation/libsecurity-go/password"
-	"ibm-security-innovation/libsecurity-go/salt"
-	ss "ibm-security-innovation/libsecurity-go/storage"
+	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	"github.com/ibm-security-innovation/libsecurity-go/password"
+	"github.com/ibm-security-innovation/libsecurity-go/salt"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (
@@ -68,13 +68,13 @@ func (u *AmUserInfo) setLogger(severity string, fileName string) {
 }
 
 // Generate and return a new Account Management object using the given priviledge, password and salt (in case they are valid)
-func NewUserAm(privilege string, pass []byte, saltData []byte) (*AmUserInfo, error) {
+func NewUserAm(privilege string, pass []byte, saltData []byte, checkPwdStrength bool) (*AmUserInfo, error) {
 	err := IsValidPrivilege(privilege)
 	if err != nil {
 		return nil, err
 	}
 	// was userPwd := password.UserPwd{Password: pass, Expiration: getPwdExpiration(id), Salt: saltData}
-	userPwd, err := password.NewUserPwd(pass, saltData)
+	userPwd, err := password.NewUserPwd(pass, saltData, checkPwdStrength)
 	if err != nil {
 		return nil, err
 	}
@@ -118,8 +118,8 @@ func (u *AmUserInfo) UpdateUserPrivilege(privilege string) error {
 
 // Update the AM property password to the given password and set the expiration time
 // The password will be updated only if the new password is valid and the curent password matches the given one
-func (u *AmUserInfo) UpdateUserPwd(userName string, currentPwd []byte, pwd []byte) error {
-	newPwd, err := u.Pwd.UpdatePassword(currentPwd, pwd)
+func (u *AmUserInfo) UpdateUserPwd(userName string, currentPwd []byte, pwd []byte, checkPwdStrength bool) error {
+	newPwd, err := u.Pwd.UpdatePassword(currentPwd, pwd, checkPwdStrength)
 	if err != nil {
 		return err
 	}
