@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pushd .
-cd /home/ravid/libSecurity/src/github.com/ibm-security-innovation/libsecurity-go
+cd ..
 
 code=(
    "accounts" "acl" "entity" "ocra" "otp" "password" "salt" "storage" "setup"
