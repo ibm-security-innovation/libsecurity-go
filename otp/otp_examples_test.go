@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	en "github.com/ibm-security-innovation/libsecurity-go/entity"
 	"github.com/ibm-security-innovation/libsecurity-go/otp"
 )
@@ -25,7 +25,7 @@ func init() {
 func addOtpUser(id string, secret []byte, startCounter int64) {
 	entityManager.AddUser(id)
 	otpUser, _ := otp.NewOtpUser(secret, true, false, 10, 1, 100, 2, 0, startCounter)
-	entityManager.AddPropertyToEntity(id, stc.OtpPropertyName, otpUser)
+	entityManager.AddPropertyToEntity(id, defs.OtpPropertyName, otpUser)
 }
 
 // The TOTP example demonstrates the following secenario:
@@ -42,11 +42,11 @@ func ExampleTotp() {
 	if err != nil {
 		fmt.Println("Can't generate TOTP, error: ", err)
 	} else {
-		e, _ := entityManager.GetPropertyAttachedToEntity(entityName, stc.OtpPropertyName)
+		e, _ := entityManager.GetPropertyAttachedToEntity(entityName, defs.OtpPropertyName)
 		if e == nil {
 			return
 		}
-		entity, ok := e.(*otp.OtpUser)
+		entity, ok := e.(*otp.UserInfoOtp)
 		if ok == true {
 			ok, err := entity.VerifyOtpUserCode(code, otp.TotpType)
 			if ok {
@@ -97,9 +97,9 @@ func ExampleHotp() {
 		if err != nil {
 			fmt.Println("Can't generate HOTP, error: ", err)
 		} else {
-			entity, _ := entityManager.GetPropertyAttachedToEntity(users[idx].name, stc.OtpPropertyName)
+			entity, _ := entityManager.GetPropertyAttachedToEntity(users[idx].name, defs.OtpPropertyName)
 			if entity != nil {
-				ok, err := entity.(*otp.OtpUser).VerifyOtpUserCode(code, otp.HotpType)
+				ok, err := entity.(*otp.UserInfoOtp).VerifyOtpUserCode(code, otp.HotpType)
 				if ok {
 					fmt.Printf("HOTP: %v, Code: %v as expected\n", users[idx], code)
 					users[idx].counter++

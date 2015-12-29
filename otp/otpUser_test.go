@@ -12,7 +12,7 @@ const (
 	wrongCode = "1234"
 )
 
-func testGenerateOtpUser(t *testing.T, thrTimeSec time.Duration) *OtpUser {
+func testGenerateOtpUser(t *testing.T, thrTimeSec time.Duration) *UserInfoOtp {
 	otpUser, err := NewOtpUser(BaseSecret, true, false, defaultThrottlingLen, thrTimeSec, manuelUnblockSec, defaultHotpWindowsSize, defaultTotpWindowsSizeSec, defaultStartCounter)
 	if err != nil {
 		t.Errorf("Test fail, can't generate otpUser, error: %v", err)
@@ -21,13 +21,13 @@ func testGenerateOtpUser(t *testing.T, thrTimeSec time.Duration) *OtpUser {
 	return otpUser
 }
 
-func addDefaultOtpUserGetHotp(t *testing.T, throttleTimeSec time.Duration) (*OtpUser, *Hotp) {
+func addDefaultOtpUserGetHotp(t *testing.T, throttleTimeSec time.Duration) (*UserInfoOtp, *Hotp) {
 	otpUser := testGenerateOtpUser(t, throttleTimeSec)
 	hotp := testGetHotp(t)
 	return otpUser, hotp
 }
 
-func addDefaultOtpUserGetTotp(t *testing.T, throttleTimeSec time.Duration) (*OtpUser, *Totp) {
+func addDefaultOtpUserGetTotp(t *testing.T, throttleTimeSec time.Duration) (*UserInfoOtp, *Totp) {
 	otpUser := testGenerateOtpUser(t, throttleTimeSec)
 	totp := testGetTotp(t)
 	return otpUser, totp
@@ -234,7 +234,7 @@ func Test_ChangeUserBlocked(t *testing.T) {
 	}
 }
 
-func initBlockedUserTest(t *testing.T) (*OtpUser, int32) {
+func initBlockedUserTest(t *testing.T) (*UserInfoOtp, int32) {
 	otpUser := testGenerateOtpUser(t, 0)
 	len := otpUser.Throttle.Cliff - otpUser.Throttle.consErrorCounter
 	otpUser.SetOtpUserBlockedState(false)
@@ -249,7 +249,7 @@ func initBlockedUserTest(t *testing.T) (*OtpUser, int32) {
 // 4. If the user is blocked, the right code dosn't check therefor, it can't clear the errCounter
 func Test_BlockAndUnblockUser(t *testing.T) {
 	var code string
-	var errCnt int32 = 0
+	var errCnt int32
 	otpUser, len := initBlockedUserTest(t)
 	// Clear the err counter and use the right code in the following sequence (each one is starting after the previus one is done)
 	clearErrcnt := []int32{len / 2, len + 2, len + 10, len + 2}

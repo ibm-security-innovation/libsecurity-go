@@ -10,16 +10,18 @@ import (
 // Permission could be any string
 type Permission string
 
+// PermissionsMap : hash to check if a premission was defined
 type PermissionsMap map[Permission]interface{}
 
 var pLock sync.Mutex
 
-type AclEntry struct {
+// Entry : structure that holds the entity name and the set of permissions associated to this entry
+type Entry struct {
 	EntityName  string
 	Permissions PermissionsMap
 }
 
-func (a AclEntry) String() string {
+func (a Entry) String() string {
 	return fmt.Sprintf("Name: %v, permissions: %v", a.EntityName, a.Permissions)
 }
 
@@ -30,17 +32,18 @@ func isPermissionValid(permission Permission) error {
 	return nil
 }
 
-func NewEntry(name string) (*AclEntry, error) {
+// NewEntry : Generate a new ACL entry structure
+func NewEntry(name string) (*Entry, error) {
 	err := en.IsEntityNameValid(name)
 	if err != nil {
 		return nil, err
 	}
-	a := AclEntry{EntityName: name, Permissions: make(PermissionsMap)}
+	a := Entry{EntityName: name, Permissions: make(PermissionsMap)}
 	return &a, nil
 }
 
-// If the permission is valid and was not set yet, add it to the entry's permission list
-func (a *AclEntry) AddPermission(permission Permission) (bool, error) {
+// AddPermission : If the permission is valid and was not set yet, add it to the entry's permission list
+func (a *Entry) AddPermission(permission Permission) (bool, error) {
 	pLock.Lock()
 	defer pLock.Unlock()
 
@@ -56,7 +59,8 @@ func (a *AclEntry) AddPermission(permission Permission) (bool, error) {
 	return true, nil
 }
 
-func (a *AclEntry) RemovePermission(permission Permission) error {
+// RemovePermission : Remove the given permission from the ACL entry
+func (a *Entry) RemovePermission(permission Permission) error {
 	pLock.Lock()
 	defer pLock.Unlock()
 
@@ -72,8 +76,8 @@ func (a *AclEntry) RemovePermission(permission Permission) error {
 	return nil
 }
 
-// Check if a given permission is in the entry's list
-func (a AclEntry) CheckPermission(permission Permission) (bool, error) {
+// CheckPermission : Check if a given permission is in the entry's list
+func (a Entry) CheckPermission(permission Permission) (bool, error) {
 	pLock.Lock()
 	defer pLock.Unlock()
 

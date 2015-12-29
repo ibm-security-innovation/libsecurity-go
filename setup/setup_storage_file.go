@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 
 	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	en "github.com/ibm-security-innovation/libsecurity-go/entity"
 	"github.com/ibm-security-innovation/libsecurity-go/password"
 	"github.com/ibm-security-innovation/libsecurity-go/salt"
@@ -59,7 +59,7 @@ func createBasicFile(stFilePath string, name string, pass string, key []byte) {
 	ul := en.New()
 	ul.AddUser(name)
 	amUser, _ := am.NewUserAm(am.SuperUserPermission, []byte(pass), saltStr, true)
-	ul.AddPropertyToEntity(name, stc.AmPropertyName, amUser)
+	ul.AddPropertyToEntity(name, defs.AmPropertyName, amUser)
 	ul.StoreInfo(stFilePath, key, false)
 }
 
@@ -89,7 +89,7 @@ func generateRSAKeys(rsaPrivateKeyFileName string, rsaPublicKeyFileName string) 
 }
 
 func main() {
-	defaultRootPassword := stc.RootUserName
+	defaultRootPassword := defs.RootUserName
 
 	secureKeyFileNamePath := flag.String("secure-key", "./secureKey", "secure key file path")
 	loginFilePath := flag.String("storage-file", "./data.txt", "First storage file that includes the root user")
@@ -111,7 +111,7 @@ func main() {
 	}
 
 	key := ss.GetSecureKey(*secureKeyFileNamePath)
-	createBasicFile(*loginFilePath, stc.RootUserName, *rootPassword, key)
+	createBasicFile(*loginFilePath, defs.RootUserName, *rootPassword, key)
 	fmt.Println("The generated file name is:", *loginFilePath)
 	if *generateRSA {
 		generateRSAKeys(rsaPrivateKeyFileName, rsaPublicKeyFileName)

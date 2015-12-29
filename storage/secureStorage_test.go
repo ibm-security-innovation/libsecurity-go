@@ -3,7 +3,6 @@ package storage
 import (
 	"bytes"
 	"crypto/rand"
-	//	"fmt"
 	"io"
 	"io/ioutil"
 	"os"

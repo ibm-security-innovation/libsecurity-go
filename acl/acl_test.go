@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	en "github.com/ibm-security-innovation/libsecurity-go/entity"
 	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 )
@@ -39,7 +39,7 @@ type testGroup struct {
 	members []string
 }
 
-type AclTestMap map[*AclEntry]bool
+type AclTestMap map[*Entry]bool
 
 func init() {
 	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard)
@@ -74,9 +74,9 @@ func initAclAndEntries(length int) (*en.EntityManager, *Acl, AclTestMap, error) 
 	return el, a, entries, nil
 }
 
-// Try to add a new AclEntry to a given ACL and check if it functions as expected
+// Try to add a new Entry to a given ACL and check if it functions as expected
 func addEntries(a *Acl, entries AclTestMap, expected bool) (bool, error) {
-	for e, _ := range entries {
+	for e := range entries {
 		err := a.addAclEntry(e)
 		if expected == true && err != nil {
 			return false, fmt.Errorf("can't add the valid aclAclEntry '%v', ACL list: %v", e, a)
@@ -89,7 +89,7 @@ func addEntries(a *Acl, entries AclTestMap, expected bool) (bool, error) {
 
 // Try to remove an aclAclEntry from a given ACL and check if it functions as expected
 func removeEntries(a *Acl, entries AclTestMap, expected bool) (bool, error) {
-	for e, _ := range entries {
+	for e := range entries {
 		err := a.removeAclEntry(e.EntityName)
 		if expected == true && err != nil {
 			return false, fmt.Errorf("can't remove the valid aclAclEntry '%v' from ACL list: %v", e, a)
@@ -171,7 +171,7 @@ func setupCheckPermissions(setPermissionData bool) (*en.EntityManager, *Acl, []s
 		{usersName[0], []Permission{PerRead, PerWrite, PerExe}},
 		{groupsName[0], []Permission{PerRead}},
 		{groupsName[1], []Permission{PerExe, PerTake}},
-		{stc.AclAllEntryName, []Permission{PerAll}}}
+		{defs.AclAllEntryName, []Permission{PerAll}}}
 	resetEntries := []aclTestEntry{ // note the remove can be done for a single user/group in each step
 		{}, // check the setup
 		{groupsName[1], []Permission{PerExe}},
@@ -193,7 +193,7 @@ func setupCheckPermissions(setPermissionData bool) (*en.EntityManager, *Acl, []s
 		{{groupsName[0], []Permission{PerAll}}, {groupsName[1], []Permission{PerTake, PerAll}}}}
 	expectWhoUsePermission := []expectWhoUsePermissions{
 		{PerExe, []string{usersName[0], usersName[1], groupsName[1]}},
-		{PerAll, []string{usersName[0], usersName[1], usersName[2], groupsName[0], groupsName[1], stc.AclAllEntryName}},
+		{PerAll, []string{usersName[0], usersName[1], usersName[2], groupsName[0], groupsName[1], defs.AclAllEntryName}},
 		{"aa", []string{}},
 	}
 	for _, gData := range groupsData {
@@ -203,7 +203,7 @@ func setupCheckPermissions(setPermissionData bool) (*en.EntityManager, *Acl, []s
 			el.AddUserToGroup(gData.name, name)
 		}
 	}
-	var e *AclEntry
+	var e *Entry
 	for _, v := range setEntries {
 		e, _ = a.Permissions[v.name]
 		if e == nil {
@@ -216,7 +216,7 @@ func setupCheckPermissions(setPermissionData bool) (*en.EntityManager, *Acl, []s
 		}
 		a.addAclEntry(e)
 	}
-	el.AddPropertyToEntity(resourceName, stc.AclPropertyName, a)
+	el.AddPropertyToEntity(resourceName, defs.AclPropertyName, a)
 	//	el.PrintWithProperties()
 	return el, a, allNames, setEntries, resetEntries, expectUserPermissions, expectGroupPermissions, expectWhoUsePermission
 }
@@ -246,8 +246,8 @@ func checkExp(t *testing.T, el *en.EntityManager, a *Acl, idx int, name string, 
 // First aclAclEntry a1: user: read, write, exe, group read
 // Second aclAclEntry a2: user: nil, group exe
 // Tests:
-// setup: First AclEntry: permissions: read, write, exe, no take
-//        Second AclEntry: permissions: group exe only
+// setup: First Entry: permissions: read, write, exe, no take
+//        Second Entry: permissions: group exe only
 // Test that empty permission is allowed and results with the behaviour that is determined by the default
 // Note for all tests: test that the expected permissions are set and the others are clear
 // Step 1. Remove exe permission from the second aclAclEntry => no permissions
@@ -257,7 +257,7 @@ func checkExp(t *testing.T, el *en.EntityManager, a *Acl, idx int, name string, 
 func Test_Permissions(t *testing.T) {
 	el, a, usersName, _, resetEntries, expectUserPermissions, expectGroupPermissions, _ := setupCheckPermissions(true)
 
-	el.GetPropertyAttachedToEntity(resourceName, stc.AclPropertyName)
+	el.GetPropertyAttachedToEntity(resourceName, defs.AclPropertyName)
 	ok := CheckUserPermission(el, usersName[0], resourceName, "")
 	if ok == true {
 		t.Error("Test fail: Error empty permission were allowed")
@@ -304,7 +304,7 @@ func Test_GroupListCorrectness(t *testing.T) {
 	el := initEntityManager()
 	a := NewACL()
 
-	el.AddPropertyToEntity(resourceName, stc.AclPropertyName, a)
+	el.AddPropertyToEntity(resourceName, defs.AclPropertyName, a)
 	if CheckUserPermission(el, userName, resourceName, PerRead) == true {
 		t.Error("Test fail: Have permissions for empty lists")
 	}
@@ -336,8 +336,8 @@ func Test_AllListPermissions(t *testing.T) {
 	el := initEntityManager()
 	a := NewACL()
 	el.AddUser(userName)
-	el.AddPropertyToEntity(resourceName, stc.AclPropertyName, a)
-	a.AddPermissionToResource(el, stc.AclAllEntryName, PerRead)
+	el.AddPropertyToEntity(resourceName, defs.AclPropertyName, a)
+	a.AddPermissionToResource(el, defs.AclAllEntryName, PerRead)
 	if CheckUserPermission(el, userName, resourceName, PerRead) != true {
 		t.Errorf("Test fail: '%v' permission must be set, %v", PerRead, a)
 	}
@@ -359,10 +359,10 @@ func Test_CheckPermissionWhenUserIsRemovedAndAdded(t *testing.T) {
 	el.AddUser(userName)
 	el.AddGroup(groupName)
 	el.AddUserToGroup(groupName, userName)
-	el.AddPropertyToEntity(resourceName, stc.AclPropertyName, a)
-	AclEntry, _ := NewEntry(groupName)
-	a.addAclEntry(AclEntry)
-	AclEntry.AddPermission(p)
+	el.AddPropertyToEntity(resourceName, defs.AclPropertyName, a)
+	Entry, _ := NewEntry(groupName)
+	a.addAclEntry(Entry)
+	Entry.AddPermission(p)
 	if CheckUserPermission(el, userName, resourceName, p) != true {
 		t.Errorf("Test fail: '%v' permission must be set, %v", p, a)
 	}
@@ -370,9 +370,9 @@ func Test_CheckPermissionWhenUserIsRemovedAndAdded(t *testing.T) {
 	if CheckUserPermission(el, userName, resourceName, p) == true {
 		t.Errorf("Test fail: '%v' permission must not be allowed, %v", p, a)
 	}
-	AclEntry, _ = NewEntry(userName)
-	a.addAclEntry(AclEntry)
-	AclEntry.AddPermission(p)
+	Entry, _ = NewEntry(userName)
+	a.addAclEntry(Entry)
+	Entry.AddPermission(p)
 	if CheckUserPermission(el, userName, resourceName, p) != true {
 		t.Errorf("Test fail: '%v' permission must be set, %v", p, a)
 	}
@@ -399,13 +399,13 @@ func Test_WhoUsesPermissions(t *testing.T) {
 }
 
 func generateAcl(el *en.EntityManager) bool {
-	for n, _ := range el.Resources {
-		tmpE, _ := el.GetPropertyAttachedToEntity(n, stc.AclPropertyName)
+	for n := range el.Resources {
+		tmpE, _ := el.GetPropertyAttachedToEntity(n, defs.AclPropertyName)
 		a, ok := tmpE.(*Acl)
 		if ok == false {
 			return false
 		}
-		for name, _ := range el.Users {
+		for name := range el.Users {
 			a.AddPermissionToResource(el, name, Permission("uP"+n))
 		}
 	}
@@ -422,7 +422,7 @@ func Test_StoreLoad(t *testing.T) {
 		resourceName := fmt.Sprintf("Disk %d", i+1)
 		el.AddResource(resourceName)
 		a := NewACL()
-		el.AddPropertyToEntity(resourceName, stc.AclPropertyName, a)
+		el.AddPropertyToEntity(resourceName, defs.AclPropertyName, a)
 	}
 
 	if generateAcl(el) == false {
@@ -436,10 +436,10 @@ func Test_StoreLoad(t *testing.T) {
 		fmt.Println(err)
 	}
 
-	for n, _ := range el.Resources {
-		tmpE, _ := el.GetPropertyAttachedToEntity(n, stc.AclPropertyName)
+	for n := range el.Resources {
+		tmpE, _ := el.GetPropertyAttachedToEntity(n, defs.AclPropertyName)
 		a := tmpE.(*Acl)
-		tmpE1, _ := entityManager1.GetPropertyAttachedToEntity(n, stc.AclPropertyName)
+		tmpE1, _ := entityManager1.GetPropertyAttachedToEntity(n, defs.AclPropertyName)
 		a1 := tmpE1.(*Acl)
 		if a.IsEqual(*a1) == false {
 			t.Errorf("Test fail, Stored ACL property != loaded one")

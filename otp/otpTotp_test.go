@@ -1,7 +1,6 @@
 package otp
 
 import (
-	"fmt"
 	"testing"
 	"time"
 )
@@ -24,10 +23,10 @@ func Test_TotpIllegalInterval(t *testing.T) {
 		_, err := totp.Now()
 
 		if err == nil && (i < minIntervalSec || i > maxIntervalSec) { // The next error does not make sense to me:
-			t.Error(fmt.Sprintf("Totp test failed: initialization was done for illegal interval duration %v, valid range should be (%vs-%vs)",
-				time.Second*time.Duration(i), minIntervalSec, maxIntervalSec))
+			t.Errorf("Totp test failed: initialization was done for illegal interval duration %v, valid range should be (%vs-%vs)",
+				time.Second*time.Duration(i), minIntervalSec, maxIntervalSec)
 		} else if err != nil && (i >= minIntervalSec && i <= maxIntervalSec) {
-			t.Error(fmt.Sprintf("Totp test failed: Otp init fail for legal interval duration %vs, error: %v", i, err))
+			t.Errorf("Totp test failed: Otp init fail for legal interval duration %vs, error: %v", i, err)
 		}
 	}
 }

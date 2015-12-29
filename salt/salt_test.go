@@ -115,11 +115,11 @@ type testHash struct {
 
 // Results are from http://www.lorem-ipsum.co.uk/hasher.php
 func Test_StaticCalculationSalting(t *testing.T) {
-	var testsFor_ABCD_A1B2 = []testHash{{sha1.New, 1, "f877eed103f74c751952861e0630e643c4ec1eaa"},
+	var testsForABCDA1B2 = []testHash{{sha1.New, 1, "f877eed103f74c751952861e0630e643c4ec1eaa"},
 		{md5.New, 1, "dcfdf079664f00c2ad0d1e348b070bd5"},
 		{sha256.New, 1, "a193d7d1ba2253b712d13a0dd27bd7dfddcf04a6c8d904ae7e0e9ba2ced0f8fb"}}
 
-	for i, test := range testsFor_ABCD_A1B2 {
+	for i, test := range testsForABCDA1B2 {
 		salt, err := NewSalt([]byte("ABCD"), 4, 128, []byte("A1B2"))
 		if err != nil {
 			t.Error("Test fail: Can't initialize Salt, error:", err)

@@ -1,4 +1,4 @@
-// The entityManagement package includes implementation of User, Group, Resource and a container of all theses entities.
+// Package entityManagement : The entityManagement package includes implementation of User, Group, Resource and a container of all theses entities.
 //
 // There are three types of entities: User, Group and resource
 //	- Users have a name and a list of properties
@@ -8,6 +8,10 @@
 //
 // There is a special group entity, that is not defined explicitly, with the name "All".
 //	This entity is used in the ACL when the resource has permission properties that applies to all the entities in the system
+//
+// Note: The GetEntityAccount is the only external function that can be called without crudential checking
+//			therefore, it is protected against timming attacks (where the attacker tries to gain information
+//			such as if a specific user name is already defined in the system)
 package entityManagement
 
 import (
@@ -15,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
@@ -30,20 +34,24 @@ const (
 type entityProperties map[string]interface{}
 type groupOfUsers map[string]interface{}
 
+// Entity : structure that holds the entity name and the properties associated to it
 type Entity struct {
 	Name             string
 	EntityProperties entityProperties
 }
 
+// User : structure that holds the user data: Entity
 type User struct {
 	Entity
 }
 
+// Group : structure that holds the group data: Entity and list of users associated to this group
 type Group struct {
 	Entity
 	Group groupOfUsers
 }
 
+// Resource : structure that holds the resource data: Entity
 type Resource struct {
 	Entity
 }
@@ -51,7 +59,7 @@ type Resource struct {
 func (e Entity) String() string {
 	pArray := make([]string, 0, len(e.EntityProperties))
 
-	for name, _ := range e.EntityProperties {
+	for name := range e.EntityProperties {
 		pArray = append(pArray, name)
 	}
 	return fmt.Sprintf("%v, Properties: %v", e.Name, strings.Join(pArray, ","))
@@ -68,13 +76,13 @@ func (r Resource) String() string {
 func (g Group) String() string {
 	nArray := make([]string, 0, len(g.Group))
 
-	for n, _ := range g.Group {
+	for n := range g.Group {
 		nArray = append(nArray, n)
 	}
 	return fmt.Sprintf("%v: %v, Users list: %q", groupTypeStr, g.Entity, nArray)
 }
 
-// Verify that the entity name is valid, the current limit is that its size must be at least 1 character
+// IsEntityNameValid : Verify that the entity name is valid, the current limit is that its size must be at least 1 character
 func IsEntityNameValid(name string) error {
 	if len(name) == 0 {
 		return fmt.Errorf("name is not valid, its length must be larger than 0")
@@ -153,9 +161,9 @@ func (e *Entity) addProperty(propertyName string, data interface{}) error {
 	if data == nil {
 		return fmt.Errorf("can't add property of '%v' to the entity, property data is nil", propertyName)
 	}
-	_, exist := stc.PropertiesName[propertyName]
+	_, exist := defs.PropertiesName[propertyName]
 	if exist == false {
-		return fmt.Errorf("the property name '%v' can't be used, the allowed properties names are: %v", propertyName, stc.PropertiesName)
+		return fmt.Errorf("the property name '%v' can't be used, the allowed properties names are: %v", propertyName, defs.PropertiesName)
 	}
 	e.EntityProperties[propertyName] = data
 	return nil

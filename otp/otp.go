@@ -1,4 +1,4 @@
-// The OTP package provides implementation of One Time Password (OTP) services as defined by RFCs 4226 (HOTP), 6238 (TOTP).
+// Package otp : The OTP package provides implementation of One Time Password (OTP) services as defined by RFCs 4226 (HOTP), 6238 (TOTP).
 //
 // One time password implemenatation
 //	This package implements RFC 6238 "Totp: Time-Based One-Time Password Algorithm"
@@ -48,15 +48,15 @@ const (
 
 var defaultHashFunc = sha1.New
 
-// One Time Password
+// Otp : One Time Password structure
 type Otp struct {
 	Secret []byte           // Assume a legal Secret key
 	Digits int              // Number of digits in the code. default is 6
 	digest func() hash.Hash // Digest type, default is sha1
 }
 
-func (o Otp) String() string {
-	return fmt.Sprintf("Otp: Digits: %v", o.Digits)
+func (otp Otp) String() string {
+	return fmt.Sprintf("Otp: Digits: %v", otp.Digits)
 }
 
 func isNumberOfDigitsValid(val int) error {
@@ -92,7 +92,7 @@ func (otp Otp) isDataValid() error {
 	return nil
 }
 
-// Generate Otp
+// NewOtpAdvance : Generate Otp with the given parameters
 func NewOtpAdvance(secret []byte, numOfDigits int, digest func() hash.Hash) (*Otp, error) {
 	err := isSecretValid(secret)
 	if err != nil {
@@ -101,7 +101,7 @@ func NewOtpAdvance(secret []byte, numOfDigits int, digest func() hash.Hash) (*Ot
 	return &Otp{secret, numOfDigits, digest}, nil
 }
 
-// The default OTP: sha1 with 6 digits
+// NewOtp : The default OTP: sha1 with 6 digits
 // Any number of digits and any (hash) function are allowed
 func NewOtp(secret []byte) (*Otp, error) {
 	err := isSecretValid(secret)
@@ -111,7 +111,7 @@ func NewOtp(secret []byte) (*Otp, error) {
 	return &Otp{secret, defaultNumOfDigits, defaultHashFunc}, nil
 }
 
-// Return the OTP for a given input
+// Generate : Return the OTP for a given input
 // Input may either be time (for Totp) or integer (for Hotp)
 func (otp Otp) Generate(seed int64) (string, error) {
 	if err := otp.isDataValid(); err != nil {
@@ -122,7 +122,7 @@ func (otp Otp) Generate(seed int64) (string, error) {
 	return otp.GenerateHmac(data), nil
 }
 
-// Return the OTP for a given input
+// GenerateHmac : Return the OTP for a given input
 // Input is a byte array
 func (otp Otp) GenerateHmac(data []byte) string {
 	hmacHash := hmac.New(otp.digest, otp.Secret)
@@ -148,14 +148,14 @@ func (otp Otp) GenerateHmac(data []byte) string {
 	return fmt.Sprintf("%0*d", otp.Digits, code)
 }
 
-// Time-based One Time Password
+// Totp : Time-based One Time Password
 type Totp struct {
 	Interval time.Duration // The time interval in seconds for OT, The default is 30 seconds (the standard)
 	BaseOtp  *Otp
 }
 
-func (t Totp) String() string {
-	return fmt.Sprintf("Totp: Interval: %v, %v", t.Interval, t.BaseOtp)
+func (totp Totp) String() string {
+	return fmt.Sprintf("Totp: Interval: %v, %v", totp.Interval, totp.BaseOtp)
 }
 
 func validInterval(val time.Duration) bool {
@@ -172,7 +172,7 @@ func (totp Totp) isDataValid() error {
 	return nil
 }
 
-// default lifespan of a Totp is 30 seconds
+// NewTotp : Generate new totp structure, default lifespan of a Totp is 30 seconds
 func NewTotp(secret []byte) (*Totp, error) {
 	otp, err := NewOtp(secret)
 	if err != nil {
@@ -184,38 +184,39 @@ func NewTotp(secret []byte) (*Totp, error) {
 	}, nil
 }
 
-// Return the Time Based One Time Password for the current time
-func (tp Totp) Now() (string, error) {
+// Now : Return the Time Based One Time Password for the current time
+func (totp Totp) Now() (string, error) {
 	//	if tp.Interval < time.Second * 1 //
-	return tp.AtTime(time.Now()) //TODO check for UTC
+	return totp.AtTime(time.Now()) //TODO check for UTC
 }
 
-// Generate an OTP for a given time
-func (tp Totp) AtTime(t time.Time) (string, error) {
-	if err := tp.isDataValid(); err != nil {
+// AtTime : Generate an OTP for a given time
+func (totp Totp) AtTime(t time.Time) (string, error) {
+	if err := totp.isDataValid(); err != nil {
 		return "", err
 	}
-	return tp.BaseOtp.Generate(tp.timeCode(t))
+	return totp.BaseOtp.Generate(totp.timeCode(t))
 }
 
 // A counter that is incremented each lifespan - all
 // times within the same timespan return the same value,
 // once the time is incremented by the defined lifespan the
 // return value is incremented as well
-func (tp Totp) timeCode(t time.Time) int64 {
-	return (t.Unix() / int64(tp.Interval.Seconds()))
+func (totp Totp) timeCode(t time.Time) int64 {
+	return (t.Unix() / int64(totp.Interval.Seconds()))
 }
 
-// Event-based HMAC One Time Password
+// Hotp : Event-based HMAC One Time Password
 type Hotp struct {
 	Count   int64
 	BaseOtp *Otp
 }
 
-func (h Hotp) String() string {
-	return fmt.Sprintf("Hotp: count: %v, %v", h.Count, h.BaseOtp)
+func (hp Hotp) String() string {
+	return fmt.Sprintf("Hotp: count: %v, %v", hp.Count, hp.BaseOtp)
 }
 
+// NewHotp : Generate new hotp structure
 func NewHotp(secret []byte, count int64) (*Hotp, error) {
 	otp, err := NewOtp(secret)
 	if err != nil {
@@ -227,18 +228,18 @@ func NewHotp(secret []byte, count int64) (*Hotp, error) {
 	}, err
 }
 
-// Generate the next OTP in the sequence
+// Next : Generate the next OTP in the sequence
 func (hp *Hotp) Next() (string, error) {
 	newCount := atomic.AddInt64(&hp.Count, 1)
 	return hp.AtCount(newCount)
 }
 
-// Generate an OTP for a given value
+// AtCount : Generate an OTP for a given value
 func (hp Hotp) AtCount(count int64) (string, error) {
 	return hp.BaseOtp.Generate(count)
 }
 
-// Generate a new OTP using a random integer
+// New : Generate a new OTP using a random integer
 func (hp *Hotp) New() (string, error) {
 	val, _ := rand.Int(rand.Reader, big.NewInt(1<<32))
 	return hp.AtCount(val.Int64())

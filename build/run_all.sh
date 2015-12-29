@@ -5,7 +5,7 @@ cd /home/ravid/libSecurity/src/github.com/ibm-security-innovation/libsecurity-go
 
 code=(
    "accounts" "acl" "entity" "ocra" "otp" "password" "salt" "storage" "setup"
-   "restful/accounts_restful" "restful/entity_restful" "restful/ocra_restful" "restful/otp_restful" "restful/password_restful" "restful/storage_restful" "restful/acl_restful"
+   "restful/accounts-restful" "restful/entity-restful" "restful/ocra-restful" "restful/otp-restful" "restful/password-restful" "restful/storage-restful" "restful/acl-restful"
    "app/token"
 )
 
@@ -38,6 +38,11 @@ pushd . >& /dev/null
 echo "Test code format"  >> $cpwd/tmp-res
 echo "Test code format"
 go vet github.com/ibm-security-innovation/libsecurity-go/... |& grep -v "go-restful" | grep -v "exit status" | tee -a $cpwd/tmp-res
+
+echo "Test coding conventions"  >> $cpwd/tmp-res
+echo "Test coding conventions"
+golint github.com/ibm-security-innovation/libsecurity-go/... | tee -a $cpwd/tmp-res
+
 popd >& /dev/null
 
 grep -iw 'pass\|fail\|running\|error\|_examples\|.*.go:.*' < $cpwd/tmp-res >> $cpwd/res

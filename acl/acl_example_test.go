@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ibm-security-innovation/libsecurity-go/acl"
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	en "github.com/ibm-security-innovation/libsecurity-go/entity"
 )
 
@@ -39,7 +39,7 @@ func initEntityManager() *en.EntityManager {
 	}
 	entityManager.AddResource(resourceName)
 	a := acl.NewACL()
-	entityManager.AddPropertyToEntity(resourceName, stc.AclPropertyName, a)
+	entityManager.AddPropertyToEntity(resourceName, defs.AclPropertyName, a)
 	return entityManager
 }
 
@@ -49,10 +49,10 @@ func Example_acl() {
 	fmt.Println("ExampleShowACLAddCheckRemovePermissions")
 	fmt.Printf("User: %q, permission %q is: %v\n", userName1, canUsePermission,
 		acl.CheckUserPermission(entityManager, userName1, resourceName, acl.Permission(canUsePermission)))
-	data, _ := entityManager.GetPropertyAttachedToEntity(resourceName, stc.AclPropertyName)
+	data, _ := entityManager.GetPropertyAttachedToEntity(resourceName, defs.AclPropertyName)
 	a, ok := data.(*acl.Acl)
 	if ok == false {
-		fmt.Println("Error: can't get property", stc.AclPropertyName, "attached to resource", resourceName)
+		fmt.Println("Error: can't get property", defs.AclPropertyName, "attached to resource", resourceName)
 		return
 	}
 	a.AddPermissionToResource(entityManager, userName1, acl.Permission(canUsePermission))
@@ -60,7 +60,7 @@ func Example_acl() {
 		acl.CheckUserPermission(entityManager, userName1, resourceName, acl.Permission(canUsePermission)))
 	a.AddPermissionToResource(entityManager, groupName, acl.Permission(supportPermission))
 	a.AddPermissionToResource(entityManager, groupName, acl.Permission(canUsePermission))
-	a.AddPermissionToResource(entityManager, stc.AclAllEntryName, acl.Permission(allPermission))
+	a.AddPermissionToResource(entityManager, defs.AclAllEntryName, acl.Permission(allPermission))
 	a.AddPermissionToResource(entityManager, userInGroupName1, acl.Permission(usersPermission))
 	permissions, _ := acl.GetUserPermissions(entityManager, userInGroupName1, resourceName)
 	fmt.Printf("All the permissions for user: %q, on resource %q are: %q\n",

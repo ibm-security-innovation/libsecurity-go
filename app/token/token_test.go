@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 )
 
 const (
 	defaultUserName = "User1"
-	defaultIp       = "1.2.3.4"
+	defaultIP       = "1.2.3.4"
 
 	privateKeyFilePath = "./dist/key.private"
 )
@@ -23,13 +23,13 @@ func init() {
 // Verify that only the same tokens are equal
 func Test_GenerateToken(t *testing.T) {
 	usersName := []string{defaultUserName, defaultUserName + "a", ""}
-	ipsStr := []string{defaultIp, defaultIp + "1", ""}
+	ipsStr := []string{defaultIP, defaultIP + "1", ""}
 	usersPrivilege := am.GetUsersPrivilege()
-	signKey, verifyKey := TokenSetUp(privateKeyFilePath)
+	signKey, verifyKey := SetupAToken(privateKeyFilePath)
 
 	for _, name := range usersName {
 		for _, ip := range ipsStr {
-			for p, _ := range usersPrivilege {
+			for p := range usersPrivilege {
 				token1, _ := GenerateToken(name, p, ip, signKey)
 				data, err := ParseToken(token1, ip, verifyKey)
 				if err != nil || data.UserName != name || data.Privilege != p {
@@ -47,11 +47,11 @@ func Test_GenerateToken(t *testing.T) {
 // Verify that only user with the relevant privilege can run the operation
 // Verify that the IsTheSameUser return the expected value
 func Test_CheckPrivilegeAndSameUser(t *testing.T) {
-	groupsName := []string{stc.UsersGroupName, stc.AdminGroupName, stc.SuperUserGroupName}
+	groupsName := []string{defs.UsersGroupName, defs.AdminGroupName, defs.SuperUserGroupName}
 	usersName := []string{"user", "admin", "super"}
 	permissions := []string{am.UserPermission, am.AdminPermission, am.SuperUserPermission}
 
-	signKey, verifyKey := TokenSetUp(privateKeyFilePath)
+	signKey, verifyKey := SetupAToken(privateKeyFilePath)
 
 	for _, name := range usersName {
 		usersList.AddUser(name)
@@ -63,9 +63,9 @@ func Test_CheckPrivilegeAndSameUser(t *testing.T) {
 		}
 	}
 	for i, name := range usersName {
-		token1, _ := GenerateToken(name, permissions[i], defaultIp, signKey)
-		for j, _ := range usersName {
-			ok, err := IsPrivilegeOk(token1, permissions[j], defaultIp, verifyKey)
+		token1, _ := GenerateToken(name, permissions[i], defaultIP, signKey)
+		for j := range usersName {
+			ok, err := IsPrivilegeOk(token1, permissions[j], defaultIP, verifyKey)
 			if j > i && ok == true {
 				t.Errorf("Test fail: Is privilege returns %v but the token privilege is '%v' and the check was for '%v', error %v", ok, usersName[i], permissions[j], err)
 			} else if j <= i && ok == false {
@@ -74,9 +74,9 @@ func Test_CheckPrivilegeAndSameUser(t *testing.T) {
 		}
 	}
 	for _, name1 := range usersName {
-		token1, _ := GenerateToken(name1, name1, defaultIp, signKey)
+		token1, _ := GenerateToken(name1, name1, defaultIP, signKey)
 		for _, name2 := range usersName {
-			ok, _ := IsItTheSameUser(token1, name2, defaultIp, verifyKey)
+			ok, _ := IsItTheSameUser(token1, name2, defaultIP, verifyKey)
 			if name1 != name2 && ok == true {
 				t.Errorf("Test fail: IsItTheSameUser returns true but the names are different: '%v', '%v'", name1, name2)
 			} else if name1 == name2 && ok == false {

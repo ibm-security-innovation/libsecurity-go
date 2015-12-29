@@ -1,4 +1,4 @@
-// The secureStorage package provides implementation of Secure storage services: Persistence mechanism based on AES Encryption of key-value pairs within a signed file.
+// Package storage : The secureStorage package provides implementation of Secure storage services: Persistence mechanism based on AES Encryption of key-value pairs within a signed file.
 //
 // The secure storgae allows maintaining data persistently and securely.
 // 	The implementation of the secure storage is based on encrypted key-value pairs that are stored
@@ -42,13 +42,18 @@ import (
 )
 
 const (
+	// FilePermissions : linux style read/write for the owner
 	FilePermissions = 0600
-	MaxSaltLen      = 16
-	SaltLen         = 8
-	SecretLen       = 16
-	minSecretLen    = 8
-	maxSecretLen    = 255
-	SaltData        = "Ravid"
+	// MaxSaltLen : the maximum salting string length
+	MaxSaltLen = 16
+	// SaltLen : the default salting string length
+	SaltLen = 8
+	// SecretLen : the default secret string length
+	SecretLen    = 16
+	minSecretLen = 8
+	maxSecretLen = 255
+	// SaltData : the default salting string
+	SaltData = "Ravid"
 
 	extraCharStr  = "@#%^&()'-_+=;:"
 	minUpperCase  = 2
@@ -62,7 +67,7 @@ var (
 	aesKeySize    = make(map[int]interface{})
 	aesKeySizeStr string
 
-	NullChar = byte(0)
+	nullChar = byte(0)
 )
 
 func init() {
@@ -70,14 +75,16 @@ func init() {
 	aesKeySize[24] = ""
 	aesKeySize[32] = ""
 	var s []byte
-	for k, _ := range aesKeySize {
+	for k := range aesKeySize {
 		s = append(s, fmt.Sprintf("%v ", k)...)
 	}
 	aesKeySizeStr = string(s)
 }
 
+// SecureDataMap : hash to map the modules data
 type SecureDataMap map[string]string
 
+// SecureStorage : structure that holds all the secure data to be store/read from the storage include the calculated signature (the secret is not stored on the disk)
 type SecureStorage struct {
 	Salt   []byte
 	Sign   []byte
@@ -99,7 +106,7 @@ func getSaltedPass(secret, saltData []byte) []byte {
 	return bytes.Replace(pass, []byte{'0'}, []byte{'a'}, -1)
 }
 
-// Create a new storage using the given secret
+// NewStorage : Create a new storage using the given secret
 func NewStorage(secret []byte, checkSecretStrength bool) (*SecureStorage, error) {
 	err := isValidData(secret)
 	if err != nil {
@@ -115,7 +122,7 @@ func NewStorage(secret []byte, checkSecretStrength bool) (*SecureStorage, error)
 	return &s, nil
 }
 
-// Verify if the given secret match the secure stiorage secret use throttling
+// IsSecretMatch : Verify if the given secret match the secure stiorage secret use throttling
 func (s *SecureStorage) IsSecretMatch(secret []byte) bool {
 	pass := getSaltedPass(secret, s.Salt)
 	return subtle.ConstantTimeCompare(s.secret, pass) == 1
@@ -125,7 +132,7 @@ func manipulateSecureKey(key []byte, saltData []byte) []byte {
 	return pbkdf2.Key(key, saltData, 4096, 32, sha256.New)
 }
 
-// Read a secure key from the given file, process it with cryptographic manipulations  and return it
+// GetSecureKey : Read a secure key from the given file, process it with cryptographic manipulations  and return it
 func GetSecureKey(secureKeyFilePath string) []byte {
 	secureKey, err := ioutil.ReadFile(secureKeyFilePath)
 	if err != nil {
@@ -149,7 +156,7 @@ func isValidSecret(secret []byte) error {
 	return nil
 }
 
-// Add (or replace) to the storage a new item using the given key and value
+// AddItem : Add (or replace) to the storage a new item using the given key and value
 func (s *SecureStorage) AddItem(key string, value string) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -171,7 +178,7 @@ func (s *SecureStorage) AddItem(key string, value string) error {
 	return nil
 }
 
-// Return from storage the item that is associated with the given key
+// GetItem : Return from storage the item that is associated with the given key
 func (s *SecureStorage) GetItem(key string) (string, error) {
 	lock.Lock()
 	defer lock.Unlock()
@@ -199,7 +206,7 @@ func (s *SecureStorage) GetItem(key string) (string, error) {
 	return ret, nil
 }
 
-// Remove from the storage the item that is associated with the given key
+// RemoveItem : Remove from the storage the item that is associated with the given key
 func (s *SecureStorage) RemoveItem(key string) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -235,7 +242,7 @@ func (s SecureStorage) encrypt(text []byte, fixedIv bool, inIv string) (string, 
 		if len(b)%aes.BlockSize == 0 {
 			break
 		}
-		data = append(data, NullChar)
+		data = append(data, nullChar)
 	}
 	ciphertext := make([]byte, aes.BlockSize+len(b))
 	iv := ciphertext[:aes.BlockSize]
@@ -318,7 +325,7 @@ func (s SecureStorage) calcHMac(data []byte, secret []byte) []byte {
 	return hmacHash.Sum(nil)
 }
 
-// Read a secure storage from file (JSON format), verify that the file is genuine
+// LoadInfo : Read a secure storage from file (JSON format), verify that the file is genuine
 // by calculating the expected signature
 func LoadInfo(fileName string, secret []byte) (*SecureStorage, error) {
 	lock.Lock()
@@ -340,7 +347,7 @@ func LoadInfo(fileName string, secret []byte) (*SecureStorage, error) {
 	return &s, nil
 }
 
-// Sign the secure storage and than store it to a given file path
+// StoreInfo : Sign the secure storage and than store it to a given file path without the secret
 func (s SecureStorage) StoreInfo(fileName string) error {
 	tmpFileName := "./tmpA1B2.tr1"
 	lock.Lock()
@@ -369,7 +376,7 @@ func (s SecureStorage) StoreInfo(fileName string) error {
 }
 
 func (s SecureStorage) extractDataFromEncodedString(data string) (string, error) {
-	val := strings.Split(data, string(NullChar))
+	val := strings.Split(data, string(nullChar))
 	ret, err := base64.StdEncoding.DecodeString(val[0])
 	sLen := bytes.IndexByte(ret, 0)
 	if sLen <= 0 {
@@ -378,7 +385,7 @@ func (s SecureStorage) extractDataFromEncodedString(data string) (string, error)
 	return string(ret[:sLen]), err
 }
 
-// Get the decrypted storgae information
+//GetDecryptStorageData : Get the decrypted storgae information
 func (s SecureStorage) GetDecryptStorageData() *SecureStorage {
 	data := make(SecureDataMap)
 

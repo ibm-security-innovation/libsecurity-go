@@ -131,8 +131,8 @@ func Test_VerifyPwd(t *testing.T) {
 	}
 }
 
-// Check that one time password can be used exctly once
-func Test_UseOfOneTimePwd(t *testing.T) {
+// Check that temporary password can be used exctly once
+func Test_UseOfTemporaryPwd(t *testing.T) {
 	user, err := NewUserPwd(defaultPassword, defaultSaltStr, true)
 	if err != nil {
 		t.Error("Test fail, can't initialized user password structure, error:", err)
@@ -140,14 +140,14 @@ func Test_UseOfOneTimePwd(t *testing.T) {
 	}
 	tPwd, _ := salt.GenerateSaltedPassword(defaultPassword, MinPasswordLength, MaxPasswordLength, user.Salt, -1)
 	pwd := GetHashedPwd(tPwd)
-	user.SetOneTimePwd(true)
+	user.SetTemporaryPwd(true)
 	err = user.IsPasswordMatch(pwd)
 	if err != nil {
 		t.Errorf("Test fail: password '%v' was not accepted but it is the same as the current password, %v, current time: %v, error: %v", pwd, user, time.Now(), err)
 	}
 	err = user.IsPasswordMatch(pwd)
 	if err == nil {
-		t.Errorf("Test fail: password '%v' accepted but it was a one time password, and it was already used, %v, current time: %v", pwd, user, time.Now())
+		t.Errorf("Test fail: password '%v' accepted but it was a temporary password, and it was already used, %v, current time: %v", pwd, user, time.Now())
 	}
 }
 
@@ -172,7 +172,7 @@ func Test_VerifyPwdBlocked(t *testing.T) {
 			t.Errorf("Test fail: password was not blocked after %v wrong attempts, it should be blocked after %v wrong attempts", i, maxPwdAttempts)
 		} else if err != nil && i >= maxPwdAttempts {
 			pwd := GenerateNewValidPassword()
-			expiration := time.Now().Add(time.Duration(defaultOneTimePwdExpirationMinutes) * time.Second * 60)
+			expiration := time.Now().Add(time.Duration(defaultTemporaryPwdExpirationMinutes) * time.Second * 60)
 			user.updatePasswordHandler(user.Password, pwd, expiration, false, true)
 			err = user.IsPasswordMatch(user.Password)
 			if err != nil {
@@ -209,11 +209,11 @@ func Test_ResetPassword(t *testing.T) {
 	}
 	err = user.IsPasswordMatch(pass)
 	if err == nil {
-		t.Errorf("Test fail: The one time pwd: '%v' accepted twice", newPwd)
+		t.Errorf("Test fail: The temporary pwd: '%v' accepted twice", newPwd)
 	}
 	for i := 0; i < 3; i++ {
 		pass = []byte(string(pass) + "a1^A")
-		expiration := time.Now().Add(time.Duration(defaultOneTimePwdExpirationMinutes) * time.Second * 60)
+		expiration := time.Now().Add(time.Duration(defaultTemporaryPwdExpirationMinutes) * time.Second * 60)
 		newPwd, err := user.UpdatePasswordAfterReset(user.Password, pass, expiration)
 		if err != nil {
 			t.Errorf("Test fail: can't use the new password: '%v' (%v), return an error: %v", pass, string(pass), err)
@@ -239,7 +239,7 @@ func Test_GenerateRandomPassword(t *testing.T) {
 		if exist {
 			if cnt < dupPassLen {
 				dupPass[cnt] = pass
-				cnt += 1
+				cnt++
 			}
 		} else {
 			vec[pass] = true

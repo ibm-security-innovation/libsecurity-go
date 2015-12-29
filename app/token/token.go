@@ -1,4 +1,4 @@
-// The Token package: Enables the transfer of users' information between clients and servers using secure JSON Web Token (JWT) cookies
+// Package token : The Token package: Enables the transfer of users' information between clients and servers using secure JSON Web Token (JWT) cookies
 package token
 
 import (
@@ -13,14 +13,13 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
-	//	"ibm-security-innovation/libsecurity-go/acl"
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	en "github.com/ibm-security-innovation/libsecurity-go/entity"
 	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 )
 
 const (
-	TrusteerSecurityStr     = "Trusteer"
+	securityStr             = "Trusteer"
 	tokenClaimsExpireStr    = "exp"
 	tokenClaimsIssuerStr    = "iss"
 	tokenClaimsAudienceStr  = "aud"
@@ -32,38 +31,41 @@ const (
 
 	defaultTokenTimeExpirationMinutes = 30
 
+	/* old use
 	SuperUserPermission = "Super-user"
 	AdminPermission     = "Admin"
 	UserPermission      = "User"
+	*/
 )
 
 var (
-	jwtUniqId string
+	jwtUniqID string
 
 	usersList                                *en.EntityManager
 	adminsGroup, superusersGroup, usersGroup *en.Entity
 )
 
-type TokenData struct {
+// SecureTokenData : The token information: token string, user name and privilege and ID
+type SecureTokenData struct {
 	Token     *jwt.Token
 	UserName  string
 	Privilege string
-	Id        string
+	ID        string
 }
 
 func init() {
-	jwtUniqId = generateJwt(jwtLen)
+	jwtUniqID = generateJwt(jwtLen)
 
 	usersList = en.New()
 
-	usersList.AddGroup(stc.SuperUserGroupName)
-	usersList.AddGroup(stc.AdminGroupName)
-	usersList.AddGroup(stc.UsersGroupName)
+	usersList.AddGroup(defs.SuperUserGroupName)
+	usersList.AddGroup(defs.AdminGroupName)
+	usersList.AddGroup(defs.UsersGroupName)
 
-	usersList.AddUserToGroup(stc.AdminGroupName, stc.SuperUserGroupName)
-	usersList.AddUserToGroup(stc.UsersGroupName, stc.SuperUserGroupName)
-	usersList.AddUserToGroup(stc.UsersGroupName, stc.AdminGroupName)
-	usersList.AddUserToGroup(stc.SuperUserGroupName, stc.RootUserName)
+	usersList.AddUserToGroup(defs.AdminGroupName, defs.SuperUserGroupName)
+	usersList.AddUserToGroup(defs.UsersGroupName, defs.SuperUserGroupName)
+	usersList.AddUserToGroup(defs.UsersGroupName, defs.AdminGroupName)
+	usersList.AddUserToGroup(defs.SuperUserGroupName, defs.RootUserName)
 }
 
 func generateJwt(length int) string {
@@ -96,9 +98,9 @@ func getPrivateKey(privateKeyFilePath string) (*rsa.PrivateKey, error) {
 	return privateKey, nil
 }
 
-// Read the given private key PEM file and extract an RSA private key (signing
+// SetupAToken : Read the given private key PEM file and extract an RSA private key (signing
 // key) the corresponding RSA public key (verifying key)
-func TokenSetUp(privateKeyFilePath string) (*rsa.PrivateKey, *rsa.PublicKey) {
+func SetupAToken(privateKeyFilePath string) (*rsa.PrivateKey, *rsa.PublicKey) {
 	var err error
 	pKey, err := getPrivateKey(privateKeyFilePath)
 	if err != nil {
@@ -107,28 +109,28 @@ func TokenSetUp(privateKeyFilePath string) (*rsa.PrivateKey, *rsa.PublicKey) {
 	return pKey, &pKey.PublicKey
 }
 
-// Generate a new signed token
+// GenerateToken : Generate a new signed token
 func GenerateToken(name string, privilege string, ipAddr string, signKey *rsa.PrivateKey) (string, error) {
 	// create a signer for rsa 256
 	token := jwt.New(jwt.SigningMethodRS256)
 
 	token.Claims[tokenClaimsExpireStr] = time.Now().Add(time.Minute * defaultTokenTimeExpirationMinutes).Unix()
-	token.Claims[tokenClaimsIssuerStr] = TrusteerSecurityStr
+	token.Claims[tokenClaimsIssuerStr] = securityStr
 	token.Claims[tokenClaimsAudienceStr] = name
-	token.Claims[tokenClaimsJtiStr] = jwtUniqId
+	token.Claims[tokenClaimsJtiStr] = jwtUniqID
 	token.Claims[tokenClaimsPrivilegeStr] = privilege
 	token.Claims[tokenClaimsIPAddr] = ipAddr
 	return token.SignedString(signKey)
 }
 
-// Parse the given token and verify that it holds the mandatory data
-func ParseToken(tokenString string, ipAddr string, verifyKey *rsa.PublicKey) (*TokenData, error) {
+// ParseToken : Parse the given token and verify that it holds the mandatory data
+func ParseToken(tokenString string, ipAddr string, verifyKey *rsa.PublicKey) (*SecureTokenData, error) {
 	token, err := jwt.Parse(tokenString,
 		func(token *jwt.Token) (interface{}, error) {
-			if token.Claims[tokenClaimsIssuerStr] != TrusteerSecurityStr {
+			if token.Claims[tokenClaimsIssuerStr] != securityStr {
 				return nil, fmt.Errorf("the token is not valid: it was not issued by trusteer")
 			}
-			if token.Claims[tokenClaimsJtiStr] != jwtUniqId {
+			if token.Claims[tokenClaimsJtiStr] != jwtUniqID {
 				return nil, fmt.Errorf("the token is not valid: wrong ID")
 			}
 			if token.Claims[tokenClaimsIPAddr] != ipAddr {
@@ -148,13 +150,13 @@ func ParseToken(tokenString string, ipAddr string, verifyKey *rsa.PublicKey) (*T
 		userName := token.Claims[tokenClaimsAudienceStr].(string)
 		id := token.Claims[tokenClaimsJtiStr].(string)
 		privilege := token.Claims[tokenClaimsPrivilegeStr].(string)
-		return &TokenData{token, userName, privilege, id}, nil
+		return &SecureTokenData{token, userName, privilege, id}, nil
 	case *jwt.ValidationError: // something was wrong during the validation
 		vErr := err.(*jwt.ValidationError)
 
 		switch vErr.Errors {
 		case jwt.ValidationErrorExpired:
-			return nil, fmt.Errorf("token Expired, get a new one.")
+			return nil, fmt.Errorf("token Expired, get a new one")
 		default:
 			return nil, fmt.Errorf("problem was found while parsing token! %v", err)
 		}
@@ -164,7 +166,7 @@ func ParseToken(tokenString string, ipAddr string, verifyKey *rsa.PublicKey) (*T
 	}
 }
 
-// Verify that the given privilege matches the one that is associated with the user defined in the token
+// IsPrivilegeOk : Verify that the given privilege matches the one that is associated with the user defined in the token
 func IsPrivilegeOk(tokenString string, privilege string, ipAddr string, verifyKey *rsa.PublicKey) (bool, error) {
 	err := am.IsValidPrivilege(privilege)
 	if err != nil {
@@ -175,12 +177,12 @@ func IsPrivilegeOk(tokenString string, privilege string, ipAddr string, verifyKe
 		return false, err
 	}
 	var entityName string
-	if privilege == SuperUserPermission {
-		entityName = stc.SuperUserGroupName
-	} else if privilege == AdminPermission {
-		entityName = stc.AdminGroupName
+	if privilege == am.SuperUserPermission {
+		entityName = defs.SuperUserGroupName
+	} else if privilege == am.AdminPermission {
+		entityName = defs.AdminGroupName
 	} else {
-		entityName = stc.UsersGroupName
+		entityName = defs.UsersGroupName
 	}
 	if usersList.IsUserPartOfAGroup(entityName, token.UserName) {
 		return true, nil
@@ -188,14 +190,14 @@ func IsPrivilegeOk(tokenString string, privilege string, ipAddr string, verifyKe
 	return false, fmt.Errorf("the privilege %v is not permited to this operation", token.Privilege)
 }
 
-// Verify that the user associated with the token is the same as the given one
+// IsItTheSameUser : Verify that the user associated with the token is the same as the given one
 func IsItTheSameUser(tokenString string, userName string, ipAddr string, verifyKey *rsa.PublicKey) (bool, error) {
-	tokenData, err := ParseToken(tokenString, ipAddr, verifyKey)
+	SecureTokenData, err := ParseToken(tokenString, ipAddr, verifyKey)
 
 	if err != nil {
 		return false, err
 	}
-	if tokenData.UserName == userName {
+	if SecureTokenData.UserName == userName {
 		return true, nil
 	}
 	return false, nil

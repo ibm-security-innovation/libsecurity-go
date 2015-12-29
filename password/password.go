@@ -1,4 +1,4 @@
-// The password package provides implementation of Password services: Encryption, salting, reset, time expiration and throttling.
+// Package password : The password package provides implementation of Password services: Encryption, salting, reset, time expiration and throttling.
 //
 // The password package handles the following:
 //	- Generating a new (salted) password,
@@ -11,12 +11,13 @@
 //	- The password's expiration time
 //	- Old passwords that should be avoided. If there is an attempt to reused an old the user is flagged.
 //	- Error counter: counts the number of consecutive unsuccessful authentication attempts
-//	- Is it a 'one time password' (after password reset)
+//	- Is it a 'temporary password' (after password reset)
 //
 // Note that users are also flagged if they attempt to use a one-time-passwords more than once
 package password
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
@@ -29,22 +30,24 @@ import (
 	"time"
 	"unicode"
 
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	"github.com/ibm-security-innovation/libsecurity-go/salt"
 	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 // Note: Secure storage and the strength of the password are not handled by this package
 const (
-	defaultPasswordLen                 = 10
-	defaultExpirationDurationDays      = 90
-	defaultNumberOfOldPasswords        = 5
-	defaultOneTimePwd                  = false
-	defaultPwdAttempts                 = 10
-	defaultOneTimePwdExpirationMinutes = 60
+	defaultPasswordLen                   = 10
+	defaultExpirationDurationDays        = 90
+	defaultNumberOfOldPasswords          = 5
+	defaultTemporaryPwd                  = false
+	defaultPwdAttempts                   = 10
+	defaultTemporaryPwdExpirationMinutes = 60
 
 	MinPasswordLength = 8
 	MaxPasswordLength = 256
+
+	noiseRandomMiliSec = 2 // to avoid timimg attacks
 
 	minUpperCase  = 1
 	minLowerCase  = 1
@@ -59,24 +62,26 @@ var (
 	p1Lock sync.Mutex
 )
 
+// UserPwd : structure that holds all the parameters relevant to handle password such as the passward, salt, expiration time, counters etc.
 type UserPwd struct {
 	Password      []byte
 	Salt          []byte
 	Expiration    time.Time
 	ErrorsCounter int
-	OneTimePwd    bool // must be replaced after the first use
+	TemporaryPwd  bool // must be replaced after the first use
 	OldPasswords  [defaultNumberOfOldPasswords][]byte
 }
 
 func (u UserPwd) String() string {
-	return fmt.Sprintf("Password: %v, Salt: %v, Expiration: %v, Errors counter: %v, One time password: %v, Old passwords: %v",
-		u.Password, u.Salt, u.Expiration, u.ErrorsCounter, u.OneTimePwd, u.OldPasswords)
+	return fmt.Sprintf("Password: %v, Salt: %v, Expiration: %v, Errors counter: %v, Temporary password: %v, Old passwords: %v",
+		u.Password, u.Salt, u.Expiration, u.ErrorsCounter, u.TemporaryPwd, u.OldPasswords)
 }
 
+// Serializer : virtual set of functions that must be implemented by each module
 type Serializer struct{}
 
 func init() {
-	stc.Serializers[stc.PwdPropertyName] = &Serializer{}
+	defs.Serializers[defs.PwdPropertyName] = &Serializer{}
 }
 
 // Verify that the password length is in the defined range
@@ -88,7 +93,7 @@ func isPwdLengthValid(pwd []byte) error {
 	return nil
 }
 
-// Verify that the password is legal: its length is OK and it wasn't recently used
+// IsNewPwdValid : Verify that the password is legal: its length is OK and it wasn't recently used
 func (u UserPwd) IsNewPwdValid(pwd []byte, checkPwdStrength bool) error {
 	err := isPwdLengthValid(pwd)
 	if err != nil {
@@ -103,14 +108,14 @@ func (u UserPwd) IsNewPwdValid(pwd []byte, checkPwdStrength bool) error {
 		return fmt.Errorf("the new password is illegal: it is the same as the current password, please select a new password")
 	}
 	for _, s := range u.OldPasswords {
-		if compareHashedPwd(newPwd, s) == true {
+		if bytes.Compare(newPwd, s) == 0 { // the constant delay comparison must be used only once
 			return fmt.Errorf("the new password is illegal: it was already used, please select a new password")
 		}
 	}
 	return nil
 }
 
-// The password should be handled and stored as hashed and not in clear text
+// GetHashedPwd : The password should be handled and stored as hashed and not in clear text
 // This function implementation may later be updated to crypto.cbytes
 func GetHashedPwd(pwd []byte) []byte {
 	hasher := sha256.New()
@@ -119,10 +124,11 @@ func GetHashedPwd(pwd []byte) []byte {
 }
 
 func compareHashedPwd(pwd1 []byte, pwd2 []byte) bool {
+	defs.TimingAttackSleep(0, noiseRandomMiliSec)
 	return subtle.ConstantTimeCompare(pwd1, pwd2) == 1
 }
 
-// Generate a new UserPwd for a given password
+// NewUserPwd : Generate a new UserPwd for a given password
 // The generated password is with a default expiration time
 func NewUserPwd(pwd []byte, saltData []byte, checkPwdStrength bool) (*UserPwd, error) {
 	err := isPwdLengthValid(pwd)
@@ -138,24 +144,25 @@ func NewUserPwd(pwd []byte, saltData []byte, checkPwdStrength bool) (*UserPwd, e
 		return nil, err
 	}
 	setPwd := GetHashedPwd(newPwd)
-	return &UserPwd{setPwd, saltData, getNewDefaultPasswordExpirationTime(), 0, defaultOneTimePwd, [defaultNumberOfOldPasswords][]byte{}}, nil
+	return &UserPwd{setPwd, saltData, getNewDefaultPasswordExpirationTime(), 0, defaultTemporaryPwd, [defaultNumberOfOldPasswords][]byte{}}, nil
 }
 
 func getNewDefaultPasswordExpirationTime() time.Time {
 	return time.Now().Add(time.Duration(defaultExpirationDurationDays*24) * time.Hour)
 }
 
-func (u *UserPwd) SetOneTimePwd(flag bool) {
-	u.OneTimePwd = flag
+// SetTemporaryPwd : sets the temporary password status to the given value
+func (u *UserPwd) SetTemporaryPwd(flag bool) {
+	u.TemporaryPwd = flag
 }
 
-// Update password and expiration time
+// UpdatePassword : Update password and expiration time
 func (u *UserPwd) UpdatePassword(currentPwd []byte, pwd []byte, checkPwdStrength bool) ([]byte, error) {
-	return u.updatePasswordHandler(currentPwd, pwd, getNewDefaultPasswordExpirationTime(), defaultOneTimePwd, checkPwdStrength)
+	return u.updatePasswordHandler(currentPwd, pwd, getNewDefaultPasswordExpirationTime(), defaultTemporaryPwd, checkPwdStrength)
 }
 
 // Update the password, it's expioration time and it's state (is it a one-time-password or a regular one)
-func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiration time.Time, oneTimePwd bool, checkPwdStrength bool) ([]byte, error) {
+func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiration time.Time, TemporaryPwd bool, checkPwdStrength bool) ([]byte, error) {
 	pLock.Lock()
 	defer pLock.Unlock()
 
@@ -185,11 +192,11 @@ func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiratio
 	u.Password = newPwd
 	u.Expiration = expiration
 	u.ErrorsCounter = 0
-	u.SetOneTimePwd(oneTimePwd)
+	u.SetTemporaryPwd(TemporaryPwd)
 	return newPwd, nil
 }
 
-// Verify that the given password is the expected one and that it is not expired
+// IsPasswordMatch : Verify that the given password is the expected one and that it is not expired
 func (u *UserPwd) IsPasswordMatch(pwd []byte) error {
 	return u.isPasswordMatchHandler(pwd, false)
 }
@@ -202,6 +209,7 @@ func (u *UserPwd) isPasswordMatchHandler(pwd []byte, overrideChecks bool) error 
 
 	if overrideChecks == false {
 		if u.ErrorsCounter >= maxPwdAttempts {
+			compareHashedPwd(pwd, u.Password) // against timing attacks
 			return fmt.Errorf("too many password attempts, Reset password before trying again")
 		}
 		err := isPwdLengthValid(pwd)
@@ -211,52 +219,53 @@ func (u *UserPwd) isPasswordMatchHandler(pwd []byte, overrideChecks bool) error 
 		if compareHashedPwd(pwd, u.Password) == false {
 			u.ErrorsCounter = u.ErrorsCounter + 1
 			return fmt.Errorf("password is wrong, please try again")
-		}
+		} // don't check it again
 		// Check expiration only for valid password: to hide the information that the user is valid
 		if time.Now().After(u.Expiration) {
-			return fmt.Errorf("password has expired, please replace it.")
+			return fmt.Errorf("password has expired, please replace it")
 		}
 	}
 	// the error counter must be increased also for password update to avoid backdoors
-	if compareHashedPwd(pwd, u.Password) == false {
+	if overrideChecks != false && compareHashedPwd(pwd, u.Password) == false {
 		u.ErrorsCounter = u.ErrorsCounter + 1
 		return fmt.Errorf("password is wrong, please try again")
-	} else {
-		if u.OneTimePwd == true {
-			u.Expiration = time.Now()          // The password expired => it can't be used any more.
-			u.SetOneTimePwd(defaultOneTimePwd) // Reset to the default option for the next password
-		}
-		u.ErrorsCounter = 0
-		return nil
 	}
+	if u.TemporaryPwd == true {
+		u.Expiration = time.Now()              // The password expired => it can't be used any more.
+		u.SetTemporaryPwd(defaultTemporaryPwd) // Reset to the default option for the next password
+	}
+	u.ErrorsCounter = 0
+	return nil
 }
 
-// Reset the password of a given user to a random password and make it a One-time-password with
+// ResetPasword : Reset the password of a given user to a random password and make it a One-time-password with
 // a short window time in which it should be used and replaced by the user
 func (u *UserPwd) ResetPasword() ([]byte, error) {
 	pass := GenerateNewValidPassword()
-	expiration := time.Now().Add(time.Duration(defaultOneTimePwdExpirationMinutes) * time.Second * 60)
+	expiration := time.Now().Add(time.Duration(defaultTemporaryPwdExpirationMinutes) * time.Second * 60)
 	u.ErrorsCounter = 0
 	_, err := u.updatePasswordHandler(u.Password, pass, expiration, true, true)
-	u.SetOneTimePwd(true)
-	u.Expiration = expiration // to override the one time password setting
+	u.SetTemporaryPwd(true)
+	u.Expiration = expiration // to override the temporary password setting
 	if err != nil {
 		return nil, err
 	}
 	return pass, nil
 }
 
+// UpdatePasswordAfterReset : Update the password, it's expioration time and it's state (is it a one-time-password or a regular one)
 func (u *UserPwd) UpdatePasswordAfterReset(currentPwd []byte, pwd []byte, expiration time.Time) ([]byte, error) {
 	return u.updatePasswordHandler(currentPwd, pwd, expiration, false, true)
 }
 
+// CheckPasswordStrength : VErify that the given password strength is good enougth
 func CheckPasswordStrength(pass string) error {
 	extraCnt := 0
 	digitCnt := 0
 	upperCaseCnt := 0
 	lowerCaseCnt := 0
 
-	for _, c := range stc.ExtraCharStr {
+	for _, c := range defs.ExtraCharStr {
 		extraCnt += strings.Count(pass, string(c))
 	}
 	for _, c := range pass {
@@ -271,18 +280,18 @@ func CheckPasswordStrength(pass string) error {
 	if len(pass) < MinPasswordLength || extraCnt < minExtraChars || digitCnt < minDigits ||
 		upperCaseCnt < minUpperCase || lowerCaseCnt < minLowerCase {
 		return fmt.Errorf("The checked password does not pass the password strength test. In order to be strong, the password must contain at least %v characters, and include at least: %v digits, %v letters (%v must be upper-case and %v must be lower-case) and %v extra character from the list bellow.\nList of possible extra characters: '%v'",
-			MinPasswordLength, minDigits, minUpperCase+minLowerCase, minUpperCase, minLowerCase, minExtraChars, stc.ExtraCharStr)
+			MinPasswordLength, minDigits, minUpperCase+minLowerCase, minUpperCase, minLowerCase, minExtraChars, defs.ExtraCharStr)
 	}
 	return nil
 }
 
-// Generate a valid password that includes defaultPasswordLen characters
+// GenerateNewValidPassword : Generate a valid password that includes defaultPasswordLen characters
 // with 2 Upper case characters, 2 numbers and 2 characters from "!@#$&-+;"
 // The other method of select random byte array and verify if it fits the rules may take a lot of
 // iterations to fit the rules
-// The entropy is not perfect but its good enougth for one time reset password
+// The entropy is not perfect but its good enougth for temporary reset password
 func GenerateNewValidPassword() []byte {
-	extraChars := []byte(stc.ExtraCharStr)
+	extraChars := []byte(defs.ExtraCharStr)
 	pwd := make([]byte, defaultPasswordLen)
 	_, err := io.ReadFull(rand.Reader, pwd)
 	if err != nil {
@@ -320,6 +329,10 @@ func GenerateNewValidPassword() []byte {
 	return pwd
 }
 
+// All the properties must implement a set of functions:
+// PrintProperties, IsEqualProperties, AddToStorage, ReadFromStorage
+
+// PrintProperties : Print the Password property data
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*UserPwd)
 	if ok == false {
@@ -328,6 +341,7 @@ func (s Serializer) PrintProperties(data interface{}) string {
 	return d.String()
 }
 
+// IsEqualProperties : Compare 2 Password properties
 func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 	d1, ok1 := da1.(*UserPwd)
 	d2, ok2 := da2.(*UserPwd)
@@ -337,7 +351,7 @@ func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 	return reflect.DeepEqual(d1, d2)
 }
 
-// Store User data info to the secure_storage
+// AddToStorage : Add the Password property information to the secure_storage
 func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.SecureStorage) error {
 	d, ok := data.(*UserPwd)
 	if ok == false {
@@ -354,7 +368,7 @@ func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.Se
 	return nil
 }
 
-// Read the user information from disk (in JSON format)
+// ReadFromStorage : Return the entity Password data read from the secure storage (in JSON format)
 func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (interface{}, error) {
 	var user UserPwd
 

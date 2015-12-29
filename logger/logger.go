@@ -1,4 +1,4 @@
-// The logger package contains the implementation of log handling.
+// Package logger : The logger package contains the implementation of log handling.
 package logger
 
 import (
@@ -9,16 +9,21 @@ import (
 )
 
 var (
-	Trace   *log.Logger
-	Info    *log.Logger
+	// Trace : write trace information to the logger
+	Trace *log.Logger
+	// Info : write info and trace information to the logger
+	Info *log.Logger
+	// Warning : write warnings, info and trace information to the logger
 	Warning *log.Logger
-	Error   *log.Logger
+	// Error : write errors, warnings, info and trace information to the logger
+	Error *log.Logger
 )
 
 func init() {
 	Init(ioutil.Discard, ioutil.Discard, os.Stdout, os.Stderr)
 }
 
+// Init : initialize the logger
 func Init(traceHandle io.Writer, infoHandle io.Writer, warningHandle io.Writer, errorHandle io.Writer) {
 	Trace = log.New(traceHandle, "TRACE: ",
 		log.Ldate|log.Ltime|log.Lshortfile)

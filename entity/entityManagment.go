@@ -5,7 +5,8 @@ import (
 	"strings"
 	"sync"
 
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	"github.com/ibm-security-innovation/libsecurity-go/accounts"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
@@ -15,12 +16,13 @@ const (
 )
 
 var (
-	protectedEntityManager = []string{stc.RootUserName, stc.AclAllEntryName}
-	// protectedGroupsList = []string{stc.SuperUserGroupName, stc.AdminGroupName, stc.UsersGroupName}
+	protectedEntityManager = []string{defs.RootUserName, defs.AclAllEntryName}
+	// protectedGroupsList = []string{defs.SuperUserGroupName, defs.AdminGroupName, defs.UsersGroupName}
 
 	lock         sync.Mutex
 	propertyLock sync.Mutex
 
+	// RemoveEntityFromAcl : call back function to enable remove of entity from ACL
 	RemoveEntityFromAcl func(el1 interface{}, name string)
 )
 
@@ -28,24 +30,25 @@ type uList map[string]*User
 type gList map[string]*Group
 type rList map[string]*Resource
 
+// EntityManager : structure that holds lists of users, gropus and resources
 type EntityManager struct {
 	Users     uList
 	Groups    gList
 	Resources rList
 }
 
-func (e EntityManager) String() string {
-	uArray := make([]string, 0, len(e.Users))
-	gArray := make([]string, 0, len(e.Groups))
-	rArray := make([]string, 0, len(e.Resources))
+func (el EntityManager) String() string {
+	uArray := make([]string, 0, len(el.Users))
+	gArray := make([]string, 0, len(el.Groups))
+	rArray := make([]string, 0, len(el.Resources))
 
-	for _, u := range e.Users {
+	for _, u := range el.Users {
 		uArray = append(uArray, u.Name)
 	}
-	for _, g := range e.Groups {
+	for _, g := range el.Groups {
 		gArray = append(gArray, g.Name)
 	}
-	for _, r := range e.Resources {
+	for _, r := range el.Resources {
 		rArray = append(rArray, r.Name)
 	}
 	return fmt.Sprintf("Users list: %q, Groups list: %q, Resource list: %q", uArray, gArray, rArray)
@@ -61,15 +64,43 @@ func initList() *EntityManager {
 	return entityManager
 }
 
-// Create and initilize a new EntityManager, add all the protected entities
+// New : Create and initilize a new EntityManager, add all the protected entities
 // to avoid giving regular entities protected names
 func New() *EntityManager {
 	return initList()
 }
 
-// Check if the given entity name (user/group/resource) is in the entity list
+// IsEntityInList : Check if the given entity name (user/group/resource) is in the entity list
 func (el *EntityManager) IsEntityInList(name string) bool {
 	return el.isUserInList(name) || el.isGroupInList(name) || el.isResourceInList(name)
+}
+
+// GetEntityAccount : The recommanded API function to be used for login: it handles timing attacks
+// Return the entity account information if the given entity name (user/group/resource) and password are as expected
+// avoid timming attacks by adding delay if one of the checks fails
+func (el *EntityManager) GetEntityAccount(name string, pwd []byte) (*accounts.AmUserInfo, error) {
+	return el.GetEntityAccountHandler(name, pwd, defs.PasswordThrottlingMiliSec, defs.ThrottleMaxRandomMiliSec)
+}
+
+// GetEntityAccountHandler : call GetEntityAccount with the given throttling parameters for testing
+func (el *EntityManager) GetEntityAccountHandler(name string, pwd []byte, throttleMiliSec int64, randomThrottleMiliSec int64) (*accounts.AmUserInfo, error) {
+	errStr := "entity name and password does not match"
+
+	if el.IsEntityInList(name) == false {
+		defs.TimingAttackSleep(throttleMiliSec, randomThrottleMiliSec)
+		return nil, fmt.Errorf(errStr)
+	}
+	data, err := el.GetPropertyAttachedToEntity(name, defs.AmPropertyName)
+	if err != nil {
+		defs.TimingAttackSleep(throttleMiliSec, randomThrottleMiliSec)
+		return nil, fmt.Errorf(errStr)
+	}
+	account := data.(*accounts.AmUserInfo)
+	err = account.IsPasswordMatchHandler(pwd, throttleMiliSec, randomThrottleMiliSec)
+	if err != nil {
+		return nil, fmt.Errorf(errStr)
+	}
+	return account, nil
 }
 
 // The name is valid if the entity name is valid and the name is not in the list yet
@@ -84,7 +115,7 @@ func (el *EntityManager) isNameValid(name string) error {
 	return nil
 }
 
-// Add a new user to the EntityManager (only for valid user name)
+// AddUser : Add a new user to the EntityManager (only for valid user name)
 func (el *EntityManager) AddUser(name string) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -98,7 +129,7 @@ func (el *EntityManager) AddUser(name string) error {
 	return nil
 }
 
-// Add a new group to the EntityManager (only for valid group name)
+// AddGroup : Add a new group to the EntityManager (only for valid group name)
 func (el *EntityManager) AddGroup(name string) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -112,7 +143,7 @@ func (el *EntityManager) AddGroup(name string) error {
 	return nil
 }
 
-// Add a new resource to the EntityManager (only for valid resource name)
+// AddResource : Add a new resource to the EntityManager (only for valid resource name)
 func (el *EntityManager) AddResource(name string) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -126,7 +157,7 @@ func (el *EntityManager) AddResource(name string) error {
 	return nil
 }
 
-// Remove the given user from the EntityManager, from all the groups it is a part of
+// RemoveUser : Remove the given user from the EntityManager, from all the groups it is a part of
 // and from all the ACLs that give it permissions
 func (el *EntityManager) RemoveUser(name string) error {
 	lock.Lock()
@@ -153,7 +184,7 @@ func (el *EntityManager) RemoveUser(name string) error {
 	return nil
 }
 
-// Remove the given group from the EntityManager
+// RemoveGroup : Remove the given group from the EntityManager
 // and from all the ACLs that give it permissions
 func (el *EntityManager) RemoveGroup(name string) error {
 	lock.Lock()
@@ -171,7 +202,7 @@ func (el *EntityManager) RemoveGroup(name string) error {
 	return nil
 }
 
-// Remove the given resource from the EntityManager
+// RemoveResource : Remove the given resource from the EntityManager
 func (el *EntityManager) RemoveResource(name string) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -211,7 +242,7 @@ func (el EntityManager) getResource(name string) (*Resource, error) {
 	return e, nil
 }
 
-// Add a new user to the given group
+// AddUserToGroup : Add a new user to the given group
 // the user name must be in the EntityManager before it can be added as a user of a group
 func (el *EntityManager) AddUserToGroup(groupName string, name string) error {
 	e, err := el.getGroup(groupName)
@@ -225,7 +256,7 @@ func (el *EntityManager) AddUserToGroup(groupName string, name string) error {
 	return e.addUserToGroup(name)
 }
 
-// Check if the given user is part of the given group
+// IsUserPartOfAGroup : Check if the given user is part of the given group
 func (el *EntityManager) IsUserPartOfAGroup(groupName string, userName string) bool {
 	g, err := el.getGroup(groupName)
 	if err != nil {
@@ -234,7 +265,7 @@ func (el *EntityManager) IsUserPartOfAGroup(groupName string, userName string) b
 	return g.isUserInGroup(userName)
 }
 
-// Get the group users
+// GetGroupUsers : Get the group users
 func (el *EntityManager) GetGroupUsers(groupName string) []string {
 	var groupUsers []string
 
@@ -242,13 +273,13 @@ func (el *EntityManager) GetGroupUsers(groupName string) []string {
 	if err != nil {
 		return nil
 	}
-	for name, _ := range g.Group {
+	for name := range g.Group {
 		groupUsers = append(groupUsers, name)
 	}
 	return groupUsers
 }
 
-// Remove the given user name from the group's users
+// RemoveUserFromGroup : Remove the given user name from the group's users
 func (el *EntityManager) RemoveUserFromGroup(groupName string, name string) error {
 	e, err := el.getGroup(groupName)
 	if err != nil {
@@ -282,7 +313,7 @@ func isEntityNameAndPropertyNameValid(name string, propertyName string) error {
 	return nil
 }
 
-// Add the given property to the entity using the given property name
+// AddPropertyToEntity : Add the given property to the entity using the given property name
 func (el *EntityManager) AddPropertyToEntity(name string, propertyName string, data interface{}) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -295,12 +326,12 @@ func (el *EntityManager) AddPropertyToEntity(name string, propertyName string, d
 		return ret
 	}
 	if el.isUserInList(name) {
-		if propertyName == stc.AclPropertyName {
+		if propertyName == defs.AclPropertyName {
 			return fmt.Errorf("can't add ACL property to %v, its ilegal", userTypeStr)
 		}
 		return el.Users[name].addProperty(propertyName, data)
 	} else if el.isGroupInList(name) {
-		if propertyName == stc.AclPropertyName {
+		if propertyName == defs.AclPropertyName {
 			return fmt.Errorf("can't add ACL property to %v, its ilegal", groupTypeStr)
 		}
 		return el.Groups[name].addProperty(propertyName, data)
@@ -310,7 +341,7 @@ func (el *EntityManager) AddPropertyToEntity(name string, propertyName string, d
 	return fmt.Errorf("property '%v', can't be added, the entity '%v' is not in the entity list", propertyName, name)
 }
 
-// Return the given property name property from the entity (User/Group/Resource)
+// GetPropertyAttachedToEntity : Return the given property name property from the entity (User/Group/Resource)
 func (el *EntityManager) GetPropertyAttachedToEntity(name string, propertyName string) (interface{}, error) {
 	ret := isEntityNameAndPropertyNameValid(name, propertyName)
 	if ret != nil {
@@ -323,10 +354,10 @@ func (el *EntityManager) GetPropertyAttachedToEntity(name string, propertyName s
 	} else if el.isResourceInList(name) {
 		return el.Resources[name].getProperty(propertyName)
 	}
-	return nil, fmt.Errorf("property '%v', can't be returned, the entiry '%v' is not in entity list", propertyName, name)
+	return nil, fmt.Errorf("property '%v', can't be returned, the entity '%v' is not in entity list", propertyName, name)
 }
 
-// Remove the given property name property from the user
+// RemovePropertyFromEntity : Remove the given property name property from the user
 func (el *EntityManager) RemovePropertyFromEntity(name string, propertyName string) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -358,9 +389,9 @@ func addUserResourceToStorage(typeStr string, name string, e Entity, prefix stri
 	if err != nil {
 		return err
 	}
-	for propertyName, _ := range e.EntityProperties {
+	for propertyName := range e.EntityProperties {
 		data, _ := e.getProperty(propertyName)
-		err = stc.Serializers[propertyName].AddToStorage(getPropertyStoreFmt(propertyName, name), data, storage)
+		err = defs.Serializers[propertyName].AddToStorage(getPropertyStoreFmt(propertyName, name), data, storage)
 		if err != nil {
 			return fmt.Errorf("while storing to property '%v', error: %v", propertyName, err)
 		}
@@ -373,9 +404,9 @@ func addGroupToStorage(typeStr string, name string, g *Group, prefix string, sto
 	if err != nil {
 		return err
 	}
-	for propertyName, _ := range g.EntityProperties {
+	for propertyName := range g.EntityProperties {
 		data, _ := g.getProperty(propertyName)
-		err = stc.Serializers[propertyName].AddToStorage(getPropertyStoreFmt(propertyName, name), data, storage)
+		err = defs.Serializers[propertyName].AddToStorage(getPropertyStoreFmt(propertyName, name), data, storage)
 		if err != nil {
 			return fmt.Errorf("while storing to property '%v', error: %v", propertyName, err)
 		}
@@ -383,7 +414,7 @@ func addGroupToStorage(typeStr string, name string, g *Group, prefix string, sto
 	return nil
 }
 
-// Load the EntityManager data from the storage
+// LoadInfo : Load the EntityManager data from the storage
 // and constract/reconstract the EntityManager
 func LoadInfo(filePath string, secret []byte, el *EntityManager) error {
 	prefix := ""
@@ -425,7 +456,7 @@ func LoadInfo(filePath string, secret []byte, el *EntityManager) error {
 		}
 		// fmt.Println("key:", key, "Value:", value, "error:", err)
 		if userType || groupType || resourceType {
-			for propertyName, property := range stc.Serializers {
+			for propertyName, property := range defs.Serializers {
 				data, err := property.ReadFromStorage(getPropertyStoreFmt(propertyName, name), storage)
 				if err == nil { // the item exist for this entity
 					err = el.AddPropertyToEntity(name, propertyName, data)
@@ -440,7 +471,7 @@ func LoadInfo(filePath string, secret []byte, el *EntityManager) error {
 	return nil
 }
 
-// Store all the data of all the entities in the list including their properties in the secure storage
+// StoreInfo : Store all the data of all the entities in the list including their properties in the secure storage
 func (el *EntityManager) StoreInfo(filePath string, secret []byte, checkSecretStrength bool) error {
 	lock.Lock()
 	defer lock.Unlock()

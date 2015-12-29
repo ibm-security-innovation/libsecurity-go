@@ -1,4 +1,4 @@
-// A One Time Password (OTP) is a password that is valid for only one login session or transaction (and may be limited for a specific time period). The most important advantage that is addressed by OTPs is that, in contrast to static passwords, they are not vulnerable to replay attacks. A second major advantage is that a user who uses the same (or similar) password for multiple systems, is not made vulnerable on all of them, if the password for one of these is gained by an attacker.
+// Package otp : A One Time Password (OTP) is a password that is valid for only one login session or transaction (and may be limited for a specific time period). The most important advantage that is addressed by OTPs is that, in contrast to static passwords, they are not vulnerable to replay attacks. A second major advantage is that a user who uses the same (or similar) password for multiple systems, is not made vulnerable on all of them, if the password for one of these is gained by an attacker.
 // We implemented the 2 possible OTP implementations: A time based one time password algorithm (TOTP) and HMAC-based one time password algorithm (HOTP). Our OTP implementation is based on RFC 2289 for OTP in general, RFC 4226 for HOTP, and RFC 6238 for TOTP.
 //
 // The OTP implementation has three layers:
@@ -21,12 +21,13 @@ import (
 	"reflect"
 	"time"
 
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	"github.com/ibm-security-innovation/libsecurity-go/password"
 	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
-type OtpType int
+// TypeOfOtp define as integer
+type TypeOfOtp int
 
 const (
 	defaultStartCounter       = 1000
@@ -48,8 +49,10 @@ const (
 	maxTotpWindowSizeSec = 240
 	maxUnblockSec        = 3600
 
-	HotpType OtpType = 1
-	TotpType OtpType = 2
+	// HotpType index is 1
+	HotpType TypeOfOtp = 1
+	// TotpType index is 2
+	TotpType TypeOfOtp = 2
 )
 
 type throtteling struct {
@@ -70,7 +73,8 @@ func (t throtteling) String() string {
 		t.Cliff, t.DurationSec, t.CheckHotpWindow, t.AutoUnblockSec, t.CheckTotpWindowSec)
 }
 
-type OtpUser struct {
+// UserInfoOtp : structure that holds all the properties associated to a user
+type UserInfoOtp struct {
 	Secret   []byte
 	Blocked  bool
 	Throttle throtteling // Handle all the throttle parameters
@@ -78,18 +82,19 @@ type OtpUser struct {
 	BaseTotp *Totp
 }
 
-func (u OtpUser) String() string {
+func (u UserInfoOtp) String() string {
 	return fmt.Sprintf("Otp parameters: is blocked: %v, Throttling: %v, total consecutive errors: %v",
 		u.Blocked, u.Throttle, u.Throttle.consErrorCounter)
 }
 
+// Serializer : virtual set of functions that must be implemented by each module
 type Serializer struct{}
 
 func init() {
-	stc.Serializers[stc.OtpPropertyName] = &Serializer{}
+	defs.Serializers[defs.OtpPropertyName] = &Serializer{}
 }
 
-func (u OtpUser) isValid() error {
+func (u UserInfoOtp) isValid() error {
 	return u.Throttle.isValid()
 }
 
@@ -130,11 +135,13 @@ func (t throtteling) isValid() error {
 	return nil
 }
 
-func NewSimpleOtpUser(secret []byte, checkSecretStrength bool) (*OtpUser, error) {
+// NewSimpleOtpUser : generate a new otp user with the default parameters
+func NewSimpleOtpUser(secret []byte, checkSecretStrength bool) (*UserInfoOtp, error) {
 	return NewOtpUser(secret, checkSecretStrength, false, defaultThrottlingLen, defaultThrottlingSec, defaultUnblockSec, defaultHotpWindowsSize, defaultTotpWindowsSizeSec, defaultStartCounter)
 }
 
-func NewOtpUser(secret []byte, checkSecretStrength bool, lock bool, cliffLen int32, thrTimeSec time.Duration, autoUnblockSec time.Duration, hotpWindowSize time.Duration, totpWindowSize time.Duration, startCount int64) (*OtpUser, error) {
+// NewOtpUser : generate a new otp user with the given parameters
+func NewOtpUser(secret []byte, checkSecretStrength bool, lock bool, cliffLen int32, thrTimeSec time.Duration, autoUnblockSec time.Duration, hotpWindowSize time.Duration, totpWindowSize time.Duration, startCount int64) (*UserInfoOtp, error) {
 	err := password.CheckPasswordStrength(string(secret))
 	if err != nil && checkSecretStrength {
 		return nil, err
@@ -147,24 +154,24 @@ func NewOtpUser(secret []byte, checkSecretStrength bool, lock bool, cliffLen int
 	if err != nil {
 		return nil, err
 	}
-	return &OtpUser{secret, lock,
+	return &UserInfoOtp{secret, lock,
 		newThrottle(cliffLen, thrTimeSec, autoUnblockSec, hotpWindowSize, totpWindowSize),
 		hotp, totp}, err
 }
 
-func (u *OtpUser) setBlockedState(val bool) {
+func (u *UserInfoOtp) setBlockedState(val bool) {
 	u.Blocked = val
 	if val == true {
 		u.initAutoUnblockTimer()
 	}
 }
 
-func (u OtpUser) getBlockState() bool {
+func (u UserInfoOtp) getBlockState() bool {
 	return u.Blocked
 }
 
 // set the automatic unblock timer
-func (u *OtpUser) initAutoUnblockTimer() {
+func (u *UserInfoOtp) initAutoUnblockTimer() {
 	if u.Throttle.AutoUnblockSec != manuelUnblockSec {
 		u.Throttle.unblockTimer = time.Now().Add(time.Duration(u.Throttle.AutoUnblockSec) * time.Second)
 		if debug {
@@ -175,7 +182,7 @@ func (u *OtpUser) initAutoUnblockTimer() {
 }
 
 // get the automatic unblock timer
-func (u OtpUser) getAutoUnBlockedTimer() time.Time {
+func (u UserInfoOtp) getAutoUnBlockedTimer() time.Time {
 	return u.Throttle.unblockTimer
 }
 
@@ -183,7 +190,7 @@ func getBeginningOfTime() time.Time {
 	return time.Date(1970, time.January, 1, 1, 0, 0, 0, time.Local)
 }
 
-func (u *OtpUser) checkAndUpdateUnBlockStateHelper(timeOffset time.Duration) {
+func (u *UserInfoOtp) checkAndUpdateUnBlockStateHelper(timeOffset time.Duration) {
 	if u.getBlockState() && u.Throttle.AutoUnblockSec != manuelUnblockSec {
 		if time.Now().Add(time.Duration(timeOffset) * time.Second).After(u.Throttle.unblockTimer) {
 			u.setBlockedState(false)
@@ -194,12 +201,12 @@ func (u *OtpUser) checkAndUpdateUnBlockStateHelper(timeOffset time.Duration) {
 }
 
 // if the user shuld be unblocked because the blocked time was passed, unblock it
-func (u *OtpUser) checkAndUpdateUnBlockState() {
+func (u *UserInfoOtp) checkAndUpdateUnBlockState() {
 	u.checkAndUpdateUnBlockStateHelper(0)
 }
 
 // Check if the input code match the expected code in a given window size
-func (u *OtpUser) findHotpCodeMatch(code string, size int32) (bool, int32, error) {
+func (u *UserInfoOtp) findHotpCodeMatch(code string, size int32) (bool, int32, error) {
 	var i int32
 	for i = 0; i < size; i++ {
 		calcCode, err := u.BaseHotp.AtCount(u.BaseHotp.Count + int64(i))
@@ -217,7 +224,7 @@ func (u *OtpUser) findHotpCodeMatch(code string, size int32) (bool, int32, error
 }
 
 // Check if the input code match the expected code in a given window time
-func (u *OtpUser) findTotpCodeMatch(code string, timeOffsetSec int32) (bool, error) {
+func (u *UserInfoOtp) findTotpCodeMatch(code string, timeOffsetSec int32) (bool, error) {
 	var start, last int64
 	offset := int64(timeOffsetSec)
 	calcCode, _ := u.BaseTotp.Now()
@@ -250,7 +257,7 @@ func (u *OtpUser) findTotpCodeMatch(code string, timeOffsetSec int32) (bool, err
 	return false, nil // no match
 }
 
-func (u *OtpUser) handleErrorCode(otpType OtpType) (bool, error) {
+func (u *UserInfoOtp) handleErrorCode(otpType TypeOfOtp) (bool, error) {
 	if u.Throttle.consErrorCounter < u.Throttle.Cliff {
 		u.Throttle.consErrorCounter++
 		factor := int64(u.Throttle.consErrorCounter) * int64(u.Throttle.DurationSec) // was int32(math.Pow(2, float64(u.consErrorCounter))) * u.ThDurationSec
@@ -271,7 +278,7 @@ func (u *OtpUser) handleErrorCode(otpType OtpType) (bool, error) {
 	return false, fmt.Errorf("too many false attempts, locked out")
 }
 
-func (u *OtpUser) handleOkCode(code string, otpType OtpType, offset int32) (bool, error) {
+func (u *UserInfoOtp) handleOkCode(code string, otpType TypeOfOtp, offset int32) (bool, error) {
 	if otpType == HotpType && offset != 0 {
 		u.BaseHotp.Count += int64(offset) // resync the provider interal counter to the client counter
 		// TODO log
@@ -287,10 +294,10 @@ func (u *OtpUser) handleOkCode(code string, otpType OtpType, offset int32) (bool
 	return true, nil
 }
 
-// Verify that the given code is the expected one, if so, increment the internal counter (for hotp) or block the same code (for totp)
+// VerifyCode : Verify that the given code is the expected one, if so, increment the internal counter (for hotp) or block the same code (for totp)
 // The upper layer shell take the action to blocl the user (the upper layer can take more information before blockingthe user)
 // the differences between hotp and totp are: the code check and the action if the code was found
-func (u *OtpUser) VerifyCode(code string, otpType OtpType) (bool, error) {
+func (u *UserInfoOtp) VerifyCode(code string, otpType TypeOfOtp) (bool, error) {
 	var found bool
 	var err error
 	var offset int32
@@ -319,26 +326,27 @@ func (u *OtpUser) VerifyCode(code string, otpType OtpType) (bool, error) {
 	}
 	if !found {
 		return u.handleErrorCode(otpType)
-	} else {
-		return u.handleOkCode(code, otpType, offset)
 	}
+	return u.handleOkCode(code, otpType, offset)
 }
 
-func (u OtpUser) isOtpUserBlockedHelper(offsetTime time.Duration) (bool, error) {
+func (u UserInfoOtp) isOtpUserBlockedHelper(offsetTime time.Duration) (bool, error) {
 	u.checkAndUpdateUnBlockStateHelper(offsetTime)
 	return u.getBlockState(), nil
 }
 
-func (u OtpUser) IsOtpUserBlocked() (bool, error) {
+// IsOtpUserBlocked : check if the given user account is blocked
+func (u UserInfoOtp) IsOtpUserBlocked() (bool, error) {
 	return u.isOtpUserBlockedHelper(0)
 }
 
-func (u *OtpUser) SetOtpUserBlockedState(block bool) error {
+// SetOtpUserBlockedState : set the user account status to the given status
+func (u *UserInfoOtp) SetOtpUserBlockedState(block bool) error {
 	u.setBlockedState(block)
 	return nil
 }
 
-func (u OtpUser) getOtpUserThrottlingTimer(otpType OtpType) (time.Time, error) {
+func (u UserInfoOtp) getOtpUserThrottlingTimer(otpType TypeOfOtp) (time.Time, error) {
 	if otpType == HotpType {
 		return u.Throttle.throttlingTimerHotp, nil
 	}
@@ -346,7 +354,7 @@ func (u OtpUser) getOtpUserThrottlingTimer(otpType OtpType) (time.Time, error) {
 }
 
 // OTP shall be verified only if the throttle time is pass and the user is not blocked
-func (u *OtpUser) canCheckOtpCode(otpType OtpType, timeFactorSec time.Duration) (bool, error) {
+func (u *UserInfoOtp) canCheckOtpCode(otpType TypeOfOtp, timeFactorSec time.Duration) (bool, error) {
 	var timer time.Time
 
 	if otpType == HotpType {
@@ -365,15 +373,15 @@ func (u *OtpUser) canCheckOtpCode(otpType OtpType, timeFactorSec time.Duration) 
 	return true, nil
 }
 
-// Verify that a given code is as expected, If the user is blocked, return an error
+// VerifyOtpUserCode : Verify that a given code is as expected, If the user is blocked, return an error
 // If the code is as expected, the counter code will be incremented (for HOTP) and saved to avoid replay attack (TOTP)
 // If the code dosn't match and the number of consecutive errors pass the Throtlling parameter
 // for this user, the user acount will be blocked till manuel or automatic unblock
-func (u *OtpUser) VerifyOtpUserCode(code string, otpType OtpType) (bool, error) {
+func (u *UserInfoOtp) VerifyOtpUserCode(code string, otpType TypeOfOtp) (bool, error) {
 	return u.verifyOtpUserCodeHelper(code, otpType, 0)
 }
 
-func (u *OtpUser) verifyOtpUserCodeHelper(code string, otpType OtpType, timeFactorSec time.Duration) (bool, error) {
+func (u *UserInfoOtp) verifyOtpUserCodeHelper(code string, otpType TypeOfOtp, timeFactorSec time.Duration) (bool, error) {
 	ok, err := u.canCheckOtpCode(otpType, timeFactorSec)
 	if !ok {
 		return ok, err
@@ -381,21 +389,27 @@ func (u *OtpUser) verifyOtpUserCodeHelper(code string, otpType OtpType, timeFact
 	return u.VerifyCode(code, otpType)
 }
 
-func (u *OtpUser) IsEqual(u1 interface{}) bool {
-	return reflect.DeepEqual(u, u1.(*OtpUser))
+// IsEqual : compare 2 OTP structures
+func (u *UserInfoOtp) IsEqual(u1 interface{}) bool {
+	return reflect.DeepEqual(u, u1.(*UserInfoOtp))
 }
 
+// All the properties must implement a set of functions:
+// PrintProperties, IsEqualProperties, AddToStorage, ReadFromStorage
+
+// PrintProperties : Print the OTP property data
 func (s Serializer) PrintProperties(data interface{}) string {
-	d, ok := data.(*OtpUser)
+	d, ok := data.(*UserInfoOtp)
 	if ok == false {
 		return "can't print the OTP property it is not in the right type"
 	}
 	return d.String()
 }
 
+// IsEqualProperties : Compare 2 OTP properties (without parts of OTP that are not saved)
 func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
-	t1, ok1 := da1.(*OtpUser)
-	t2, ok2 := da2.(*OtpUser)
+	t1, ok1 := da1.(*UserInfoOtp)
+	t2, ok2 := da2.(*UserInfoOtp)
 	if ok1 == false || ok2 == false {
 		return false
 	}
@@ -412,9 +426,9 @@ func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 	return reflect.DeepEqual(t1, t2)
 }
 
-// Store User data info to the secure_storage
+// AddToStorage : Add the OTP property information to the secure_storage
 func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.SecureStorage) error {
-	d, ok := data.(*OtpUser)
+	d, ok := data.(*UserInfoOtp)
 	if ok == false {
 		return fmt.Errorf("can't store the OTP property: its not in the right type")
 	}
@@ -429,9 +443,9 @@ func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.Se
 	return nil
 }
 
-// Read the user information from disk (in JSON format)
+// ReadFromStorage : Return the entity OTP data read from the secure storage (in JSON format)
 func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (interface{}, error) {
-	var user OtpUser
+	var user UserInfoOtp
 
 	if storage == nil {
 		return nil, fmt.Errorf("can't read AM property from storage, storage is nil")

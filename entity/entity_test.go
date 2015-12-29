@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 )
 
 const (
@@ -15,9 +15,9 @@ const (
 // Print an Entity and its properties
 func (e Entity) getEntityStrWithProperties() string {
 	str := fmt.Sprintf("'%v'\n", e.Name)
-	for propertyName, _ := range e.EntityProperties {
+	for propertyName := range e.EntityProperties {
 		data, _ := e.getProperty(propertyName)
-		str += fmt.Sprintf("\tProperty: %v, data: %v\n", propertyName, stc.Serializers[propertyName].PrintProperties(data))
+		str += fmt.Sprintf("\tProperty: %v, data: %v\n", propertyName, defs.Serializers[propertyName].PrintProperties(data))
 	}
 	return str
 }
@@ -29,8 +29,8 @@ func (g Group) getGroupStrWithProperties() string {
 
 // Compare all the properties associated with the given entities
 func (e *Entity) isEqualProperties(e1 Entity) bool {
-	for propertyName, _ := range e.EntityProperties {
-		_, exist := stc.PropertiesName[propertyName]
+	for propertyName := range e.EntityProperties {
+		_, exist := defs.PropertiesName[propertyName]
 		if exist == false {
 			fmt.Printf("Internal error: unknown property '%v' was in the entity properties %v", propertyName, e.EntityProperties)
 			return false
@@ -40,7 +40,7 @@ func (e *Entity) isEqualProperties(e1 Entity) bool {
 		if data1 == nil || data2 == nil {
 			return false
 		}
-		if stc.Serializers[propertyName].IsEqualProperties(data1, data2) == false {
+		if defs.Serializers[propertyName].IsEqualProperties(data1, data2) == false {
 			return false
 		}
 	}
@@ -196,7 +196,7 @@ func Test_EntityIsEqual(t *testing.T) {
 		}
 	}
 	e[0].removeUserFromGroup(names[0])
-	e[1].addProperty(stc.AmPropertyName, "try1") // it tests both wrong property as well as different entities
+	e[1].addProperty(defs.AmPropertyName, "try1") // it tests both wrong property as well as different entities
 	for i := 0; i < len; i++ {
 		for j := 0; j < len; j++ {
 			ret := e[i].isEqualGroup(e[j])
@@ -208,7 +208,7 @@ func Test_EntityIsEqual(t *testing.T) {
 }
 
 func addRemoveProperty(t *testing.T, typeStr string) {
-	propertyList := []string{stc.UmPropertyName, stc.OtpPropertyName, stc.OcraPropertyName, stc.PwdPropertyName, stc.AmPropertyName, stc.AclPropertyName}
+	propertyList := []string{defs.UmPropertyName, defs.OtpPropertyName, defs.OcraPropertyName, defs.PwdPropertyName, defs.AmPropertyName, defs.AclPropertyName}
 	expected := []bool{true, false}
 	var e Entity
 

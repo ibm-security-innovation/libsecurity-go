@@ -3,7 +3,6 @@ package otp
 import (
 	"crypto/sha1"
 	"encoding/base32"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -54,9 +53,9 @@ func Test_OtpIllegalSecret(t *testing.T) {
 	for i := 0; i < maxSecretLen+10; i++ {
 		_, err := NewOtp(secret[:i])
 		if err == nil && (i < minSecretLen || i > maxSecretLen) {
-			t.Error(fmt.Sprintf("Test failed: initialization was done for a secret key with an illegal length %d. Valid lengths are in the range %d-%d", i, minSecretLen, maxSecretLen))
+			t.Errorf("Test failed: initialization was done for a secret key with an illegal length %d. Valid lengths are in the range %d-%d", i, minSecretLen, maxSecretLen)
 		} else if err != nil && (i >= minSecretLen && i <= maxSecretLen) {
-			t.Error(fmt.Sprintf("Test failed: Otp initialization failed for a secret key with a legal length %d, error: %v", i, err))
+			t.Errorf("Test failed: Otp initialization failed for a secret key with a legal length %d, error: %v", i, err)
 		}
 	}
 }

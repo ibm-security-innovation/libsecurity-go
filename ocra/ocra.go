@@ -1,4 +1,4 @@
-// The OCRA package provides implementation of OATH services as defined by RFC 6287.
+// Package ocra The OCRA package provides implementation of OATH services as defined by RFC 6287.
 //
 // The OCRA property:
 //	Challenge–response authentication: is a family of protocols
@@ -63,7 +63,7 @@ import (
 	"strconv"
 	"strings"
 
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 	"github.com/ibm-security-innovation/libsecurity-go/otp"
 	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
@@ -122,6 +122,7 @@ var (
 	dataInputTimeStampTokenRegExp    = regexp.MustCompile(fmt.Sprintf(dataInputTokenFmt, ocraSuiteDataInputSplitToken, ocraSuiteDataInputTimeStampToken))
 )
 
+// UserOcra : structure that holds the OCRA suite as defined in the RFC and the secret key
 type UserOcra struct {
 	OcraSuite string
 	Key       []byte
@@ -156,11 +157,12 @@ type hashesData struct {
 var hashes = []hashesData{{"sha1", sha1.New, 0}, {"sha256", sha256.New, 0}, {"sha512", sha512.New, 0}}
 var passwords = []inputData{{"psha1", 20}, {"psha256", 32}, {"psha512", 64}}
 
+// Serializer : virtual set of functions that must be implemented by each module
 type Serializer struct{}
 
 func init() {
 	logger.Init(ioutil.Discard, ioutil.Discard, os.Stdout, os.Stderr)
-	stc.Serializers[stc.OcraPropertyName] = &Serializer{}
+	defs.Serializers[defs.OcraPropertyName] = &Serializer{}
 
 	for _, val := range ocraValidOutputLength {
 		ocraValidOutputLengthMap[val] = val
@@ -614,7 +616,7 @@ func buildOtpData(ocraSuite, key string, msg []byte) ([]byte, []byte, error) {
 	return hmacKey, hmacText, nil
 }
 
-// Generates an OCRA HOTP value for the given minimal parameters: OCRASuite, key and question
+// GenerateOCRA : Generates an OCRA HOTP value for the given minimal parameters: OCRASuite, key and question
 func GenerateOCRA(key string) (string, string, error) {
 	question := make([]byte, 8)
 	io.ReadFull(rand.Reader, question)
@@ -622,7 +624,7 @@ func GenerateOCRA(key string) (string, string, error) {
 	return otp, string(question), err
 }
 
-// Generates an OCRA HOTP value for the given set of parameters as defined by RFC 6287:
+// GenerateOCRAAdvance : Generates an OCRA HOTP value for the given set of parameters as defined by RFC 6287:
 // OCRA suite: <Algorithm>:<CryptoFunction>:<DataInput>
 // key: the shared secret, HEX encoded
 // counter:   the counter that changes per use basis, HEX encoded
@@ -657,7 +659,7 @@ func GenerateOCRAAdvance(ocraSuite, key, counter, question, password, session, t
 	return code, nil
 }
 
-// Generate a new userOcra for a given key and OCRA suite
+// NewOcraUser : Generate a new userOcra for a given key and OCRA suite
 func NewOcraUser(key []byte, ocraSuite string) (*UserOcra, error) {
 	err := isOcraKeyValid(key)
 	if err != nil {
@@ -670,7 +672,7 @@ func NewOcraUser(key []byte, ocraSuite string) (*UserOcra, error) {
 	return &UserOcra{ocraSuite, key}, nil
 }
 
-// Update the user's secret key
+// UpdateOcraKey : Update the user's secret key
 func (u *UserOcra) UpdateOcraKey(key []byte) error {
 	err := isOcraKeyValid(key)
 	if err != nil {
@@ -680,7 +682,7 @@ func (u *UserOcra) UpdateOcraKey(key []byte) error {
 	return nil
 }
 
-// Update the user's secret key
+// UpdateOcraSuite : Update the user's secret key
 func (u *UserOcra) UpdateOcraSuite(ocraSuite string) error {
 	err := isOcraSuiteValid(ocraSuite)
 	if err == nil {
@@ -689,6 +691,10 @@ func (u *UserOcra) UpdateOcraSuite(ocraSuite string) error {
 	return err
 }
 
+// All the properties must implement a set of functions:
+// PrintProperties, IsEqualProperties, AddToStorage, ReadFromStorage
+
+// PrintProperties : Print the OCRA property data
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*UserOcra)
 	if ok == false {
@@ -697,6 +703,7 @@ func (s Serializer) PrintProperties(data interface{}) string {
 	return d.String()
 }
 
+// IsEqualProperties : Compare 2 OCRA properties
 func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 	d1, ok1 := da1.(*UserOcra)
 	d2, ok2 := da2.(*UserOcra)
@@ -706,7 +713,7 @@ func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 	return reflect.DeepEqual(d1, d2)
 }
 
-// Store User data info to the secure_storage
+// AddToStorage : Add the OCRA property information to the secure_storage
 func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.SecureStorage) error {
 	d, ok := data.(*UserOcra)
 	if ok == false {
@@ -723,7 +730,7 @@ func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.Se
 	return nil
 }
 
-// Read the user information from disk (in JSON format)
+// ReadFromStorage : Return the entity OCRA data read from the secure storage (in JSON format)
 func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (interface{}, error) {
 	var user UserOcra
 

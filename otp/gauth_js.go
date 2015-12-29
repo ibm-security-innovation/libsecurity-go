@@ -49,7 +49,7 @@ func jsOtp(base32secret string, epoch int64) string {
 	substr := hmcout[offset*2 : offset*2+8]
 	psubstr, _ := strconv.ParseInt(substr, 16, 64)
 	pmask, _ := strconv.ParseInt("7fffffff", 16, 64)
-	otp_ex := fmt.Sprintf("%d", psubstr&pmask)
+	otpEx := fmt.Sprintf("%d", psubstr&pmask)
 	// fmt.Println(offset,otp_ex[len(otp_ex)-6:])
-	return otp_ex[len(otp_ex)-6:]
+	return otpEx[len(otpEx)-6:]
 }

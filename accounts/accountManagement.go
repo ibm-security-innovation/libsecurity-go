@@ -1,3 +1,4 @@
+// Package accounts :
 // The Account Management package handles user privileges and password management.
 //
 // The data structure is:
@@ -7,7 +8,7 @@
 //	- The password's expiration time
 //	- Old passwords that should be avoided. If there is an attempt to reused an old the user is flagged.
 //	- Error counter: counts the number of consecutive unsuccessful authentication attempts
-//	- Is it a 'one time password' (after password reset)
+//	- Is it a 'temporary password' (after password reset)
 package accounts
 
 import (
@@ -19,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 	"github.com/ibm-security-innovation/libsecurity-go/password"
 	"github.com/ibm-security-innovation/libsecurity-go/salt"
@@ -27,9 +28,12 @@ import (
 )
 
 const (
+	// SuperUserPermission : string that defines the super user permission
 	SuperUserPermission = "Super-user"
-	AdminPermission     = "Admin"
-	UserPermission      = "User"
+	// AdminPermission : string that defines the administrator permission
+	AdminPermission = "Admin"
+	// UserPermission : string that defines the user permission
+	UserPermission = "User"
 
 	rootPwdExpirationDays = 3550
 	pwdExpirationDays     = 90
@@ -41,13 +45,16 @@ var (
 	lock sync.Mutex
 )
 
+// UsersPrivilege : hash structure that defines the allowed privileges
 type UsersPrivilege map[string]interface{}
 
+// AmUserInfo : structure that defines the data atached to the user: password and privilege
 type AmUserInfo struct {
 	Pwd       password.UserPwd
 	Privilege string
 }
 
+// Serializer : virtual set of functions that must be implemented by each module
 type Serializer struct{}
 
 func (u AmUserInfo) String() string {
@@ -60,14 +67,14 @@ func init() {
 	usersPrivilege[SuperUserPermission] = ""
 	usersPrivilege[AdminPermission] = ""
 
-	stc.Serializers[stc.AmPropertyName] = &Serializer{}
+	defs.Serializers[defs.AmPropertyName] = &Serializer{}
 }
 
 func (u *AmUserInfo) setLogger(severity string, fileName string) {
 	logger.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
 }
 
-// Generate and return a new Account Management object using the given priviledge, password and salt (in case they are valid)
+// NewUserAm : Generate and return a new Account Management object using the given priviledge, password and salt (in case they are valid)
 func NewUserAm(privilege string, pass []byte, saltData []byte, checkPwdStrength bool) (*AmUserInfo, error) {
 	err := IsValidPrivilege(privilege)
 	if err != nil {
@@ -81,7 +88,7 @@ func NewUserAm(privilege string, pass []byte, saltData []byte, checkPwdStrength 
 	return &AmUserInfo{Pwd: *userPwd, Privilege: privilege}, nil
 }
 
-// Verify that the privilage is a member of the set of valid options
+// IsValidPrivilege : Verify that the privilage is a member of the set of valid options
 func IsValidPrivilege(privilege string) error {
 	_, exist := usersPrivilege[privilege]
 	if !exist {
@@ -91,7 +98,7 @@ func IsValidPrivilege(privilege string) error {
 	return nil
 }
 
-// The predefind set of valid privilege
+// GetUsersPrivilege : The predefind set of valid privilege
 func GetUsersPrivilege() UsersPrivilege {
 	return usersPrivilege
 }
@@ -99,14 +106,14 @@ func GetUsersPrivilege() UsersPrivilege {
 // Return the time expiration of the AM password, root time expiration is different
 // than all other users time expiration
 func getPwdExpiration(id string) time.Time {
-	if id != stc.RootUserName {
+	if id != defs.RootUserName {
 		return time.Now().Add(time.Hour * 24 * pwdExpirationDays)
-	} else { // root password dosn't have expiration limit
-		return time.Now().Add(time.Hour * 24 * rootPwdExpirationDays)
 	}
+	// root password dosn't have expiration limit
+	return time.Now().Add(time.Hour * 24 * rootPwdExpirationDays)
 }
 
-// Set the AM property privilege to the given value (only for valid privileges)
+// UpdateUserPrivilege : Set the AM property privilege to the given value (only for valid privileges)
 func (u *AmUserInfo) UpdateUserPrivilege(privilege string) error {
 	err := IsValidPrivilege(privilege)
 	if err != nil {
@@ -116,7 +123,7 @@ func (u *AmUserInfo) UpdateUserPrivilege(privilege string) error {
 	return nil
 }
 
-// Update the AM property password to the given password and set the expiration time
+// UpdateUserPwd : Update the AM property password to the given password and set the expiration time
 // The password will be updated only if the new password is valid and the curent password matches the given one
 func (u *AmUserInfo) UpdateUserPwd(userName string, currentPwd []byte, pwd []byte, checkPwdStrength bool) error {
 	newPwd, err := u.Pwd.UpdatePassword(currentPwd, pwd, checkPwdStrength)
@@ -128,24 +135,36 @@ func (u *AmUserInfo) UpdateUserPwd(userName string, currentPwd []byte, pwd []byt
 	return nil
 }
 
-// Check if a given password matches the curent password
+// PasswordErrorThrotling : throttle the session in case of wrong password,
+//	the delay is the sum of a constant value: throttleMiliSec plus a random between 1 and randomThrottleMiliSec
+//	the random is to be counterpart to timing attacks
+func PasswordErrorThrotling(throttleMiliSec int64, randomThrottleMiliSec int64) {
+	defs.TimingAttackSleep(throttleMiliSec, randomThrottleMiliSec)
+}
+
+// IsPasswordMatch : Check if a given password matches the curent password
 // Note that the passwords are stored after hashing and not as clear text
 // If the passwords don't match, a 1 second delay will be used before the
 // next attempt, in order to prevent brute force entry attempts
 func (u AmUserInfo) IsPasswordMatch(pwd []byte) error {
+	return u.IsPasswordMatchHandler(pwd, defs.PasswordThrottlingMiliSec, defs.ThrottleMaxRandomMiliSec)
+}
+
+// IsPasswordMatchHandler : use IsPasswordMatch with throttling parameters other than the default ones, for testing purposes
+func (u AmUserInfo) IsPasswordMatchHandler(pwd []byte, throttleMiliSec int64, randomThrottleMiliSec int64) error {
 	saltedPwd, _ := salt.GenerateSaltedPassword([]byte(pwd), password.MinPasswordLength, password.MaxPasswordLength, u.Pwd.Salt, -1)
 	tPwd := password.GetHashedPwd(saltedPwd)
 	err := u.Pwd.IsPasswordMatch(tPwd)
 	// on error throttle for 1 second, reset the error counter
 	if err != nil {
-		time.Sleep(1 * time.Second)
-		u.Pwd.ErrorsCounter = 0 // the throttling is enougth
+		PasswordErrorThrotling(throttleMiliSec, randomThrottleMiliSec)
+		// u.Pwd.ErrorsCounter = 0 // the throttling is enougth
 		return err
 	}
 	return nil
 }
 
-// Comapre 2 AM properties, the comparisson may be set not to compare the expiration time
+// IsEqual : Comapre 2 AM properties, the comparisson may be set not to compare the expiration time
 func (u AmUserInfo) IsEqual(u2 *AmUserInfo, withExpiration bool) bool {
 	if u2 == nil {
 		return false
@@ -163,7 +182,7 @@ func (u AmUserInfo) IsEqual(u2 *AmUserInfo, withExpiration bool) bool {
 // All the properties must implement a set of functions:
 // PrintProperties, IsEqualProperties, AddToStorage, ReadFromStorage
 
-// Print the AM property data
+// PrintProperties : Print the AM property data
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*AmUserInfo)
 	if ok == false {
@@ -172,7 +191,7 @@ func (s Serializer) PrintProperties(data interface{}) string {
 	return d.String()
 }
 
-// Compare 2 AM properties
+// IsEqualProperties : Compare 2 AM properties
 func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 	d1, ok1 := da1.(*AmUserInfo)
 	d2, ok2 := da2.(*AmUserInfo)
@@ -182,7 +201,7 @@ func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 	return d1.IsEqual(d2, true)
 }
 
-// Add the AM property information to the secure_storage
+// AddToStorage : Add the AM property information to the secure_storage
 func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.SecureStorage) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -202,7 +221,7 @@ func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.Se
 	return nil
 }
 
-// Return the entity AM data read from the secure storage
+// ReadFromStorage : Return the entity AM data read from the secure storage
 func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (interface{}, error) {
 	var user AmUserInfo
 

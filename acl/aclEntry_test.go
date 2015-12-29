@@ -1,10 +1,7 @@
 package acl
 
 import (
-	"fmt"
 	"testing"
-
-	//	um "github.com/ibm-security-innovation/libsecurity-go/usersManagement"
 )
 
 const (
@@ -32,7 +29,7 @@ func init() {
 	}
 }
 
-func addPermissions(a *AclEntry, permissions map[Permission]bool, expected bool) (bool, *Permission) {
+func addPermissions(a *Entry, permissions map[Permission]bool, expected bool) (bool, *Permission) {
 	for p, val := range permissions {
 		if val == true {
 			val, err := a.AddPermission(p)
@@ -61,7 +58,7 @@ func Test_AddRemovePermissions(t *testing.T) {
 	p := Permission("")
 	_, err := a.AddPermission(p)
 	if err == nil {
-		t.Error(fmt.Sprintf("Test fail: Invalid permission: '%v' was added to the %v", p, a))
+		t.Errorf("Test fail: Invalid permission: '%v' was added to the %v", p, a)
 	}
 	// verify that valid permission can be added
 	// verify that permission that is in the list can't be added again

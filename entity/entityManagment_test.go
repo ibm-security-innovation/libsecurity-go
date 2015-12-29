@@ -2,10 +2,12 @@ package entityManagement
 
 import (
 	"fmt"
+	"math"
 	"testing"
+	"time"
 
 	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
-	stc "github.com/ibm-security-innovation/libsecurity-go/defs"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 )
 
 var (
@@ -207,17 +209,82 @@ func Test_EntityManagerIsEqual(t *testing.T) {
 			}
 		}
 	}
-	a1, _ := am.NewUserAm(am.UserPermission, []byte("123456"), []byte("abcd"), false)
-	el[0].AddPropertyToEntity(getGroupFormat(names[1]), stc.AmPropertyName, a1)
-	el[2].AddPropertyToEntity(getGroupFormat(names[1]), stc.AmPropertyName, a1)
+	a1, _ := am.NewUserAm(am.UserPermission, secret, salt, false)
+	el[0].AddPropertyToEntity(getGroupFormat(names[1]), defs.AmPropertyName, a1)
+	el[2].AddPropertyToEntity(getGroupFormat(names[1]), defs.AmPropertyName, a1)
 	el[1].AddUser(userName)
 	el[1].AddUserToGroup(getGroupFormat(names[1]), userName)
-	el[2].RemovePropertyFromEntity(getGroupFormat(names[1]), stc.AmPropertyName)
+	el[2].RemovePropertyFromEntity(getGroupFormat(names[1]), defs.AmPropertyName)
 	for i := 0; i < len; i++ {
 		for j := 0; j < len; j++ {
 			if i != j && el[i].IsEqual(el[j]) == true {
 				t.Errorf("Test fail: entity list %v:\n%v is not equal to entity list %v:\n%v", i, el[i].getEntityManagerStrWithProperties(), j, el[j].getEntityManagerStrWithProperties())
 			}
+		}
+	}
+}
+
+// Verift that entities in entity list retun OK only if the entity is in the list and the password match
+// Verify that the throttling delay is the same for cases were the user is not in the list as well as if the password does not match
+func Test_VerifyEntityPasswordAndTimmingAttack(t *testing.T) {
+	baseName := "a"
+	types := []string{userTypeStr, groupTypeStr, resourceTypeStr}
+	throttleDelayMiliSec := int64(100)
+	randomThrottling := int64(3)
+	allowedErrorP := float64(randomThrottling + 1)
+
+	el := New()
+	for _, typeStr := range types {
+		user := []string{baseName + typeStr}
+		_, err := addEntities(el, typeStr, user, true)
+		if err != nil {
+			t.Errorf("Test fail: %v", err)
+			t.FailNow()
+		}
+		pass := []byte(string(secret) + typeStr)
+		a1, _ := am.NewUserAm(am.UserPermission, pass, salt, false)
+		el.AddPropertyToEntity(user[0], defs.AmPropertyName, a1)
+	}
+	for _, typeStr := range types {
+		user := baseName + typeStr
+		pass := []byte(string(secret) + typeStr)
+		for _, typeStr1 := range types {
+			user1 := baseName + typeStr1
+			start := time.Now()
+			_, err := el.GetEntityAccountHandler(user1, pass, throttleDelayMiliSec, randomThrottling)
+			totalDelay := float64(time.Since(start) / time.Millisecond)
+			errorP := math.Abs(float64(totalDelay/float64(throttleDelayMiliSec))-1) * 100
+			if typeStr == typeStr1 && err != nil {
+				t.Errorf("Test fail: user %v with pass %v was not found, error: %v", user1, pass, err)
+				t.FailNow()
+			}
+			if typeStr != typeStr1 && errorP > allowedErrorP {
+				t.Errorf("Test fail: the throttling %v was not as expected %v with tolerance of %v%%", totalDelay, throttleDelayMiliSec, allowedErrorP)
+				t.FailNow()
+			}
+			if typeStr != typeStr1 && err == nil {
+				t.Errorf("Test fail: user %v with pass %v match user %v with different password", user, pass, user1)
+				t.FailNow()
+			}
+		}
+	}
+	for _, typeStr := range types {
+		user := []string{baseName + typeStr}
+		pass := []byte(string(secret) + typeStr)
+		_, err := removeEntities(el, typeStr, user, true)
+		if err != nil {
+			t.Errorf("Test fail: %v", err)
+		}
+		start := time.Now()
+		_, err = el.GetEntityAccountHandler(user[0], pass, throttleDelayMiliSec, randomThrottling)
+		totalDelay := float64(time.Since(start) / time.Millisecond)
+		errorP := math.Abs(float64(totalDelay/float64(throttleDelayMiliSec))-1) * 100
+		if err == nil {
+			t.Errorf("Test fail: removed user %v with pass %v was found", user, pass)
+			t.FailNow()
+		} else if err != nil && errorP > allowedErrorP {
+			t.Errorf("Test fail: the throttling %v was not as expected %v with tolerance of %v%%", totalDelay, throttleDelayMiliSec, allowedErrorP)
+			t.FailNow()
 		}
 	}
 }
