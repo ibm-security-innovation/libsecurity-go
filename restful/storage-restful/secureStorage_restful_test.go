@@ -101,7 +101,7 @@ func HTTPDataMethodWithHeader(method string, url string, data string, headerInfo
 	for key, value := range headerInfo {
 		request.Header.Set(key, value)
 	}
-	request.AddCookie(&http.Cookie{Name: cr.AccessToken, Value: cr.CookieStr, Path: "/"})
+	request.AddCookie(&http.Cookie{Name: cr.AccessToken, Value: "", Path: "/"})
 	response, err := client.Do(request)
 	return cr.GetResponse(response, err)
 }

@@ -67,7 +67,7 @@ func init() {
 	stRestful.SetData(usersList, loginKey, verifyKey, signKey, nil)
 
 	rootCookieStr, _ := app.GenerateToken(defs.RootUserName, am.SuperUserPermission, clientIP, signKey)
-	cr.SetCookie(rootCookieStr)
+	cr.TestSetCookie(rootCookieStr)
 
 	for _, name := range usersName {
 		stRestful.UsersList.AddUser(name)
@@ -125,7 +125,7 @@ func exeCommandCheckRes(t *testing.T, method string, url string, expCode int, da
 
 func initAListOfUsers(t *testing.T, usersList []string) string {
 	cookieStr, _ := app.GenerateToken(defs.RootUserName, am.SuperUserPermission, clientIP, stRestful.SignKey)
-	cr.SetCookie(cookieStr)
+	cr.TestSetCookie(cookieStr)
 
 	for _, name := range usersList {
 		okURLJ := cr.URL{URL: fmt.Sprintf("%v/%v", servicePath, name)}
@@ -194,7 +194,7 @@ func TestUpdatePrivilege(t *testing.T) {
 	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusBadRequest, string(privilege), cr.Error{Code: http.StatusBadRequest})
 
 	cookieStr, _ := app.GenerateToken(userName, am.UserPermission, clientIP, stRestful.SignKey)
-	cr.SetCookie(cookieStr)
+	cr.TestSetCookie(cookieStr)
 	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusMethodNotAllowed, string(privilege), cr.Error{Code: http.StatusMethodNotAllowed})
 }
 
@@ -206,7 +206,7 @@ func TestUpdatePassword(t *testing.T) {
 
 	//	initAListOfUsers(t, usersName)
 	cookieStr, _ := app.GenerateToken(userName, am.UserPermission, clientIP, stRestful.SignKey)
-	cr.SetCookie(cookieStr)
+	cr.TestSetCookie(cookieStr)
 
 	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserPwdCommand]), usersPath, userName, pwdPath)
 	okURLJ := cr.URL{URL: fmt.Sprintf("%v/%v", servicePath, userName)}
@@ -219,7 +219,7 @@ func TestUpdatePassword(t *testing.T) {
 	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusMethodNotAllowed, string(pwd), cr.Error{Code: http.StatusMethodNotAllowed})
 
 	cookieStr, _ = app.GenerateToken(defs.RootUserName, am.SuperUserPermission, clientIP, stRestful.SignKey)
-	cr.SetCookie(cookieStr)
+	cr.TestSetCookie(cookieStr)
 	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserPwdCommand]), usersPath, defs.RootUserName, pwdPath)
 	okURLJ = cr.URL{URL: fmt.Sprintf("%v/%v", servicePath, defs.RootUserName)}
 	pwd, _ = json.Marshal(cr.UpdateSecret{OldPassword: rootPwd, NewPassword: secretCode + "1"})

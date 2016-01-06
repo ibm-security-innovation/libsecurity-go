@@ -153,7 +153,7 @@ func (l AmRestful) restAm(request *restful.Request, response *restful.Response) 
 	userInfo := userData{tUserInfo.Name, []byte(tUserInfo.Password)}
 	data, err := l.st.UsersList.GetEntityAccount(userInfo.Name, []byte(userInfo.Password))
 	if err != nil {
-		l.setError(response, http.StatusMethodNotAllowed, fmt.Errorf("%v", err))
+		l.setError(response, http.StatusMethodNotAllowed, err)
 		return
 	}
 	tokenStr, err := app.GenerateToken(userInfo.Name, data.Privilege, getIPAddress(request), l.st.SignKey)

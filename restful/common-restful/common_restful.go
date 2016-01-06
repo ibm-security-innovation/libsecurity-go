@@ -43,8 +43,8 @@ var (
 	// Version : the current RESTFul version
 	Version = "/v1"
 
-	// CookieStr : the default CookieStr
-	CookieStr string // = ""
+	// testCookieStr : for testing purposes
+	testCookieStr string // = ""
 
 	// EmptyStr : the defined EmptyStr
 	EmptyStr = StringMessage{""}
@@ -130,7 +130,7 @@ func HTTPDataMethod(method string, url string, data string) (int, string, error)
 		fmt.Println("Error in: HTTPDataMethod, error:", err)
 	}
 	request.Header.Set("Content-Type", "application/json")
-	request.AddCookie(&http.Cookie{Name: AccessToken, Value: CookieStr, Path: "/"})
+	request.AddCookie(&http.Cookie{Name: AccessToken, Value: testCookieStr, Path: "/"})
 	response, err := client.Do(request)
 	return GetResponse(response, err)
 }
@@ -221,10 +221,10 @@ func GetExpectedData(sData string, okJ interface{}) (bool, string, string, Error
 	return true, exp, res, e, err
 }
 
-// SetCookie : set the cookie string to the given parameter
-func SetCookie(cookieStr string) {
-	CookieStr = cookieStr
-	logger.Trace.Println("Set cookie to:", CookieStr)
+// TestSetCookie : set the cookie string to the given parameter
+func TestSetCookie(cookieStr string) {
+	testCookieStr = cookieStr
+	logger.Trace.Println("Set cookie to:", testCookieStr)
 }
 
 // GetPropertyData : extract the property data from the relevant module
