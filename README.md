@@ -62,14 +62,14 @@ Note: if you generated the RSA files, copy them to the dist directory (the gener
     - change directory to the restful/libsecurity directory
     - **go run libsecurity.go**
     -  -config-file (default "./config.json"): Configuration information file
-    -  -host (default "localhost:8080"): Listening host
+    -  -host (default "127.0.0.1:5443"): Listening host
     -  -protocol (default "https"): Using protocol: http ot https
     -  -rsa-private (default "./dist/key.private"): RSA private key file path
     -  -secure-key (default "./dist/secureKey"): password to encrypt the secure storage
     -  -server-cert (default "./dist/server.crt"): SSL server certificate file path for https
     -  -server-key (default "./dist/server.key"): SSL server key file path for https
     -  -storage-file (default "./dist/data.txt"): persistence storage file
-  - In the browser address bar type: **https://ip:port/forewind/doc** (or **http://ip:port/forewind/doc**) (The default is: https://127.0.0.1:8080/forewind/doc)
+  - In the browser address bar type: **https://ip:port/forewind/doc** (or **http://ip:port/forewind/doc**) (The default is: https://127.0.0.1:5443/forewind/doc)
     - click on the **/forewind/app/v1/accounts-manager**
     - click on the **/forewind/app/v1/account-manager/user** link in order to authenticate the user
     - After filling the user name and password, click on the **Try it out** button.

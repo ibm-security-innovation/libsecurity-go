@@ -73,7 +73,7 @@ func init() {
 	cr.ServicePathPrefix = "/forewind/app"
 	configOptions = []string{amToken, umToken, aclToken, appAclToken, otpToken, ocraToken, passwordToken, secureStorageToken}
 	protocol = flag.String("protocol", "https", "Using protocol: http ot https")
-	host = flag.String("host", "localhost:8080", "Listening host")
+	host = flag.String("host", "127.0.0.1:5443", "Listening host")
 	generateJSONFlag = flag.Bool("generate", false, "generate static json")
 	sslServerCert = flag.String("server-cert", "./dist/server.crt", "SSL server certificate file path for https")
 	sslServerKey = flag.String("server-key", "./dist/server.key", "SSL server key file path for https")
