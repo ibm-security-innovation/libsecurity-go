@@ -81,7 +81,7 @@ func (en *EnRestful) restCreateGroup(request *restful.Request, response *restful
 	groupID := request.PathParameter(groupIDParam)
 	err := en.st.UsersList.AddGroup(groupID)
 	if err != nil {
-		en.setError(response, http.StatusBadRequest, err)
+		en.setError(response, http.StatusPreconditionFailed, err)
 		return
 	}
 	response.WriteHeader(http.StatusCreated)
@@ -151,7 +151,7 @@ func (en *EnRestful) restCreateUser(request *restful.Request, response *restful.
 	id := request.PathParameter(userIDParam)
 	err := en.st.UsersList.AddUser(id)
 	if err != nil {
-		en.setError(response, http.StatusNotFound, err)
+		en.setError(response, http.StatusPreconditionFailed, err)
 		return
 	}
 	response.WriteHeader(http.StatusCreated)
@@ -206,7 +206,7 @@ func (en *EnRestful) restCreateResource(request *restful.Request, response *rest
 	id := request.PathParameter(resourceIDParam)
 	err := en.st.UsersList.AddResource(id)
 	if err != nil {
-		en.setError(response, http.StatusNotFound, err)
+		en.setError(response, http.StatusPreconditionFailed, err)
 		return
 	}
 	response.WriteHeader(http.StatusCreated)
