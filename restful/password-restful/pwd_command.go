@@ -77,7 +77,7 @@ func (p PwdRestful) setRoute(service *restful.WebService) {
 		Writes(cr.Match{}))
 
 	str = fmt.Sprintf(urlCommands[resetUserPasswordCommand], usersPath, userIDParam, resetUserPwdPath)
-	service.Route(service.GET(str).
+	service.Route(service.POST(str).
 		Filter(p.st.SuperUserFilter).
 		To(p.restResetPassword).
 		Doc("Reset password").

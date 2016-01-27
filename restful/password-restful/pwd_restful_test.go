@@ -174,7 +174,7 @@ func TestVerifyResetPassword(t *testing.T) {
 	initAListOfUsers(t, usersName)
 
 	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[resetUserPasswordCommand]), usersPath, userName, resetUserPwdPath)
-	secretStr := exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusCreated, getMessageStr, cr.StringMessage{Str: getMessageStr})
+	secretStr := exeCommandCheckRes(t, cr.HTTPPostStr, url, http.StatusCreated, getMessageStr, cr.StringMessage{Str: getMessageStr})
 
 	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[verifyUserPasswordCommand]), usersPath, userName)
 	exeCommandCheckRes(t, cr.HTTPPostStr, url, http.StatusOK, secretStr, cr.Match{Match: true, Message: cr.NoMessageStr})
