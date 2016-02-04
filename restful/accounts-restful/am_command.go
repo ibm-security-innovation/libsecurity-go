@@ -92,6 +92,15 @@ func (l AmRestful) setFullRoute(service *restful.WebService) {
 		Reads(cr.UpdateSecret{}).
 		Writes(cr.URL{}))
 
+	str = fmt.Sprintf(urlCommands[handleUserCommand], usersPath, userIDParam)
+	service.Route(service.PATCH(str).
+		Filter(l.st.SameUserFilter).
+		To(l.restResetPwd).
+		Doc("Reset user password").
+		Operation("resetPwd").
+		Param(service.PathParameter(userIDParam, userNameComment).DataType("string")).
+		Writes(cr.Secret{}))
+
 	str = fmt.Sprintf(urlCommands[handleAuthenticateCommand], verifyPath)
 	service.Route(service.GET(str).
 		Filter(l.st.VerifyToken).

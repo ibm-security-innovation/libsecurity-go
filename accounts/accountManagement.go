@@ -4,7 +4,7 @@
 // The data structure is:
 // 	- Entity's privilege (Super user, Admin or User)
 // 	- Password related information and handling methods including:
-//	- The current password
+//	- The current passwordpassw
 //	- The password's expiration time
 //	- Old passwords that should be avoided. If there is an attempt to reused an old the user is flagged.
 //	- Error counter: counts the number of consecutive unsuccessful authentication attempts
@@ -133,6 +133,16 @@ func (u *AmUserInfo) UpdateUserPwd(userName string, currentPwd []byte, pwd []byt
 	u.Pwd.Password = newPwd
 	u.Pwd.Expiration = getPwdExpiration(userName)
 	return nil
+}
+
+// ResetUserPwd : Update the AM property password to a random password and set the expiration time
+// The password will be updated only if the new password is valid and the curent password matches the given one
+func (u *AmUserInfo) ResetUserPwd(userName string) ([]byte, error) {
+	newPwd, err := u.Pwd.ResetPassword()
+	if err != nil {
+		return nil, err
+	}
+	return newPwd, nil
 }
 
 // PasswordErrorThrotling : throttle the session in case of wrong password,

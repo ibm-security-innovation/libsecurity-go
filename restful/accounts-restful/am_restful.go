@@ -284,3 +284,18 @@ func (l AmRestful) restUpdatePwd(request *restful.Request, response *restful.Res
 	response.WriteHeader(http.StatusCreated)
 	response.WriteEntity(l.getURLPath(request, userName))
 }
+
+func (l AmRestful) restResetPwd(request *restful.Request, response *restful.Response) {
+	userName := request.PathParameter(userIDParam)
+	data := l.getAM(request, response, userName)
+	if data == nil {
+		return
+	}
+	pwd, err := data.ResetUserPwd(userName)
+	if err != nil {
+		l.setError(response, http.StatusBadRequest, err)
+		return
+	}
+	response.WriteHeader(http.StatusCreated)
+	response.WriteEntity(cr.Secret{Secret: string(pwd)})
+}

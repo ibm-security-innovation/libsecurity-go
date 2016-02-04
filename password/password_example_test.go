@@ -63,13 +63,13 @@ func ExampleUserPwd() {
 // This function resets the current password,
 // selects a new password with short expiration time
 // and lets the user use it exactly once
-func ExampleUserPwd_ResetPasword() {
+func ExampleUserPwd_ResetPassword() {
 	id := "User1"
 	pwd := []byte("a1b2C@3d4")
 
 	saltStr, _ := salt.GetRandomSalt(10)
 	userPwd, _ := password.NewUserPwd(pwd, saltStr, false)
-	tmpPwd, _ := userPwd.ResetPasword()
+	tmpPwd, _ := userPwd.ResetPassword()
 	tPwd, _ := salt.GenerateSaltedPassword(tmpPwd, 1, 100, saltStr, -1)
 	newPwd := password.GetHashedPwd(tPwd)
 	err := userPwd.IsPasswordMatch(newPwd)

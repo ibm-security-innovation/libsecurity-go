@@ -155,7 +155,7 @@ func (p PwdRestful) restResetPassword(request *restful.Request, response *restfu
 	if data == nil {
 		return
 	}
-	newPwd, err := data.ResetPasword()
+	newPwd, err := data.ResetPassword()
 	if err != nil {
 		p.setError(response, http.StatusBadRequest, err)
 		return

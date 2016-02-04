@@ -238,9 +238,9 @@ func (u *UserPwd) isPasswordMatchHandler(pwd []byte, overrideChecks bool) error 
 	return nil
 }
 
-// ResetPasword : Reset the password of a given user to a random password and make it a One-time-password with
+// ResetPassword : Reset the password of a given user to a random password and make it a One-time-password with
 // a short window time in which it should be used and replaced by the user
-func (u *UserPwd) ResetPasword() ([]byte, error) {
+func (u *UserPwd) ResetPassword() ([]byte, error) {
 	pass := GenerateNewValidPassword()
 	expiration := time.Now().Add(time.Duration(defaultTemporaryPwdExpirationMinutes) * time.Second * 60)
 	u.ErrorsCounter = 0

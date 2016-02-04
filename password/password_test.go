@@ -193,7 +193,7 @@ func Test_ResetPassword(t *testing.T) {
 	if err != nil {
 		t.Errorf("Test fail: correct password: '%v', return an error: %v", pass, err)
 	}
-	tmpPwd, err := user.ResetPasword()
+	tmpPwd, err := user.ResetPassword()
 	if err != nil {
 		t.Errorf("Test fail: Reset password fail, error: %v", err)
 	}
