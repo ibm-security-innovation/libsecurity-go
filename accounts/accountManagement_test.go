@@ -134,3 +134,16 @@ func Test_IsPasswordMatch(t *testing.T) {
 		}
 	}
 }
+
+func Test_IsPasswordMatch_Should_Not_Allow_Second_Login_With_Temporary_Password(t *testing.T) {
+	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
+	userAm.Pwd.SetTemporaryPwd(true)
+	err1 := userAm.IsPasswordMatch(defaultPassword)
+	if err1 != nil {
+		t.Errorf("Correct password wasn't matched, error %v", err1)
+	}
+	err2 := userAm.IsPasswordMatch(defaultPassword)
+	if err2 == nil {
+		t.Errorf("Expected temporary password to fail in second login attempt, after it was used once")
+	}
+}

@@ -156,12 +156,12 @@ func PasswordErrorThrotling(throttleMiliSec int64, randomThrottleMiliSec int64) 
 // Note that the passwords are stored after hashing and not as clear text
 // If the passwords don't match, a 1 second delay will be used before the
 // next attempt, in order to prevent brute force entry attempts
-func (u AmUserInfo) IsPasswordMatch(pwd []byte) error {
+func (u *AmUserInfo) IsPasswordMatch(pwd []byte) error {
 	return u.IsPasswordMatchHandler(pwd, defs.PasswordThrottlingMiliSec, defs.ThrottleMaxRandomMiliSec)
 }
 
 // IsPasswordMatchHandler : use IsPasswordMatch with throttling parameters other than the default ones, for testing purposes
-func (u AmUserInfo) IsPasswordMatchHandler(pwd []byte, throttleMiliSec int64, randomThrottleMiliSec int64) error {
+func (u *AmUserInfo) IsPasswordMatchHandler(pwd []byte, throttleMiliSec int64, randomThrottleMiliSec int64) error {
 	saltedPwd, _ := salt.GenerateSaltedPassword([]byte(pwd), password.MinPasswordLength, password.MaxPasswordLength, u.Pwd.Salt, -1)
 	tPwd := password.GetHashedPwd(saltedPwd)
 	err := u.Pwd.IsPasswordMatch(tPwd)
