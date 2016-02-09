@@ -5,7 +5,7 @@ cd ..
 
 code=(
    "accounts" "acl" "entity" "ocra" "otp" "password" "salt" "storage" "setup"
-   "restful/accounts-restful" "restful/entity-restful" "restful/ocra-restful" "restful/otp-restful" "restful/password-restful" "restful/storage-restful" "restful/acl-restful"
+   "restful/accounts-restful" "restful/entity-restful" "restful/libsecurity-restful" "restful/ocra-restful" "restful/otp-restful" "restful/password-restful" "restful/storage-restful" "restful/acl-restful"
    "app/token"
 )
 

@@ -29,7 +29,6 @@ const (
 	internalOcraSuite = "OCRA-1:HOTP-SHA1-6:QA08"
 
 	secretCode    = "12345678"
-	getMessageStr = "get-data"
 )
 
 var (
@@ -186,7 +185,7 @@ func TestOneWayChallengeResponse(t *testing.T) {
 	initAListOfUsers(t, usersName)
 
 	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[verifyUserIdentityCommand]), usersPath, userName, verifyUserIdentityChallengeToken)
-	res := exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusOK, "", cr.StringMessage{Str: getMessageStr})
+	res := exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusOK, "", cr.StringMessage{Str: cr.GetMessageStr})
 	var OcraData ocraData
 	err := json.Unmarshal([]byte(res), &OcraData)
 	if err != nil {
@@ -215,7 +214,7 @@ func TestMutualChallengeResponse(t *testing.T) {
 	OcraData.ClientQuestion = "The client 1"
 	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[verifyUserIdentityCommand]), usersPath, userName, verifyUserIdentityMutualChallengeStep1Token)
 	data, _ := json.Marshal(cr.StringMessage{Str: OcraData.ClientQuestion})
-	res := exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusOK, string(data), cr.StringMessage{Str: getMessageStr})
+	res := exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusOK, string(data), cr.StringMessage{Str: cr.GetMessageStr})
 	err := json.Unmarshal([]byte(res), &OcraData)
 	if err != nil {
 		t.Errorf("Test fail: execute GET to '%v' expected to get ocra data but received: %v, error: %v",

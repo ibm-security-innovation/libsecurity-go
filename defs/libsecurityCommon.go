@@ -83,3 +83,8 @@ func TimingAttackSleep(baseSleepMiliSec int64, maxRandomMiliSec int64) {
 	}
 	time.Sleep(time.Duration(nBig.Int64()+baseSleepMiliSec) * time.Millisecond)
 }
+
+// GetBeginningOfTime : return 1/1/1970
+func GetBeginningOfTime() time.Time {
+	return time.Date(1970, time.January, 1, 1, 0, 0, 0, time.Local)
+}

@@ -25,19 +25,22 @@ func Test_GenerateToken(t *testing.T) {
 	usersName := []string{defaultUserName, defaultUserName + "a", ""}
 	ipsStr := []string{defaultIP, defaultIP + "1", ""}
 	usersPrivilege := am.GetUsersPrivilege()
+	updatePassword := []bool{true, false}
 	signKey, verifyKey := SetupAToken(privateKeyFilePath)
 
 	for _, name := range usersName {
 		for _, ip := range ipsStr {
 			for p := range usersPrivilege {
-				token1, _ := GenerateToken(name, p, ip, signKey)
-				data, err := ParseToken(token1, ip, verifyKey)
-				if err != nil || data.UserName != name || data.Privilege != p {
-					t.Errorf("Test fail: the parsed token != generated token, error: %v", err)
-				}
-				_, err = ParseToken(token1, ip+"1", verifyKey)
-				if err == nil {
-					t.Errorf("Test fail: return successful from parsed token but the IPs are different")
+				for _, u := range updatePassword {
+					token1, _ := GenerateToken(name, p, u, ip, signKey)
+					data, err := ParseToken(token1, ip, verifyKey)
+					if err != nil || data.UserName != name || data.Privilege != p || data.UpdatePassword != u {
+						t.Errorf("Test fail: the parsed token != generated token, error: %v", err)
+					}
+					_, err = ParseToken(token1, ip+"1", verifyKey)
+					if err == nil {
+						t.Errorf("Test fail: return successful from parsed token but the IPs are different")
+					}
 				}
 			}
 		}
@@ -63,7 +66,7 @@ func Test_CheckPrivilegeAndSameUser(t *testing.T) {
 		}
 	}
 	for i, name := range usersName {
-		token1, _ := GenerateToken(name, permissions[i], defaultIP, signKey)
+		token1, _ := GenerateToken(name, permissions[i], true, defaultIP, signKey)
 		for j := range usersName {
 			ok, err := IsPrivilegeOk(token1, permissions[j], defaultIP, verifyKey)
 			if j > i && ok == true {
@@ -74,7 +77,7 @@ func Test_CheckPrivilegeAndSameUser(t *testing.T) {
 		}
 	}
 	for _, name1 := range usersName {
-		token1, _ := GenerateToken(name1, name1, defaultIP, signKey)
+		token1, _ := GenerateToken(name1, name1, true, defaultIP, signKey)
 		for _, name2 := range usersName {
 			ok, _ := IsItTheSameUser(token1, name2, defaultIP, verifyKey)
 			if name1 != name2 && ok == true {

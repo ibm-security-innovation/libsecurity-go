@@ -151,12 +151,17 @@ func (l AmRestful) restAm(request *restful.Request, response *restful.Response) 
 		return
 	}
 	userInfo := userData{tUserInfo.Name, []byte(tUserInfo.Password)}
+
 	data, err := l.st.UsersList.GetEntityAccount(userInfo.Name, []byte(userInfo.Password))
 	if err != nil {
 		l.setError(response, http.StatusMethodNotAllowed, err)
 		return
 	}
-	tokenStr, err := app.GenerateToken(userInfo.Name, data.Privilege, getIPAddress(request), l.st.SignKey)
+	temporaryPwd := false
+	if time.Now().After(data.Pwd.Expiration) {
+		temporaryPwd = true
+	}
+	tokenStr, err := app.GenerateToken(userInfo.Name, data.Privilege, temporaryPwd, getIPAddress(request), l.st.SignKey)
 	if err != nil {
 		l.setError(response, http.StatusInternalServerError, err)
 		return
@@ -276,13 +281,39 @@ func (l AmRestful) restUpdatePwd(request *restful.Request, response *restful.Res
 		l.setError(response, http.StatusBadRequest, err)
 		return
 	}
+	// each time the password is updated, the token is extanded
+	tokenStr, err := app.GenerateToken(userName, data.Privilege, false, getIPAddress(request), l.st.SignKey)
+	if err != nil {
+		l.setError(response, http.StatusInternalServerError, err)
+		return
+	}
+	addLoginCookie(response, tokenStr)
 	response.WriteHeaderAndEntity(http.StatusCreated, l.getURLPath(request, userName))
+}
+
+func (l AmRestful) generateUpdateOnlyCookie(userName string, pwd string, request *restful.Request, response *restful.Response) bool {
+	data, err := l.st.UsersList.GetEntityAccount(userName, []byte(pwd))
+	if err != nil {
+		l.setError(response, http.StatusMethodNotAllowed, err)
+		return false
+	}
+	tokenStr, err := app.GenerateToken(userName, data.Privilege, true, getIPAddress(request), l.st.SignKey)
+	if err != nil {
+		l.setError(response, http.StatusInternalServerError, err)
+		return false
+	}
+	addLoginCookie(response, tokenStr)
+	return true
 }
 
 func (l AmRestful) restResetPwd(request *restful.Request, response *restful.Response) {
 	userName := request.PathParameter(userIDParam)
 	data := l.getAM(request, response, userName)
 	if data == nil {
+		return
+	}
+	if userName == defs.RootUserName {
+		l.setError(response, http.StatusBadRequest, fmt.Errorf("Error: root user password can't be reset"))
 		return
 	}
 	pwd, err := data.ResetUserPwd(userName)

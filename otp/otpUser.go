@@ -102,12 +102,12 @@ func newThrottle(cliffLen int32, thrTimeSec time.Duration, autoUnblockSec time.D
 	return throtteling{
 		cliffLen,
 		thrTimeSec,
-		getBeginningOfTime(),
-		getBeginningOfTime(),
+		defs.GetBeginningOfTime(),
+		defs.GetBeginningOfTime(),
 		hotpWindowSize,
 		defaultConsErrorCounter,
 		autoUnblockSec,
-		getBeginningOfTime(),
+		defs.GetBeginningOfTime(),
 		totpWindowSize,
 		"",
 	}
@@ -184,10 +184,6 @@ func (u *UserInfoOtp) initAutoUnblockTimer() {
 // get the automatic unblock timer
 func (u UserInfoOtp) getAutoUnBlockedTimer() time.Time {
 	return u.Throttle.unblockTimer
-}
-
-func getBeginningOfTime() time.Time {
-	return time.Date(1970, time.January, 1, 1, 0, 0, 0, time.Local)
 }
 
 func (u *UserInfoOtp) checkAndUpdateUnBlockStateHelper(timeOffset time.Duration) {
@@ -284,10 +280,10 @@ func (u *UserInfoOtp) handleOkCode(code string, otpType TypeOfOtp, offset int32)
 		// TODO log
 	}
 	if otpType == HotpType {
-		u.Throttle.throttlingTimerHotp = getBeginningOfTime()
+		u.Throttle.throttlingTimerHotp = defs.GetBeginningOfTime()
 		u.BaseHotp.Next()
 	} else { // you can't try the code till the next Totp period
-		u.Throttle.throttlingTimerTotp = getBeginningOfTime()
+		u.Throttle.throttlingTimerTotp = defs.GetBeginningOfTime()
 		u.Throttle.lastTotpCode = code
 	}
 	u.Throttle.consErrorCounter = defaultConsErrorCounter // clear the consecutive error counter

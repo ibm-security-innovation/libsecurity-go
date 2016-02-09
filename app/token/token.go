@@ -24,18 +24,13 @@ const (
 	tokenClaimsIssuerStr    = "iss"
 	tokenClaimsAudienceStr  = "aud"
 	tokenClaimsPrivilegeStr = "Privilege"
+	tokenClaimsUpdatePasswordOnlyStr = "UpdatePass"
 	tokenClaimsJtiStr       = "jti"
 	tokenClaimsIPAddr       = "IPAddr"
 
 	jwtLen = 128
 
 	defaultTokenTimeExpirationMinutes = 30
-
-	/* old use
-	SuperUserPermission = "Super-user"
-	AdminPermission     = "Admin"
-	UserPermission      = "User"
-	*/
 )
 
 var (
@@ -50,6 +45,7 @@ type SecureTokenData struct {
 	Token     *jwt.Token
 	UserName  string
 	Privilege string
+	UpdatePassword bool
 	ID        string
 }
 
@@ -110,7 +106,7 @@ func SetupAToken(privateKeyFilePath string) (*rsa.PrivateKey, *rsa.PublicKey) {
 }
 
 // GenerateToken : Generate a new signed token
-func GenerateToken(name string, privilege string, ipAddr string, signKey *rsa.PrivateKey) (string, error) {
+func GenerateToken(name string, privilege string, updatePasswordOnly bool, ipAddr string, signKey *rsa.PrivateKey) (string, error) {
 	// create a signer for rsa 256
 	token := jwt.New(jwt.SigningMethodRS256)
 
@@ -119,6 +115,7 @@ func GenerateToken(name string, privilege string, ipAddr string, signKey *rsa.Pr
 	token.Claims[tokenClaimsAudienceStr] = name
 	token.Claims[tokenClaimsJtiStr] = jwtUniqID
 	token.Claims[tokenClaimsPrivilegeStr] = privilege
+	token.Claims[tokenClaimsUpdatePasswordOnlyStr] = updatePasswordOnly
 	token.Claims[tokenClaimsIPAddr] = ipAddr
 	return token.SignedString(signKey)
 }
@@ -150,7 +147,8 @@ func ParseToken(tokenString string, ipAddr string, verifyKey *rsa.PublicKey) (*S
 		userName := token.Claims[tokenClaimsAudienceStr].(string)
 		id := token.Claims[tokenClaimsJtiStr].(string)
 		privilege := token.Claims[tokenClaimsPrivilegeStr].(string)
-		return &SecureTokenData{token, userName, privilege, id}, nil
+		updatePassword := token.Claims[tokenClaimsUpdatePasswordOnlyStr].(bool)
+		return &SecureTokenData{token, userName, privilege, updatePassword, id}, nil
 	case *jwt.ValidationError: // something was wrong during the validation
 		vErr := err.(*jwt.ValidationError)
 
@@ -188,6 +186,15 @@ func IsPrivilegeOk(tokenString string, privilege string, ipAddr string, verifyKe
 		return true, nil
 	}
 	return false, fmt.Errorf("the privilege %v is not permited to this operation", token.Privilege)
+}
+
+// IsUpdatePasswordOnlySet : Check if the UpdatePassword is set
+func IsUpdatePasswordOnlySet(tokenString string, ipAddr string, verifyKey *rsa.PublicKey) (bool, error) {
+	token, err := ParseToken(tokenString, ipAddr, verifyKey)
+	if err != nil {
+		return false, err
+	}
+	return token.UpdatePassword, nil
 }
 
 // IsItTheSameUser : Verify that the user associated with the token is the same as the given one

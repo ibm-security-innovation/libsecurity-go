@@ -162,7 +162,7 @@ func (u *UserPwd) UpdatePassword(currentPwd []byte, pwd []byte, checkPwdStrength
 }
 
 // Update the password, it's expioration time and it's state (is it a one-time-password or a regular one)
-func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiration time.Time, TemporaryPwd bool, checkPwdStrength bool) ([]byte, error) {
+func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiration time.Time, temporaryPwd bool, checkPwdStrength bool) ([]byte, error) {
 	pLock.Lock()
 	defer pLock.Unlock()
 
@@ -192,7 +192,7 @@ func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiratio
 	u.Password = newPwd
 	u.Expiration = expiration
 	u.ErrorsCounter = 0
-	u.SetTemporaryPwd(TemporaryPwd)
+	u.SetTemporaryPwd(temporaryPwd)
 	return newPwd, nil
 }
 
@@ -231,7 +231,7 @@ func (u *UserPwd) isPasswordMatchHandler(pwd []byte, overrideChecks bool) error 
 		return fmt.Errorf("password is wrong, please try again")
 	}
 	if u.TemporaryPwd == true {
-		u.Expiration = time.Now()              // The password expired => it can't be used any more.
+		u.Expiration = defs.GetBeginningOfTime() // old use time.Now()              // The password expired => it can't be used any more.
 		u.SetTemporaryPwd(defaultTemporaryPwd) // Reset to the default option for the next password
 	}
 	u.ErrorsCounter = 0

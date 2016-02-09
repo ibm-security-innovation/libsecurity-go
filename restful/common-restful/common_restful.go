@@ -24,7 +24,8 @@ const (
 	// HTTPPatchStr : HTTP PATCH token
 	HTTPPatchStr = "PATCH"
 
-	getMessageStr = "get-data"
+	// GetMessageStr : string to get parameters from the HTP request
+	GetMessageStr = "get-data"
 
 	// SetCookieStr : token use to set the cookie
 	SetCookieStr = "Set-Cookie"
@@ -184,7 +185,7 @@ func GetExpectedData(sData string, okJ interface{}) (bool, string, string, Error
 	case StringMessage:
 		res = sData
 		exp = okJ.(StringMessage).Str
-		if exp == getMessageStr { // get data to be used later
+		if exp == GetMessageStr { // get data to be used later
 			exp = res
 		}
 	case Error:

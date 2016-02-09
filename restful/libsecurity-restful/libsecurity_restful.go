@@ -98,6 +98,24 @@ func (l LibsecurityRestful) verifyUserPermissions(req *restful.Request, resp *re
 	return true
 }
 
+func (l LibsecurityRestful) isUpdatePasswordOnly(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) bool {
+	if l.toFilter() == false {
+		return false
+	}
+
+	tokenStr := l.getCookieAccessTokenValue(req)
+	if tokenStr == "" {
+		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("You need to authenticate first"))
+		return false
+	}
+	isUpdatePasswordOnly, err := app.IsUpdatePasswordOnlySet(tokenStr, getIPAddress(req), l.verifyKey)
+	if err != nil {
+		l.setError(resp, http.StatusMethodNotAllowed, err)
+		return false
+	}
+	return isUpdatePasswordOnly
+}
+
 // SuperUserFilter : Verify that the commands is called by user with super user privilege
 func (l LibsecurityRestful) SuperUserFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	if l.verifyUserPermissions(req, resp, chain, am.SuperUserPermission) == true {
@@ -105,8 +123,7 @@ func (l LibsecurityRestful) SuperUserFilter(req *restful.Request, resp *restful.
 	}
 }
 
-// SameUserFilter : Verify that the commands is called by a super user or the user itself
-func (l LibsecurityRestful) SameUserFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+func (l LibsecurityRestful) sameUserFilterCheckPasswordUpdate(req *restful.Request, resp *restful.Response, chain *restful.FilterChain, passwordUpdateOnly bool) {
 	if l.toFilter() == false {
 		chain.ProcessFilter(req, resp)
 		return
@@ -130,7 +147,24 @@ func (l LibsecurityRestful) SameUserFilter(req *restful.Request, resp *restful.R
 		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("User '%v' is not permited to do the operation, only the same user or root can execute it", tokenData.UserName))
 		return
 	}
+	if passwordUpdateOnly == true {
+		updatePasswordOnly := l.isUpdatePasswordOnly(req, resp, chain)
+		if updatePasswordOnly == true {
+			l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("The only permitted operation is to update the user password"))
+			return
+		}
+	}
 	chain.ProcessFilter(req, resp)
+}
+
+// SameUserFilter : Verify that the commands is called by a super user or the user itself and that the updatePassword is not set in the token
+func (l LibsecurityRestful) SameUserFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	l.sameUserFilterCheckPasswordUpdate(req, resp, chain, true)
+}
+
+// SameUserUpdatePasswordFilter : Verify that the commands is called by a super user or the user itself, don't check if the updatePassword flag is set
+func (l LibsecurityRestful) SameUserUpdatePasswordFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	l.sameUserFilterCheckPasswordUpdate(req, resp, chain, false)
 }
 
 // VerifyToken : verify is the received token is legal and as expected

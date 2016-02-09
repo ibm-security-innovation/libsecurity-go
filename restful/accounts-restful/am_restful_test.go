@@ -66,7 +66,7 @@ func init() {
 	stRestful = libsecurityRestful.NewLibsecurityRestful()
 	stRestful.SetData(usersList, loginKey, verifyKey, signKey, nil)
 
-	rootCookieStr, _ := app.GenerateToken(defs.RootUserName, am.SuperUserPermission, clientIP, signKey)
+	rootCookieStr, _ := app.GenerateToken(defs.RootUserName, am.SuperUserPermission, false, clientIP, signKey)
 	cr.TestSetCookie(rootCookieStr)
 
 	for _, name := range usersName {
@@ -124,7 +124,7 @@ func exeCommandCheckRes(t *testing.T, method string, url string, expCode int, da
 }
 
 func initAListOfUsers(t *testing.T, usersList []string) string {
-	cookieStr, _ := app.GenerateToken(defs.RootUserName, am.SuperUserPermission, clientIP, stRestful.SignKey)
+	cookieStr, _ := app.GenerateToken(defs.RootUserName, am.SuperUserPermission, false, clientIP, stRestful.SignKey)
 	cr.TestSetCookie(cookieStr)
 
 	for _, name := range usersList {
@@ -193,7 +193,7 @@ func TestUpdatePrivilege(t *testing.T) {
 	privilege, _ = json.Marshal(privilegePwd{Privilege: am.SuperUserPermission})
 	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusBadRequest, string(privilege), cr.Error{Code: http.StatusBadRequest})
 
-	cookieStr, _ := app.GenerateToken(userName, am.UserPermission, clientIP, stRestful.SignKey)
+	cookieStr, _ := app.GenerateToken(userName, am.UserPermission, false, clientIP, stRestful.SignKey)
 	cr.TestSetCookie(cookieStr)
 	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusMethodNotAllowed, string(privilege), cr.Error{Code: http.StatusMethodNotAllowed})
 }
@@ -205,7 +205,7 @@ func TestUpdatePassword(t *testing.T) {
 	userName := usersName[0]
 
 	//	initAListOfUsers(t, usersName)
-	cookieStr, _ := app.GenerateToken(userName, am.UserPermission, clientIP, stRestful.SignKey)
+	cookieStr, _ := app.GenerateToken(userName, am.UserPermission, false, clientIP, stRestful.SignKey)
 	cr.TestSetCookie(cookieStr)
 
 	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserPwdCommand]), usersPath, userName, pwdPath)
@@ -218,10 +218,66 @@ func TestUpdatePassword(t *testing.T) {
 	pwd, _ = json.Marshal(cr.UpdateSecret{OldPassword: rootPwd, NewPassword: secretCode + "2"})
 	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusMethodNotAllowed, string(pwd), cr.Error{Code: http.StatusMethodNotAllowed})
 
-	cookieStr, _ = app.GenerateToken(defs.RootUserName, am.SuperUserPermission, clientIP, stRestful.SignKey)
+	cookieStr, _ = app.GenerateToken(defs.RootUserName, am.SuperUserPermission, false, clientIP, stRestful.SignKey)
 	cr.TestSetCookie(cookieStr)
 	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserPwdCommand]), usersPath, defs.RootUserName, pwdPath)
 	okURLJ = cr.URL{URL: fmt.Sprintf("%v/%v", servicePath, defs.RootUserName)}
 	pwd, _ = json.Marshal(cr.UpdateSecret{OldPassword: rootPwd, NewPassword: secretCode + "1"})
 	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusCreated, string(pwd), okURLJ)
+}
+
+// 1. As a root: 
+//	1.1 Reset user password
+//	1.2 Success get user account info
+//	1.3 Fail to reset root user password
+// 2. As a user: 
+//	2.1 login with the new password
+//	2.2 Fail to get account info
+//	2.3 Change account password
+//	2.4 Success get account info
+func TestResetPassword(t *testing.T) {
+	userName := usersName[0]
+	updatedPwd := secretCode + "1"
+
+	initAListOfUsers(t, usersName)
+	// reset user password
+	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserCommand]), usersPath, userName)
+	newPwd := exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusCreated, cr.GetMessageStr, cr.StringMessage{Str: cr.GetMessageStr})
+
+	// fail to reset root user password
+	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserCommand]), usersPath, defs.RootUserName)
+	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusBadRequest, "", cr.Match{Match: false})
+
+	// get user info
+	url = resourcePath + "/" + userName
+	data, _ := stRestful.UsersList.GetPropertyAttachedToEntity(userName, propertyName)
+	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusOK, "", data.(*am.AmUserInfo))
+
+	// login as user and fail to get user info
+	d := data.(*am.AmUserInfo)
+	cookieStr, _ := app.GenerateToken(userName, am.UserPermission, d.Pwd.TemporaryPwd, clientIP, stRestful.SignKey)
+	cr.TestSetCookie(cookieStr)
+	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusMethodNotAllowed, "", cr.Match{Match: false})
+
+	var newPwdStr cr.Secret
+	json.Unmarshal([]byte(newPwd), &newPwdStr)
+	// update user account password
+	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserPwdCommand]), usersPath, userName, pwdPath)
+	okURLJ := cr.URL{URL: fmt.Sprintf("%v/%v", servicePath, userName)}
+	pwd, _ := json.Marshal(cr.UpdateSecret{OldPassword: newPwdStr.Secret, NewPassword: updatedPwd})
+	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusCreated, string(pwd), okURLJ)
+
+	// login as root and get user info
+	cookieStr, _ = app.GenerateToken(defs.RootUserName, am.SuperUserPermission, false, clientIP, stRestful.SignKey)
+	cr.TestSetCookie(cookieStr)
+	url = resourcePath + "/" + userName
+	data, _ = stRestful.UsersList.GetPropertyAttachedToEntity(userName, propertyName)
+	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusOK, "", data.(*am.AmUserInfo))
+
+	// login as user and get user info
+	d = data.(*am.AmUserInfo)
+	cookieStr, _ = app.GenerateToken(userName, am.UserPermission, d.Pwd.TemporaryPwd, clientIP, stRestful.SignKey)
+	cr.TestSetCookie(cookieStr)
+	url = resourcePath + "/" + userName
+	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusOK, "", data.(*am.AmUserInfo))
 }
