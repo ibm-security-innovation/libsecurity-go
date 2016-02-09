@@ -163,8 +163,7 @@ func (l AmRestful) restAm(request *restful.Request, response *restful.Response) 
 	}
 	logger.Info.Println("User:", userInfo.Name, "is authenticated")
 	addLoginCookie(response, tokenStr)
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(cr.Match{Match: true, Message: fmt.Sprintf("User '%v' is authenticated", userInfo.Name)})
+	response.WriteHeaderAndEntity(http.StatusOK, cr.Match{Match: true, Message: fmt.Sprintf("User '%v' is authenticated", userInfo.Name)})
 }
 
 func getIPAddress(request *restful.Request) string {
@@ -177,8 +176,7 @@ func (l AmRestful) restLogout(request *restful.Request, response *restful.Respon
 }
 
 func (l AmRestful) restVerifyToken(request *restful.Request, response *restful.Response) {
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(cr.StringMessage{Str: "Token OK"})
+	response.WriteHeaderAndEntity(http.StatusOK, cr.StringMessage{Str: "Token OK"})
 }
 
 func (l AmRestful) restAddAm(request *restful.Request, response *restful.Response) {
@@ -200,8 +198,7 @@ func (l AmRestful) restAddAm(request *restful.Request, response *restful.Respons
 		l.setError(response, http.StatusNotFound, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(l.getURLPath(request, name))
+	response.WriteHeaderAndEntity(http.StatusCreated, l.getURLPath(request, name))
 }
 
 func (l AmRestful) getAM(request *restful.Request, response *restful.Response, userName string) *am.AmUserInfo {
@@ -219,8 +216,7 @@ func (l AmRestful) restGetAm(request *restful.Request, response *restful.Respons
 	if data == nil {
 		return
 	}
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(data)
+	response.WriteHeaderAndEntity(http.StatusOK,data)
 }
 
 func (l AmRestful) restDeleteAM(request *restful.Request, response *restful.Response) {
@@ -257,8 +253,7 @@ func (l AmRestful) restUpdatePrivilege(request *restful.Request, response *restf
 		l.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(l.getURLPath(request, userName))
+	response.WriteHeaderAndEntity(http.StatusCreated, l.getURLPath(request, userName))
 }
 
 func (l AmRestful) restUpdatePwd(request *restful.Request, response *restful.Response) {
@@ -281,8 +276,7 @@ func (l AmRestful) restUpdatePwd(request *restful.Request, response *restful.Res
 		l.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(l.getURLPath(request, userName))
+	response.WriteHeaderAndEntity(http.StatusCreated, l.getURLPath(request, userName))
 }
 
 func (l AmRestful) restResetPwd(request *restful.Request, response *restful.Response) {
@@ -296,6 +290,5 @@ func (l AmRestful) restResetPwd(request *restful.Request, response *restful.Resp
 		l.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(cr.Secret{Secret: string(pwd)})
+	response.WriteHeaderAndEntity(http.StatusCreated, cr.Secret{Secret: string(pwd)})
 }

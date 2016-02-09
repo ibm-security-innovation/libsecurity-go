@@ -104,8 +104,7 @@ func (a *AclRestful) restAddAclToResource(request *restful.Request, response *re
 	if a.addAclToResource(request, response, resourceName, a1) == false {
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(a.getURLPath(request, resourceToken, resourceName))
+	response.WriteHeaderAndEntity(http.StatusCreated, a.getURLPath(request, resourceToken, resourceName))
 }
 
 func (a *AclRestful) restGetAclOfResource(request *restful.Request, response *restful.Response) {
@@ -114,8 +113,7 @@ func (a *AclRestful) restGetAclOfResource(request *restful.Request, response *re
 		a.setError(response, http.StatusNotFound, err)
 		return
 	}
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(data)
+	response.WriteHeaderAndEntity(http.StatusOK, data)
 }
 
 func (a *AclRestful) restDeleteAclFromResource(request *restful.Request, response *restful.Response) {
@@ -149,8 +147,7 @@ func (a AclRestful) restCheckPermission(request *restful.Request, response *rest
 		status = http.StatusNotFound
 	}
 	res := cr.Match{Match: ok, Message: str}
-	response.WriteHeader(status)
-	response.WriteEntity(res)
+	response.WriteHeaderAndEntity(status, res)
 }
 
 func (a AclRestful) restSetPermission(request *restful.Request, response *restful.Response) {
@@ -172,8 +169,7 @@ func (a AclRestful) restSetPermission(request *restful.Request, response *restfu
 	if err != nil {
 		a.setError(response, http.StatusNotFound, err)
 	} else {
-		response.WriteHeader(http.StatusCreated)
-		response.WriteEntity(a.getURLPath(request, entityToken, fmt.Sprintf("%v/%v/%v/%v/%v", aclInfo.UserName, resourceToken, aclInfo.ResourceName, permissionsToken, aclInfo.Permission)))
+		response.WriteHeaderAndEntity(http.StatusCreated, a.getURLPath(request, entityToken, fmt.Sprintf("%v/%v/%v/%v/%v", aclInfo.UserName, resourceToken, aclInfo.ResourceName, permissionsToken, aclInfo.Permission)))
 	}
 }
 
@@ -202,8 +198,7 @@ func (a AclRestful) restGetAllPermissions(request *restful.Request, response *re
 	for name := range res {
 		data = append(data, string(name))
 	}
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(data)
+	response.WriteHeaderAndEntity(http.StatusOK, data)
 }
 
 func (a AclRestful) restGetAllPermissionsOfEntity(request *restful.Request, response *restful.Response) {
@@ -218,8 +213,7 @@ func (a AclRestful) restGetAllPermissionsOfEntity(request *restful.Request, resp
 	for name := range res {
 		data = append(data, string(name))
 	}
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(data)
+	response.WriteHeaderAndEntity(http.StatusOK, data)
 }
 
 func (a AclRestful) restGetWhoUsesAResourcePermission(request *restful.Request, response *restful.Response) {
@@ -227,10 +221,8 @@ func (a AclRestful) restGetWhoUsesAResourcePermission(request *restful.Request, 
 	permission := request.PathParameter(permissionParam)
 	res := acl.GetWhoUseAPermission(a.st.UsersList, resourceName, permission)
 	data := []string{}
-	response.WriteHeader(http.StatusOK)
 	for name := range res {
 		data = append(data, name)
 	}
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(data)
+	response.WriteHeaderAndEntity(http.StatusOK, data)
 }

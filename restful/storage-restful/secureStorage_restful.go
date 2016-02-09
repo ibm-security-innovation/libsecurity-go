@@ -90,8 +90,7 @@ func (s *SRestful) restCreateSecureStorage(request *restful.Request, response *r
 		return
 	}
 	s.st.SecureStorage = data
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(s.getURLPath(request))
+	response.WriteHeaderAndEntity(http.StatusCreated, s.getURLPath(request))
 }
 
 func (s SRestful) restDeleteSecureStorage(request *restful.Request, response *restful.Response) {
@@ -109,8 +108,7 @@ func (s SRestful) restGetSecureStorage(request *restful.Request, response *restf
 	if s.isSecretMatch(request, response) == false {
 		return
 	}
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(s.st.SecureStorage.GetDecryptStorageData())
+	response.WriteHeaderAndEntity(http.StatusOK, s.st.SecureStorage.GetDecryptStorageData())
 }
 
 func (s SRestful) restAddItemToSecureStorage(request *restful.Request, response *restful.Response) {
@@ -132,8 +130,7 @@ func (s SRestful) restAddItemToSecureStorage(request *restful.Request, response 
 		s.setError(response, http.StatusInternalServerError, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(s.getURLPath(request))
+	response.WriteHeaderAndEntity(http.StatusCreated, s.getURLPath(request))
 }
 
 func (s SRestful) restGetItemFromSecureStorage(request *restful.Request, response *restful.Response) {
@@ -150,8 +147,7 @@ func (s SRestful) restGetItemFromSecureStorage(request *restful.Request, respons
 		s.setError(response, http.StatusNotFound, err)
 		return
 	}
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(itemValue{val})
+	response.WriteHeaderAndEntity(http.StatusOK, itemValue{val})
 }
 
 func (s SRestful) restDeleteItemFromSecureStorage(request *restful.Request, response *restful.Response) {

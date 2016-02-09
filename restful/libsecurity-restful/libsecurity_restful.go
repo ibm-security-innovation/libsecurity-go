@@ -167,7 +167,7 @@ func (l *LibsecurityRestful) setError(response *restful.Response, httpStatusCode
 }
 
 func (l LibsecurityRestful) restGetVersion(request *restful.Request, response *restful.Response) {
-	response.WriteEntity(cr.StringMessage{Str: GetVersion()})
+	response.WriteHeaderAndEntity(http.StatusOK, cr.StringMessage{Str: GetVersion()})
 }
 
 func (l LibsecurityRestful) restStoreData(request *restful.Request, response *restful.Response) {
@@ -184,8 +184,7 @@ func (l LibsecurityRestful) restStoreData(request *restful.Request, response *re
 		l.setError(response, http.StatusInternalServerError, err)
 		return
 	}
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(fileData.FilePath)
+	response.WriteHeaderAndEntity(http.StatusOK, fileData.FilePath)
 }
 
 func (l LibsecurityRestful) restLoadData(request *restful.Request, response *restful.Response) {
@@ -202,8 +201,7 @@ func (l LibsecurityRestful) restLoadData(request *restful.Request, response *res
 		l.setError(response, http.StatusInternalServerError, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(fileData.FilePath)
+	response.WriteHeaderAndEntity(http.StatusCreated, fileData.FilePath)
 }
 
 func getIPAddress(request *restful.Request) string {

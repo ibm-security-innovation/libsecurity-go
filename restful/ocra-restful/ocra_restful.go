@@ -108,8 +108,7 @@ func (o OcraRestful) restAddOcra(request *restful.Request, response *restful.Res
 		o.setError(response, http.StatusNotFound, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(o.getURLPath(request, name))
+	response.WriteHeaderAndEntity(http.StatusCreated, o.getURLPath(request, name))
 }
 
 func (o OcraRestful) restUpdateOcraKey(request *restful.Request, response *restful.Response) {
@@ -130,8 +129,7 @@ func (o OcraRestful) restUpdateOcraKey(request *restful.Request, response *restf
 		o.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(o.getURLPath(request, name))
+	response.WriteHeaderAndEntity(http.StatusCreated, o.getURLPath(request, name))
 }
 
 func (o OcraRestful) restUpdateOcraSuite(request *restful.Request, response *restful.Response) {
@@ -152,8 +150,7 @@ func (o OcraRestful) restUpdateOcraSuite(request *restful.Request, response *res
 		o.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(o.getURLPath(request, name))
+	response.WriteHeaderAndEntity(http.StatusCreated, o.getURLPath(request, name))
 }
 
 func (o OcraRestful) restGetOcra(request *restful.Request, response *restful.Response) {
@@ -161,8 +158,7 @@ func (o OcraRestful) restGetOcra(request *restful.Request, response *restful.Res
 	if data == nil {
 		return
 	}
-	response.WriteEntity(data)
-	response.WriteHeader(http.StatusOK)
+	response.WriteHeaderAndEntity(http.StatusOK, data)
 }
 
 func (o OcraRestful) restDeleteOcra(request *restful.Request, response *restful.Response) {
@@ -200,8 +196,7 @@ func (o OcraRestful) restVerifyOcraUserIdentityChallenge(request *restful.Reques
 		return
 	}
 	serverFirstData := ocraData{ServerQuestion: o.getRandString(ocraQuestionLen)}
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(serverFirstData)
+	response.WriteHeaderAndEntity(http.StatusOK, serverFirstData)
 }
 
 func (o OcraRestful) restVerifyOcraUserIdentityCheckOtp(request *restful.Request, response *restful.Response) {
@@ -219,14 +214,13 @@ func (o OcraRestful) restVerifyOcraUserIdentityCheckOtp(request *restful.Request
 	// verify client OTP
 	otp, err := ocra.GenerateOCRAAdvance(data.OcraSuite, string(data.Key), ocraData.Counter,
 		ocraData.ServerQuestion, ocraData.Password, ocraData.SessionID, ocraData.TimeStamp)
-	response.WriteHeader(http.StatusOK)
 	logger.Trace.Println("ocraData:", ocraData, "otp:", otp, "client otp:", ocraData.Otp)
 	if ocraData.Otp == otp && err == nil {
-		response.WriteEntity(cr.Match{Match: true, Message: "OTP match"})
+		response.WriteHeaderAndEntity(http.StatusOK, cr.Match{Match: true, Message: "OTP match"})
 		logger.Trace.Println("Server verify the OTP successfully")
 	} else {
 		logger.Trace.Println("Server calculated OTP:", otp, "is different from the one sent from the client", ocraData.Otp)
-		response.WriteEntity(cr.Match{Match: false, Message: "OTP doesn't match"})
+		response.WriteHeaderAndEntity(http.StatusOK, cr.Match{Match: false, Message: "OTP doesn't match"})
 	}
 }
 
@@ -245,10 +239,9 @@ func (o OcraRestful) restVerifyOcraUserIdentityMutualChallengeStep1(request *res
 		o.setError(response, http.StatusNotFound, err)
 		return
 	}
-	response.WriteHeader(http.StatusOK)
 	logger.Trace.Println("ocraData:", ocraData, "server otp:", serverOtp)
 	ocraData.Otp = serverOtp
-	response.WriteEntity(ocraData)
+	response.WriteHeaderAndEntity(http.StatusOK, ocraData)
 }
 
 func (o OcraRestful) restVerifyOcraUserIdentityMutualChallengeStep2(request *restful.Request, response *restful.Response) {
@@ -260,13 +253,12 @@ func (o OcraRestful) restVerifyOcraUserIdentityMutualChallengeStep2(request *res
 	err := request.ReadEntity(&ocraData)
 	clientOtp, err := ocra.GenerateOCRAAdvance(data.OcraSuite, string(data.Key),
 		ocraData.Counter, ocraData.ServerQuestion+ocraData.ClientQuestion, ocraData.Password, ocraData.SessionID, ocraData.TimeStamp)
-	response.WriteHeader(http.StatusOK)
 	logger.Trace.Println("ocraData:", ocraData, "client otp:", ocraData.Otp, "calculated client otp:", clientOtp)
 	if ocraData.Otp == clientOtp && err == nil {
-		response.WriteEntity(cr.Match{Match: true, Message: "OTP match"})
+		response.WriteHeaderAndEntity(http.StatusOK, cr.Match{Match: true, Message: "OTP match"})
 		logger.Trace.Println("Server verify the OTP successfully")
 	} else {
 		logger.Trace.Println("Server calculated OTP:", clientOtp, "is different from the one sent from the client", ocraData.Otp)
-		response.WriteEntity(cr.Match{Match: false, Message: "Client OTP doesn't match"})
+		response.WriteHeaderAndEntity(http.StatusOK, cr.Match{Match: false, Message: "Client OTP doesn't match"})
 	}
 }

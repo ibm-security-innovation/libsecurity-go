@@ -96,8 +96,7 @@ func (p PwdRestful) restAddPwd(request *restful.Request, response *restful.Respo
 		p.setError(response, http.StatusNotFound, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(p.getURLPath(request, name))
+	response.WriteHeaderAndEntity(http.StatusCreated, p.getURLPath(request, name))
 }
 
 func (p PwdRestful) restGetPwd(request *restful.Request, response *restful.Response) {
@@ -105,8 +104,7 @@ func (p PwdRestful) restGetPwd(request *restful.Request, response *restful.Respo
 	if data == nil {
 		return
 	}
-	response.WriteHeader(http.StatusOK)
-	response.WriteEntity(data)
+	response.WriteHeaderAndEntity(http.StatusOK, data)
 }
 
 func (p PwdRestful) restDeletePwd(request *restful.Request, response *restful.Response) {
@@ -146,8 +144,7 @@ func (p PwdRestful) restUpdatePassword(request *restful.Request, response *restf
 		p.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(p.getURLPath(request, name))
+	response.WriteHeaderAndEntity(http.StatusCreated, p.getURLPath(request, name))
 }
 
 func (p PwdRestful) restResetPassword(request *restful.Request, response *restful.Response) {
@@ -160,8 +157,7 @@ func (p PwdRestful) restResetPassword(request *restful.Request, response *restfu
 		p.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(secretData{string(newPwd)})
+	response.WriteHeaderAndEntity(http.StatusCreated, secretData{string(newPwd)})
 }
 
 func (p PwdRestful) restVerifyPassword(request *restful.Request, response *restful.Response) {
@@ -186,6 +182,5 @@ func (p PwdRestful) restVerifyPassword(request *restful.Request, response *restf
 	if ok == false && err != nil {
 		res.Message = fmt.Sprintf("%v", err)
 	}
-	response.WriteEntity(res)
-	response.WriteHeader(http.StatusOK)
+	response.WriteHeaderAndEntity(http.StatusOK, res)
 }

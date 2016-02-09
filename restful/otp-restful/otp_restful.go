@@ -99,8 +99,7 @@ func (u OtpRestful) restAddOtp(request *restful.Request, response *restful.Respo
 		u.setError(response, http.StatusNotFound, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(u.getURLPath(request, name))
+	response.WriteHeaderAndEntity(http.StatusCreated, u.getURLPath(request, name))
 }
 
 func (u OtpRestful) restGetOtp(request *restful.Request, response *restful.Response) {
@@ -108,8 +107,7 @@ func (u OtpRestful) restGetOtp(request *restful.Request, response *restful.Respo
 	if data == nil {
 		return
 	}
-	response.WriteEntity(data)
-	response.WriteHeader(http.StatusOK)
+	response.WriteHeaderAndEntity(http.StatusOK, data)
 }
 
 func (u OtpRestful) restDeleteOtp(request *restful.Request, response *restful.Response) {
@@ -135,8 +133,7 @@ func (u OtpRestful) restIsOtpBlocked(request *restful.Request, response *restful
 		u.setError(response, http.StatusNotFound, err)
 		return
 	}
-	response.WriteEntity(state)
-	response.WriteHeader(http.StatusOK)
+	response.WriteHeaderAndEntity(http.StatusOK, state)
 }
 
 func (u OtpRestful) restSetOtpBlockedState(request *restful.Request, response *restful.Response) {
@@ -156,8 +153,7 @@ func (u OtpRestful) restSetOtpBlockedState(request *restful.Request, response *r
 		u.setError(response, http.StatusNotFound, err)
 		return
 	}
-	response.WriteEntity(u.getURLPath(request, name))
-	response.WriteHeader(http.StatusOK)
+	response.WriteHeaderAndEntity(http.StatusOK, u.getURLPath(request, name))
 }
 
 func (u OtpRestful) getExpectedCodes(request *restful.Request, response *restful.Response) string {
@@ -202,6 +198,5 @@ func (u OtpRestful) verifyUserOtp(request *restful.Request, response *restful.Re
 	if ok == false && err != nil {
 		res.Message = fmt.Sprintf("%v", err)
 	}
-	response.WriteEntity(res)
-	response.WriteHeader(http.StatusOK)
+	response.WriteHeaderAndEntity(http.StatusOK, res)
 }

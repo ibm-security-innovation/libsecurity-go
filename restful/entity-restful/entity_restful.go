@@ -84,8 +84,7 @@ func (en *EnRestful) restCreateGroup(request *restful.Request, response *restful
 		en.setError(response, http.StatusPreconditionFailed, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(en.getGroupURLPath(request, groupID))
+	response.WriteHeaderAndEntity(http.StatusCreated, en.getGroupURLPath(request, groupID))
 }
 
 func (en EnRestful) getAllGroups() []string {
@@ -111,7 +110,7 @@ func (en EnRestful) restGetGroup(request *restful.Request, response *restful.Res
 		en.setError(response, http.StatusNotFound, fmt.Errorf("Group "+groupID+" could not be found."))
 		return
 	}
-	response.WriteEntity(group)
+	response.WriteHeaderAndEntity(http.StatusOK, group)
 }
 
 func (en *EnRestful) restRemoveGroup(request *restful.Request, response *restful.Response) {
@@ -132,8 +131,7 @@ func (en *EnRestful) restAddUserToGroup(request *restful.Request, response *rest
 		en.setError(response, http.StatusBadRequest, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(en.getGroupURLPath(request, fmt.Sprintf("%v/%v/%v/%v", groupIDToken, groupID, userIDToken, userID)))
+	response.WriteHeaderAndEntity(http.StatusCreated, en.getGroupURLPath(request, fmt.Sprintf("%v/%v/%v/%v", groupIDToken, groupID, userIDToken, userID)))
 }
 
 func (en *EnRestful) restRemoveUserFromGroup(request *restful.Request, response *restful.Response) {
@@ -154,12 +152,11 @@ func (en *EnRestful) restCreateUser(request *restful.Request, response *restful.
 		en.setError(response, http.StatusPreconditionFailed, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(en.getUserURLPath(request, id))
+	response.WriteHeaderAndEntity(http.StatusCreated, en.getUserURLPath(request, id))
 }
 
 func (en EnRestful) restGetEntityManager(request *restful.Request, response *restful.Response) {
-	response.WriteEntity(en.st.UsersList)
+	response.WriteHeaderAndEntity(http.StatusOK, en.st.UsersList)
 }
 
 func (en EnRestful) restGetUser(request *restful.Request, response *restful.Response) {
@@ -169,7 +166,7 @@ func (en EnRestful) restGetUser(request *restful.Request, response *restful.Resp
 		en.setError(response, http.StatusNotFound, fmt.Errorf("User "+id+" could not be found."))
 		return
 	}
-	response.WriteEntity(user)
+	response.WriteHeaderAndEntity(http.StatusOK, user)
 }
 
 func (en *EnRestful) restRemoveAllUsers(request *restful.Request, response *restful.Response) {
@@ -209,8 +206,7 @@ func (en *EnRestful) restCreateResource(request *restful.Request, response *rest
 		en.setError(response, http.StatusPreconditionFailed, err)
 		return
 	}
-	response.WriteHeader(http.StatusCreated)
-	response.WriteEntity(en.getResourceURLPath(request, id))
+	response.WriteHeaderAndEntity(http.StatusCreated, en.getResourceURLPath(request, id))
 }
 
 func (en EnRestful) restGetResource(request *restful.Request, response *restful.Response) {
@@ -220,7 +216,7 @@ func (en EnRestful) restGetResource(request *restful.Request, response *restful.
 		en.setError(response, http.StatusNotFound, fmt.Errorf("Resource "+id+" could not be found."))
 		return
 	}
-	response.WriteEntity(user)
+	response.WriteHeaderAndEntity(http.StatusOK, user)
 }
 
 func (en *EnRestful) restRemoveAllResources(request *restful.Request, response *restful.Response) {

@@ -84,13 +84,13 @@ func testAddCheckRemoveUserProperty(t *testing.T, propertyName string, moduleDat
 }
 
 func Test_AddCheckRemoveOtpUserProperty(t *testing.T) {
-	moduleData, _ := otp.NewSimpleOtpUser(secret)
+	moduleData, _ := otp.NewSimpleOtpUser(secret, false)
 
 	testAddCheckRemoveUserProperty(t, defs.OtpPropertyName, moduleData)
 }
 
 func Test_AddCheckRemovePwdUserProperty(t *testing.T) {
-	moduleData, _ := password.NewUserPwd(secret, salt)
+	moduleData, _ := password.NewUserPwd(secret, salt, false)
 
 	testAddCheckRemoveUserProperty(t, defs.PwdPropertyName, moduleData)
 }
@@ -102,7 +102,7 @@ func Test_AddCheckRemoveOcraUserProperty(t *testing.T) {
 }
 
 func Test_AddCheckRemoveAMUserProperty(t *testing.T) {
-	moduleData, _ := am.NewUserAm(am.SuperUserPermission, secret, salt)
+	moduleData, _ := am.NewUserAm(am.SuperUserPermission, secret, salt, false)
 
 	testAddCheckRemoveUserProperty(t, defs.AmPropertyName, moduleData)
 }
