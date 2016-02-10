@@ -4,7 +4,7 @@
 // The data structure is:
 // 	- Entity's privilege (Super user, Admin or User)
 // 	- Password related information and handling methods including:
-//	- The current passwordpassw
+//	- The current password
 //	- The password's expiration time
 //	- Old passwords that should be avoided. If there is an attempt to reused an old the user is flagged.
 //	- Error counter: counts the number of consecutive unsuccessful authentication attempts
@@ -14,14 +14,11 @@ package accounts
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"reflect"
 	"sync"
 	"time"
 
 	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
-	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 	"github.com/ibm-security-innovation/libsecurity-go/password"
 	"github.com/ibm-security-innovation/libsecurity-go/salt"
 	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
@@ -68,10 +65,6 @@ func init() {
 	usersPrivilege[AdminPermission] = ""
 
 	defs.Serializers[defs.AmPropertyName] = &Serializer{}
-}
-
-func (u *AmUserInfo) setLogger(severity string, fileName string) {
-	logger.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
 }
 
 // NewUserAm : Generate and return a new Account Management object using the given priviledge, password and salt (in case they are valid)
@@ -137,7 +130,7 @@ func (u *AmUserInfo) UpdateUserPwd(userName string, currentPwd []byte, pwd []byt
 
 // ResetUserPwd : Update the AM property password to a random password and set the expiration time
 // The password will be updated only if the new password is valid and the curent password matches the given one
-func (u *AmUserInfo) ResetUserPwd(userName string) ([]byte, error) {
+func (u *AmUserInfo) ResetUserPwd() ([]byte, error) {
 	newPwd, err := u.Pwd.ResetPassword()
 	if err != nil {
 		return nil, err

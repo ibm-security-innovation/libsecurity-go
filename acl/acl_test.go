@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"testing"
+	"reflect"
 
 	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	en "github.com/ibm-security-innovation/libsecurity-go/entity"
@@ -436,15 +437,21 @@ func Test_StoreLoad(t *testing.T) {
 		fmt.Println(err)
 	}
 
+	as := defs.Serializers[defs.AclPropertyName]	
 	for n := range el.Resources {
 		tmpE, _ := el.GetPropertyAttachedToEntity(n, defs.AclPropertyName)
 		a := tmpE.(*Acl)
 		tmpE1, _ := entityManager1.GetPropertyAttachedToEntity(n, defs.AclPropertyName)
 		a1 := tmpE1.(*Acl)
-		if a.IsEqual(*a1) == false {
+		if a.IsEqual(*a1) == false || as.IsEqualProperties(a, a1) == false {
 			t.Errorf("Test fail, Stored ACL property != loaded one")
 			fmt.Println("The stored ACL for resource:", n, a)
 			fmt.Println("The loaded ACL for resource:", n, a1)
+		}
+		eq := reflect.DeepEqual(a.GetAllPermissions(), a1.GetAllPermissions())
+		logger.Trace.Println("Data:", as.PrintProperties(a))
+		if eq == false {
+			t.Errorf("Test fail, Stored ACL permissions %v != loaded one %v", a.GetAllPermissions(), a1.GetAllPermissions())
 		}
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 )
 
 const (
@@ -214,15 +215,19 @@ func addRemoveProperty(t *testing.T, typeStr string) {
 
 	if typeStr == userTypeStr {
 		u, _ := newUser(entityName)
+		logger.Trace.Println("The data is:", u.String())
 		e = u.Entity
 	} else if typeStr == groupTypeStr {
 		g, _ := newGroup(entityName)
+		u, _ := newUser(entityName)
+		g.addUserToGroup(u.Name)
 		e = g.Entity
 	} else {
 		r, _ := newResource(entityName)
+		logger.Trace.Println("The data is:", r.String())
 		e = r.Entity
 	}
-	err := e.addProperty("try", "try1")
+	err := e.addProperty("try", []string{"try1", "try2"})
 	if err == nil {
 		t.Errorf("Test fail: Undefined property was added to the entity %v", err)
 	}
@@ -231,6 +236,7 @@ func addRemoveProperty(t *testing.T, typeStr string) {
 		t.Errorf("Test fail: %v", err)
 		t.FailNow()
 	}
+	logger.Trace.Println("The data is:", e.String())
 	for _, exp := range expected {
 		_, err := removeProperty(&e, propertyList, exp)
 		if err != nil {

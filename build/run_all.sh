@@ -27,7 +27,7 @@ do
    then
       ./generate.sh
    else
-      go test | tee -a $cpwd/tmp-res
+      go test -cover | tee -a $cpwd/tmp-res
       go build github.com/ibm-security-innovation/libsecurity-go/$c
       go install github.com/ibm-security-innovation/libsecurity-go/$c
    fi

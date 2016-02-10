@@ -13,6 +13,7 @@ import (
 
 func GenerateUserData(el *EntityManager, usersName []string, secret []byte, salt []byte) {
 	el.AddUser(usersName[0])
+	el.AddResource("r"+usersName[0])
 	amData, _ := am.NewUserAm(am.SuperUserPermission, secret, salt, false)
 	el.AddPropertyToEntity(usersName[0], defs.AmPropertyName, amData)
 	otpData, _ := otp.NewSimpleOtpUser(secret, false)

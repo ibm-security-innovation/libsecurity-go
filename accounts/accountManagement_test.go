@@ -2,19 +2,25 @@ package accounts
 
 import (
 	"io/ioutil"
+//	"fmt"
 	"testing"
 	"time"
+	"os"
 
 	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 	"github.com/ibm-security-innovation/libsecurity-go/password"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
-const ()
+const (
+)
 
 var (
 	defaultUserName = "User1"
 	defaultPassword []byte
 	defaultSalt     = []byte("salt123")
+	secret = []byte("12345678")
 )
 
 func init() {
@@ -92,6 +98,9 @@ func Test_equalAM(t *testing.T) {
 	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
 	userAm1, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
 
+	if userAm.IsEqual(nil, false) == true {
+		t.Errorf("Test fail: Unequal AM found equal with nil")
+	}
 	for p := range usersPrivilege {
 		userAm1.UpdateUserPrivilege(p)
 		for _, pass := range pwd {
@@ -136,14 +145,81 @@ func Test_IsPasswordMatch(t *testing.T) {
 }
 
 func Test_IsPasswordMatch_Should_Not_Allow_Second_Login_With_Temporary_Password(t *testing.T) {
+	pwd := defaultPassword
+
+	for i:=0 ; i<2 ; i++ {
+		userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
+		if i == 0 {
+			userAm.Pwd.SetTemporaryPwd(true)
+		}else {
+			pwd, _ = userAm.ResetUserPwd()
+		}
+		err1 := userAm.IsPasswordMatch(pwd)
+		if err1 != nil {
+			t.Errorf("Correct password wasn't matched, error %v", err1)
+		}
+		err2 := userAm.IsPasswordMatch(pwd)
+		if err2 == nil {
+			t.Errorf("Expected temporary password to fail in second login attempt, after it was used once")
+		}
+	}
+}
+
+// Test corners: String, logger etc
+func Test_corners(t *testing.T) {
 	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
-	userAm.Pwd.SetTemporaryPwd(true)
-	err1 := userAm.IsPasswordMatch(defaultPassword)
-	if err1 != nil {
-		t.Errorf("Correct password wasn't matched, error %v", err1)
+	logger.Init(ioutil.Discard, ioutil.Discard, os.Stdout, os.Stderr)
+	logger.Trace.Println("The user info is", userAm.String())
+	privileges := GetUsersPrivilege()
+	for p := range privileges {
+		if p != UserPermission && p != SuperUserPermission && p != AdminPermission {
+			t.Errorf("Unknown permission index '%v'", p)
+		}
 	}
-	err2 := userAm.IsPasswordMatch(defaultPassword)
-	if err2 == nil {
-		t.Errorf("Expected temporary password to fail in second login attempt, after it was used once")
+}
+
+func Test_StoreLoad(t *testing.T) {
+	filePath := "./tmp.txt"
+	key := "am1"
+
+	storage, err := ss.NewStorage(secret, false)
+	if err != nil {
+		t.Fatal("Fatal error: can't create storage, error: %v", err)
 	}
+	s := defs.Serializers[defs.AmPropertyName]	
+	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
+	err = s.AddToStorage(key, userAm, storage)
+	if err != nil {
+		t.Fatal("Fatal error: can't add to storage, error:", err)
+	}
+	storage.StoreInfo(filePath)	
+	storage, err = ss.LoadInfo(filePath, secret)
+	if err != nil {
+		t.Fatal("Fatal error: can't load from storage, error:", err)
+	}
+	_, err = s.ReadFromStorage(key, nil)
+	loadStorage := storage.GetDecryptStorageData()
+
+	if err == nil {
+		t.Fatal("Fatal error: Read pass but storage is nil")
+	}
+	_, err = s.ReadFromStorage("", loadStorage)
+	if err == nil {
+		t.Fatal("Fatal error: Read pass but the key is empty")
+	}
+	_, err = s.ReadFromStorage(key, loadStorage)
+	if err != nil {
+		t.Fatal("Fatal error: can't load from storage, error:", err)
+	}
+	data, err := s.ReadFromStorage(key, loadStorage)
+	if err != nil {
+		t.Fatal("Fatal error: can't read from storage, error:", err)
+	}
+	if s.IsEqualProperties(userAm, data) == false {
+		t.Fatal("Fatal error: Data read from storage:", s.PrintProperties(data), "is not equal to the one that was write to storage:", userAm)
+	}
+	if s.IsEqualProperties(userAm, "") == true {
+		t.Fatal("Fatal error: unequal properies were found equal")
+	}
+	logger.Trace.Println("Data:", s.PrintProperties(data))
 }

@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"math"
 	"testing"
+	"io/ioutil"
 	"time"
 
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 	am "github.com/ibm-security-innovation/libsecurity-go/accounts"
+	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 )
 
@@ -196,6 +199,7 @@ func Test_AddGetRemoveEntity(t *testing.T) {
 // Verift that 2 entity list are equal only if all their data is equal
 func Test_EntityManagerIsEqual(t *testing.T) {
 	names := []string{"g1", "g2", "g3"}
+	resourceNames := []string{"r1", "r2"}
 	userName := "user1"
 	len := 3
 	var el [3]*EntityManager
@@ -214,6 +218,13 @@ func Test_EntityManagerIsEqual(t *testing.T) {
 	el[2].AddPropertyToEntity(getGroupFormat(names[1]), defs.AmPropertyName, a1)
 	el[1].AddUser(userName)
 	el[1].AddUserToGroup(getGroupFormat(names[1]), userName)
+	logger.Trace.Println("Entity data", el[1].String(), el[1].GetGroupUsers(getGroupFormat(names[1])))
+	if el[1].IsUserPartOfAGroup(getGroupFormat(names[1]), userName) == false {
+		t.Errorf("user '%v' should be part of group %v in entity %v\n", userName, getGroupFormat(names[1]), el[1])
+	}
+	if el[1].IsUserPartOfAGroup(names[0], userName) == true {
+		t.Errorf("user '%v' should not be part of group entity %v\n", userName, el[1])
+	}
 	el[2].RemovePropertyFromEntity(getGroupFormat(names[1]), defs.AmPropertyName)
 	for i := 0; i < len; i++ {
 		for j := 0; j < len; j++ {
@@ -221,6 +232,25 @@ func Test_EntityManagerIsEqual(t *testing.T) {
 				t.Errorf("Test fail: entity list %v:\n%v is not equal to entity list %v:\n%v", i, el[i].getEntityManagerStrWithProperties(), j, el[j].getEntityManagerStrWithProperties())
 			}
 		}
+	}
+	err := el[2].RemovePropertyFromEntity(names[1], defs.AmPropertyName)
+	if err == nil {
+		t.Errorf("Test fail: successfully removed undefined property %v", names[1])
+	}
+	el[2].AddPropertyToEntity(names[1], defs.AmPropertyName, a1)
+	err = el[2].RemovePropertyFromEntity(names[1], defs.AmPropertyName)
+	if err != nil {
+		t.Errorf("Test fail: fail to removed property %v from el %v", userName, el[2])
+	}
+	addEntities(el[2], resourceTypeStr, resourceNames, true)
+	el[2].AddPropertyToEntity(resourceNames[0], defs.AmPropertyName, a1)
+	err = el[2].RemovePropertyFromEntity(resourceNames[0], defs.AmPropertyName)
+	if err != nil {
+		t.Errorf("Test fail: fail to removed property %v from el %v, error: %v", resourceNames[0], el[2], err)
+	}
+	err = el[2].RemovePropertyFromEntity("undef1", defs.AmPropertyName)
+	if err == nil {
+		t.Errorf("Test fail: Successfully removed undefined property from el %v", el[2])
 	}
 }
 
@@ -301,9 +331,22 @@ func Test_StoreLoad(t *testing.T) {
 	GenerateUserData(usersList, usersName, secret, salt)
 	GenerateGroupList(usersList, usersName)
 	//GenerateAcl(st) // done in the acl_test
+	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard)
+	err := usersList.StoreInfo(filePath, []byte("1234"), true)
+	if err == nil {
+		t.Errorf("TEst fail: successfully store with easy password")
+	}
 	usersList.StoreInfo(filePath, secret, false)
 	usersList1 := New()
-	err := LoadInfo(filePath, secret, usersList1)
+	err = LoadInfo(filePath, secret, nil)
+	if err == nil {
+		t.Errorf("TEst fail: successfully load from nil storage")
+	}
+	err = LoadInfo("", secret, nil)
+	if err == nil {
+		t.Errorf("Test fail: successfully load from undefined file")
+	}
+	err = LoadInfo(filePath, secret, usersList1)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -311,5 +354,48 @@ func Test_StoreLoad(t *testing.T) {
 		t.Errorf("Test fail, Stored users list != loaded one")
 		fmt.Println("The stored entity list:", usersList.getEntityManagerStrWithProperties())
 		fmt.Println("The loaded entity list:", usersList1.getEntityManagerStrWithProperties())
+	}
+}
+
+// Test corners: 
+func Test_corners(t *testing.T) {
+	userName := "u1"
+	groupName := "g1"
+	u, _ := newUser(userName)
+	g, _ := newGroup(groupName)
+	g.addUserToGroup(u.Name)
+	err := g.addUserToGroup("")
+	if err == nil {
+		t.Errorf("Test fail: Success to add undefined user to group")
+	}
+	logger.Trace.Println("The data is:", g.String())
+	err = g.addGroupToStorage(groupName, nil)
+	if err == nil {
+		t.Errorf("Test fail: Add group to nil storage")
+	}
+	err = u.Entity.addEntityToStorage(groupName, nil)
+	if err == nil {
+		t.Errorf("Test fail: Add entity to nil storage")
+	}
+	err = u.Entity.addProperty(groupName, nil)
+	if err == nil {
+		t.Errorf("Test fail: Add property with nil data")
+	}
+	storage, _ := ss.NewStorage([]byte("12345678"), false)
+	err = g.addGroupToStorage(groupName, storage)
+	if err != nil {
+		t.Errorf("Test fail: Can't add group to storage")
+	}
+	_, err = readEntityFromStorage("a12", storage)
+	if err == nil {
+		t.Errorf("Test fail: undefined entity name was found in the storage")
+	}
+	_, err = readEntityFromStorage(groupName, nil)
+	if err == nil {
+		t.Errorf("Test fail: read entity from nil storage")
+	}
+	_, err = readGroupFromStorage(groupName, nil)
+	if err == nil {
+		t.Errorf("Test fail: read group from nil storage")
 	}
 }

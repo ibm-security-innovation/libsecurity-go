@@ -316,7 +316,7 @@ func (l AmRestful) restResetPwd(request *restful.Request, response *restful.Resp
 		l.setError(response, http.StatusBadRequest, fmt.Errorf("Error: root user password can't be reset"))
 		return
 	}
-	pwd, err := data.ResetUserPwd(userName)
+	pwd, err := data.ResetUserPwd()
 	if err != nil {
 		l.setError(response, http.StatusBadRequest, err)
 		return
