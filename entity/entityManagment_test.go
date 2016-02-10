@@ -3,8 +3,8 @@ package entityManagement
 import (
 	"fmt"
 	"math"
-	"testing"
 	"io/ioutil"
+	"testing"
 	"time"
 
 	logger "github.com/ibm-security-innovation/libsecurity-go/logger"

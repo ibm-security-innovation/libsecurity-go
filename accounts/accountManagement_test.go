@@ -10,7 +10,6 @@ import (
 	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 	"github.com/ibm-security-innovation/libsecurity-go/password"
 	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
-	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
 const (
@@ -178,48 +177,8 @@ func Test_corners(t *testing.T) {
 	}
 }
 
-func Test_StoreLoad(t *testing.T) {
-	filePath := "./tmp.txt"
-	key := "am1"
-
-	storage, err := ss.NewStorage(secret, false)
-	if err != nil {
-		t.Fatal("Fatal error: can't create storage, error: %v", err)
-	}
-	s := defs.Serializers[defs.AmPropertyName]	
+func Test_StoreLoadAM(t *testing.T) {
 	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
-	err = s.AddToStorage(key, userAm, storage)
-	if err != nil {
-		t.Fatal("Fatal error: can't add to storage, error:", err)
-	}
-	storage.StoreInfo(filePath)	
-	storage, err = ss.LoadInfo(filePath, secret)
-	if err != nil {
-		t.Fatal("Fatal error: can't load from storage, error:", err)
-	}
-	_, err = s.ReadFromStorage(key, nil)
-	loadStorage := storage.GetDecryptStorageData()
 
-	if err == nil {
-		t.Fatal("Fatal error: Read pass but storage is nil")
-	}
-	_, err = s.ReadFromStorage("", loadStorage)
-	if err == nil {
-		t.Fatal("Fatal error: Read pass but the key is empty")
-	}
-	_, err = s.ReadFromStorage(key, loadStorage)
-	if err != nil {
-		t.Fatal("Fatal error: can't load from storage, error:", err)
-	}
-	data, err := s.ReadFromStorage(key, loadStorage)
-	if err != nil {
-		t.Fatal("Fatal error: can't read from storage, error:", err)
-	}
-	if s.IsEqualProperties(userAm, data) == false {
-		t.Fatal("Fatal error: Data read from storage:", s.PrintProperties(data), "is not equal to the one that was write to storage:", userAm)
-	}
-	if s.IsEqualProperties(userAm, "") == true {
-		t.Fatal("Fatal error: unequal properies were found equal")
-	}
-	logger.Trace.Println("Data:", s.PrintProperties(data))
-}
+	defs.StoreLoadTest(t, userAm, defs.AmPropertyName)
+}	

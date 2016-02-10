@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	"github.com/ibm-security-innovation/libsecurity-go/salt"
 )
 
@@ -253,4 +254,11 @@ func Test_GenerateRandomPassword(t *testing.T) {
 	if cnt > 1 {
 		t.Error("Test fail: Too many random passwords:", cnt, "were the same, when choosing", itterations, "random passwords", dupPass)
 	}
+}
+
+
+func Test_StoreLoad(t *testing.T) {
+	userPwd, _ := NewUserPwd(defaultPassword, defaultSaltStr, true)
+
+	defs.StoreLoadTest(t, userPwd, defs.PwdPropertyName)
 }

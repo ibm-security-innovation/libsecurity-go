@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 )
 
 const (
@@ -94,6 +95,12 @@ func Test_OCRAIllegalKeys(t *testing.T) {
 		length := len(key)
 		hLength := length / 2 // the hex length is half the key length
 		_, err := GenerateOCRAAdvance(ocraSuite, key, "", "11111111", "", "", "")
+		if err == nil && (hLength < minSecretLen || hLength > maxSecretLen || length%2 == 1) {
+			t.Error("Test fail: Accept illegal key length:", length, length%2 == 1)
+		} else if err != nil && hLength >= minSecretLen && hLength <= maxSecretLen && length%2 == 0 {
+			t.Error("Test fail: legal key was not accepted, length:", length, "key:", key)
+		}
+		_, _, err = GenerateOCRA(key)
 		if err == nil && (hLength < minSecretLen || hLength > maxSecretLen || length%2 == 1) {
 			t.Error("Test fail: Accept illegal key length:", length, length%2 == 1)
 		} else if err != nil && hLength >= minSecretLen && hLength <= maxSecretLen && length%2 == 0 {
@@ -432,3 +439,20 @@ func Test_UpdateOCRAData(t *testing.T) {
 		}
 	}
 }
+
+func Test_StoreLoad(t *testing.T) {
+	secret := []byte("12345678")
+	ocraSuite := "OCRA-1:HOTP-SHA512-8:C-QH08-T1M-S064-PSHA256"
+
+	userOcra, err := NewOcraUser(secret, ocraSuite)
+	err = userOcra.UpdateOcraKey(secret)
+	if err != nil {
+		t.Fatal("Fatal error: OCRA key couldn't be updated, error: %v", err)
+	}
+	err = userOcra.UpdateOcraSuite(ocraSuite)
+	if err != nil {
+		t.Fatal("Fatal error: OCRA suite couldn't be updated, error: %v", err)
+	}
+
+	defs.StoreLoadTest(t, userOcra, defs.OcraPropertyName)
+}	

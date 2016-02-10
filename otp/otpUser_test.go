@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 )
 
 // TODO add totp tests: repalay attack and time drift
@@ -285,38 +287,8 @@ func Test_BlockAndUnblockUser(t *testing.T) {
 	}
 }
 
-/*
-//func Test_CheckStoreAndLoadOTPUsersInfo(t *testing.T) {
-//	usersList := NewUsers()
-//	rUsersList := NewUsers()
-//	fileName := "./tmp.txt"
-//	defer os.Remove(fileName)
-//	secret := []byte("1234567890123456")
-//	ul := um.NewUsersList()
-//
-//	for i := 0; i < 10; i++ {
-//		id := fmt.Sprintf("%v%v", DefaultUserId, i)
-//		u, _ := um.NewUser(id, nil)
-//		ul.AddUser(u)
-//		testAddDefaultUserToList(usersList, t, id, defaultThrottlingSec, ul)
-//		if i%2 == 0 {
-//			usersList.SetUserBlockedState(id, true)
-//			usersList.UsersList[id].BaseHotp.Count = 1234
-//			usersList.UsersList[id].Throttle.Cliff = 222
-//			usersList.UsersList[id].Throttle.DurationSec = 15
-//			usersList.UsersList[id].Throttle.AutoUnblockSec = 22
-//			usersList.UsersList[id].Throttle.CheckHotpWindow = 11
-//			usersList.UsersList[id].Throttle.CheckTotpWindowSec = 123
-//		}
-//	}
-//	usersList.StoreInfo(fileName, secret)
-//	LoadInfo(fileName, rUsersList, secret)
-//	dataWrite, _ := json.Marshal(usersList)
-//	dataRead, _ := json.Marshal(rUsersList)
-//	if reflect.DeepEqual(dataWrite, dataRead) == false {
-//		t.Error("Test fail: the written users list data not equal to the read one.\nwrite:", usersList, "\n read:", rUsersList)
-//	}
-//}
-//
+func Test_StoreLoad(t *testing.T) {
+	otpUser, _ := NewOtpUser(BaseSecret, true, false, defaultThrottlingLen, 10, 20, defaultHotpWindowsSize, defaultTotpWindowsSizeSec, defaultStartCounter)
 
-*/
+	defs.StoreLoadTest(t, otpUser, defs.OtpPropertyName)
+}
