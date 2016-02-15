@@ -115,22 +115,22 @@ func newThrottle(cliffLen int32, thrTimeSec time.Duration, autoUnblockSec time.D
 
 func (t throtteling) isValid() error {
 	if t.Cliff < minThrottlingCounter || t.Cliff > maxThrottlingCounter {
-		return fmt.Errorf("user struct is not valid, the used throttling counter (%v) is not in the allowed range (%v-%v)", t.Cliff, minThrottlingCounter, maxThrottlingCounter)
+		return fmt.Errorf("User struct is not valid: Throttling counter (%v) is not in the allowed range (%v-%v)", t.Cliff, minThrottlingCounter, maxThrottlingCounter)
 	}
 	if t.DurationSec < minThrottlingSec || t.DurationSec > maxThrottlingSec {
-		return fmt.Errorf("user struct is not valid, the used throttling duration value (%vs) is not in the allowed range (%vs-%vs)", t.DurationSec, minThrottlingSec, maxThrottlingSec)
+		return fmt.Errorf("User struct is not valid: Throttling duration value (%vs) is not in the allowed range (%vs-%vs)", t.DurationSec, minThrottlingSec, maxThrottlingSec)
 	}
 	if t.AutoUnblockSec > maxUnblockSec {
-		return fmt.Errorf("user struct is not valid, the automatic user unblock is %vs, which is higher than the allowed %vs", t.AutoUnblockSec, maxUnblockSec)
+		return fmt.Errorf("User struct is not valid: Automatic user unblock %vs is higher than allowed %vs", t.AutoUnblockSec, maxUnblockSec)
 	}
 	if t.CheckHotpWindow < minHotpWindowSize || t.CheckHotpWindow > maxHotpWindowSize {
-		return fmt.Errorf("user struct is not valid, the used Hotp check window (%v) is not in the allowed range: %v-%v", t.CheckHotpWindow, minHotpWindowSize, maxHotpWindowSize)
+		return fmt.Errorf("User struct is not valid: HOTP check window (%v) is not in the allowed range: %v-%v", t.CheckHotpWindow, minHotpWindowSize, maxHotpWindowSize)
 	}
 	if t.CheckTotpWindowSec < minTotpWindowSizeSec || t.CheckTotpWindowSec > maxTotpWindowSizeSec {
-		return fmt.Errorf("user struct is not valid, the used Totp check window in sec (%v) is not in the allowed range: %vs-%vs", t.CheckTotpWindowSec, minTotpWindowSizeSec, maxTotpWindowSizeSec)
+		return fmt.Errorf("User struct is not valid: TOTP check window in sec (%v) is not in the allowed range: %vs-%vs", t.CheckTotpWindowSec, minTotpWindowSizeSec, maxTotpWindowSizeSec)
 	}
 	if maxThrottlingCounter-t.consErrorCounter < minThrottlingCounter {
-		return fmt.Errorf("user struct is not valid, the initial value of consecutive errors (%v) is larger than Maximum allowed - %v", t.consErrorCounter, maxThrottlingCounter-minThrottlingCounter)
+		return fmt.Errorf("User struct is not valid: Initial value of consecutive errors (%v) is larger than maximum allowed %v", t.consErrorCounter, maxThrottlingCounter-minThrottlingCounter)
 	}
 	return nil
 }
@@ -271,7 +271,7 @@ func (u *UserInfoOtp) handleErrorCode(otpType TypeOfOtp) (bool, error) {
 	}
 	u.setBlockedState(true)
 	u.initAutoUnblockTimer()
-	return false, fmt.Errorf("too many false attempts, locked out")
+	return false, fmt.Errorf("Too many false attempts. You have been locked out")
 }
 
 func (u *UserInfoOtp) handleOkCode(code string, otpType TypeOfOtp, offset int32) (bool, error) {
@@ -310,7 +310,7 @@ func (u *UserInfoOtp) VerifyCode(code string, otpType TypeOfOtp) (bool, error) {
 		found, offset, err = u.findHotpCodeMatch(code, int32(u.Throttle.CheckHotpWindow))
 	} else {
 		if u.Throttle.lastTotpCode == code { // avoid replay attack for totp
-			return false, fmt.Errorf("the TOTP Code was already used, you will have to wait for the next time period")
+			return false, fmt.Errorf("The TOTP code was already used, you will have to wait for the next time period")
 		}
 		found, err = u.findTotpCodeMatch(code, int32(u.Throttle.CheckTotpWindowSec))
 	}
@@ -359,12 +359,12 @@ func (u *UserInfoOtp) canCheckOtpCode(otpType TypeOfOtp, timeFactorSec time.Dura
 		timer = u.Throttle.throttlingTimerTotp
 	}
 	if timer.After(time.Now().Add(time.Duration(timeFactorSec) * time.Second)) {
-		return false, fmt.Errorf("user must wait till %v before trying again. The current time is: %v",
+		return false, fmt.Errorf("User must wait untill %v before trying again. The current time is: %v",
 			timer, time.Now())
 	}
 	blocked, _ := u.isOtpUserBlockedHelper(timeFactorSec)
 	if blocked {
-		return false, fmt.Errorf("user is blocked (thus it was not checked), Please unblock the user first")
+		return false, fmt.Errorf("Please unblock the user first")
 	}
 	return true, nil
 }
@@ -397,7 +397,7 @@ func (u *UserInfoOtp) IsEqual(u1 interface{}) bool {
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*UserInfoOtp)
 	if ok == false {
-		return "can't print the OTP property it is not in the right type"
+		return "Cannot print the OTP property: Not the right type"
 	}
 	return d.String()
 }
@@ -426,10 +426,10 @@ func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.SecureStorage) error {
 	d, ok := data.(*UserInfoOtp)
 	if ok == false {
-		return fmt.Errorf("can't store the OTP property: its not in the right type")
+		return fmt.Errorf("Cannot store the OTP property: Not the right type")
 	}
 	if storage == nil {
-		return fmt.Errorf("can't add OTP property to storage, storage is nil")
+		return fmt.Errorf("Cannot add OTP property to storage: Storage is nil")
 	}
 	value, _ := json.Marshal(d)
 	err := storage.AddItem(prefix, string(value))
@@ -444,11 +444,11 @@ func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (inte
 	var user UserInfoOtp
 
 	if storage == nil {
-		return nil, fmt.Errorf("can't read AM property from storage, storage is nil")
+		return nil, fmt.Errorf("Cannot read AM property from storage: Storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if !exist {
-		return nil, fmt.Errorf("key '%v' was not found in storage", key)
+		return nil, fmt.Errorf("Key '%v' was not found in storage", key)
 	}
 	err := json.Unmarshal([]byte(value), &user)
 	if err != nil {

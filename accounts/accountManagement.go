@@ -95,7 +95,7 @@ func NewUserAm(privilege string, pass []byte, saltData []byte, checkPwdStrength 
 func IsValidPrivilege(privilege string) error {
 	_, exist := usersPrivilege[privilege]
 	if !exist {
-		return fmt.Errorf("the user privilege '%v' is not legal, it must be one of %v",
+		return fmt.Errorf("The user privilege '%v' is not legal, it must be one of %v",
 			privilege, usersPrivilege)
 	}
 	return nil
@@ -199,7 +199,7 @@ func (u AmUserInfo) IsEqual(u2 *AmUserInfo, withExpiration bool) bool {
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*AmUserInfo)
 	if ok == false {
-		return "can't print the Account management property it is not in the right type"
+		return "Cannot print the Account management property: Not the right type"
 	}
 	return d.String()
 }
@@ -221,10 +221,10 @@ func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.Se
 
 	d, ok := data.(*AmUserInfo)
 	if ok == false {
-		return fmt.Errorf("can't store the Account management property, it has an illegal type")
+		return fmt.Errorf("Cannot store the Account management property: It has an illegal type")
 	}
 	if storage == nil {
-		return fmt.Errorf("can't add AM property to storage, storage is nil")
+		return fmt.Errorf("Cannot add AM property to storage: Storage is nil")
 	}
 	value, _ := json.Marshal(d)
 	err := storage.AddItem(prefix, string(value))
@@ -239,11 +239,11 @@ func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (inte
 	var user AmUserInfo
 
 	if storage == nil {
-		return nil, fmt.Errorf("can't read AM property from storage, storage is nil")
+		return nil, fmt.Errorf("Cannot read AM property from storage: Storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if exist == false {
-		return nil, fmt.Errorf("key '%v' was not found", key)
+		return nil, fmt.Errorf("Key '%v' was not found", key)
 	}
 	err := json.Unmarshal([]byte(value), &user)
 	if err != nil {

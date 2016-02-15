@@ -83,7 +83,7 @@ func (l LibsecurityRestful) verifyUserPermissions(req *restful.Request, resp *re
 
 	tokenStr := l.getCookieAccessTokenValue(req)
 	if tokenStr == "" {
-		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("You need to authenticate first"))
+		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("Authentication is required"))
 		return false
 	}
 	isPrivilegeOk, err := app.IsPrivilegeOk(tokenStr, userPermission, getIPAddress(req), l.verifyKey)
@@ -105,7 +105,7 @@ func (l LibsecurityRestful) isUpdatePasswordOnly(req *restful.Request, resp *res
 
 	tokenStr := l.getCookieAccessTokenValue(req)
 	if tokenStr == "" {
-		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("You need to authenticate first"))
+		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("Authentication is required"))
 		return false
 	}
 	isUpdatePasswordOnly, err := app.IsUpdatePasswordOnlySet(tokenStr, getIPAddress(req), l.verifyKey)
@@ -133,7 +133,7 @@ func (l LibsecurityRestful) sameUserFilterCheckPasswordUpdate(req *restful.Reque
 	logger.Trace.Println("SameUserFilter: user name:", name)
 	tokenStr := l.getCookieAccessTokenValue(req)
 	if tokenStr == "" {
-		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("You need to authenticate first"))
+		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("Authentication is required"))
 		return
 	}
 	isUserMatch, err := app.IsItTheSameUser(tokenStr, name, getIPAddress(req), l.verifyKey)
@@ -144,7 +144,7 @@ func (l LibsecurityRestful) sameUserFilterCheckPasswordUpdate(req *restful.Reque
 	isPrivilegeOk, _ := app.IsPrivilegeOk(tokenStr, am.SuperUserPermission, getIPAddress(req), l.verifyKey)
 	if isPrivilegeOk == false && isUserMatch == false {
 		tokenData, _ := app.ParseToken(tokenStr, getIPAddress(req), l.verifyKey)
-		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("User '%v' is not permited to do the operation, only the same user or root can execute it", tokenData.UserName))
+		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("User '%v' is not permitted to run the operation, Only root or the user can run it.", tokenData.UserName))
 		return
 	}
 	if passwordUpdateOnly == true {
@@ -171,7 +171,7 @@ func (l LibsecurityRestful) SameUserUpdatePasswordFilter(req *restful.Request, r
 func (l LibsecurityRestful) VerifyToken(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	tokenStr := l.getCookieAccessTokenValue(req)
 	if tokenStr == "" {
-		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("You need to authenticate first"))
+		l.setError(resp, http.StatusMethodNotAllowed, fmt.Errorf("Authentication is required"))
 		return
 	}
 	_, err := app.ParseToken(tokenStr, getIPAddress(req), l.verifyKey)

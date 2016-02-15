@@ -151,7 +151,7 @@ func isValidData(secret []byte) error {
 
 func isValidSecret(secret []byte) error {
 	if len(secret) == 0 {
-		return fmt.Errorf("key length must be at least 1 byte long")
+		return fmt.Errorf("Key length must be at least 1 byte long")
 	}
 	return nil
 }
@@ -193,7 +193,7 @@ func (s *SecureStorage) GetItem(key string) (string, error) {
 	}
 	val, exist := s.Data[cipherKey]
 	if !exist {
-		return "", fmt.Errorf("key '%v' was not found", key)
+		return "", fmt.Errorf("Key '%v' was not found", key)
 	}
 	value, err := s.decrypt([]byte(val))
 	if err != nil {
@@ -222,7 +222,7 @@ func (s *SecureStorage) RemoveItem(key string) error {
 	}
 	_, exist := s.Data[cipherKey]
 	if !exist {
-		return fmt.Errorf("key '%v' was not found", key)
+		return fmt.Errorf("Key '%v' was not found", key)
 	}
 	delete(s.Data, cipherKey)
 	return nil
@@ -233,7 +233,7 @@ func (s SecureStorage) encrypt(text []byte, fixedIv bool, inIv string) (string, 
 
 	block, err := aes.NewCipher(s.secret)
 	if err != nil {
-		return "", fmt.Errorf("during encryption: '%v', error: %v", text, err)
+		return "", fmt.Errorf("Error during encryption: '%v', %v", err, text)
 	}
 
 	data := text
@@ -253,7 +253,7 @@ func (s SecureStorage) encrypt(text []byte, fixedIv bool, inIv string) (string, 
 		copy(iv, []byte(str)[:aes.BlockSize])
 	}
 	if err != nil {
-		return "", fmt.Errorf("during encryption: '%v', error: %v", text, err)
+		return "", fmt.Errorf("Error during encryption: '%v', %v", err, text)
 	}
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[aes.BlockSize:], []byte(b))
@@ -272,7 +272,7 @@ func (s SecureStorage) getRandomFromKey(key string) (string, string, error) {
 	hKey := s.getHKey(key)
 	val, exist := s.Data[hKey]
 	if !exist {
-		return "", "", fmt.Errorf("key '%v' was not found", key)
+		return "", "", fmt.Errorf("Key '%v' was not found", key)
 	}
 	return hKey, string(val), nil
 }
@@ -310,7 +310,7 @@ func (s SecureStorage) decrypt(text1 []byte) (string, error) {
 		return "", fmt.Errorf("during decryption: '%v', error: %v", text, err)
 	}
 	if len(text) < aes.BlockSize {
-		return "", fmt.Errorf("during decryption: ciphertext too short")
+		return "", fmt.Errorf("Error during decryption: Ciphertext too short")
 	}
 	iv := text[:aes.BlockSize]
 	dtext := text[aes.BlockSize:]
@@ -334,14 +334,14 @@ func LoadInfo(fileName string, secret []byte) (*SecureStorage, error) {
 	var s SecureStorage
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("can't read Secure storage from file: '%v'", fileName)
+		return nil, fmt.Errorf("Cannot read secure storage from file: '%v'", fileName)
 	}
 	json.Unmarshal(data, &s)
 	sData, _ := json.Marshal(s.Data)
 	pass := getSaltedPass(secret, s.Salt)
 	sign := s.calcHMac(sData, pass)
 	if bytes.Compare(sign, s.Sign) != 0 {
-		return nil, fmt.Errorf("the file '%v' is not genuine", fileName)
+		return nil, fmt.Errorf("The file '%v' is not genuine", fileName)
 	}
 	s.secret = pass
 	return &s, nil
@@ -357,7 +357,7 @@ func (s SecureStorage) StoreInfo(fileName string) error {
 	s.Sign = s.calcHMac(sData, s.secret)
 	data, err := json.Marshal(s)
 	if err != nil {
-		return fmt.Errorf("attempt to translate the Secure storage to JSON failed, error: %v", err)
+		return fmt.Errorf("Attempt to translate the secure storage to JSON failed eith error: %v", err)
 	}
 	// If a uniq file name is not found within 10 attemps assume that there is another problem
 	for i := 0; i < 10; i++ {
@@ -435,7 +435,7 @@ func isSecretStrengthOk(pass string) error {
 	}
 	if len(pass) < minSecretLen || extraCnt < minExtraChars || digitCnt < minDigits ||
 		upperCaseCnt < minUpperCase || lowerCaseCnt < minLowerCase {
-		return fmt.Errorf("The secure storage secret does not pass the secret strength test. In order to be strong, the password must contain at least %v characters, and include at least: %v digits, %v letters (%v must be upper-case and %v must be lower-case) and %v extra character from the list bellow.\nList of possible extra characters: '%v'",
+		return fmt.Errorf("The secure storage secret does not pass the secret strength test. In order to be strong, the password must adhere to all of the following:\nContains at least %v characters\nInclude at least: %v digits\nInclude at least %v letters where at least %v must be upper-case and at least %v must be lower-case\nInclude at least %v special characters from the following list:\nSpecial characters: '%v'",
 			minSecretLen, minDigits, minUpperCase+minLowerCase, minUpperCase, minLowerCase, minExtraChars, extraCharStr)
 	}
 	return nil

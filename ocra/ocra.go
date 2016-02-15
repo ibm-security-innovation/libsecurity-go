@@ -122,14 +122,14 @@ var (
 	dataInputTimeStampTokenRegExp    = regexp.MustCompile(fmt.Sprintf(dataInputTokenFmt, ocraSuiteDataInputSplitToken, ocraSuiteDataInputTimeStampToken))
 )
 
-// UserOcra : structure that holds the OCRA suite as defined in the RFC and the secret key
+// UserOcra : structure that holds the OCRA Suite as defined in the RFC and the secret key
 type UserOcra struct {
 	OcraSuite string
 	Key       []byte
 }
 
 func (u UserOcra) String() string {
-	return fmt.Sprintf("Key: %v, OCRA suite %v", u.Key, u.OcraSuite)
+	return fmt.Sprintf("Key: %v, OCRA Suite %v", u.Key, u.OcraSuite)
 }
 
 type parseData struct {
@@ -203,7 +203,7 @@ func numericStrToByte(str string) ([]byte, error) {
 	n := &big.Int{}
 	_, ok := n.SetString(str, 10)
 	if ok == false {
-		return nil, fmt.Errorf("the string: %v is not a decimal string", str)
+		return nil, fmt.Errorf("The string '%v' is not a decimal string", str)
 	}
 	ret := fmt.Sprintf("%X", n)
 	if len(ret)%2 == 1 {
@@ -212,7 +212,7 @@ func numericStrToByte(str string) ([]byte, error) {
 	return hex.DecodeString(ret)
 }
 
-// If 'counter handling' is defined in the OCRA suite, extract the information from the
+// If 'counter handling' is defined in the OCRA Suite, extract the information from the
 // given counter string, append it to the predefined length and return it as a byte array
 func handleCounter(dataInput string, counter string, p parseData) ([]byte, error) {
 	length, err := p.cFunc(dataInput, "", p)
@@ -231,7 +231,7 @@ func handleCounter(dataInput string, counter string, p parseData) ([]byte, error
 	return c2, nil
 }
 
-// Extract the information from the given question string (using the OCRA suite question type: Alfabet, Hex or Numeric),
+// Extract the information from the given question string (using the OCRA Suite question type: Alfabet, Hex or Numeric),
 //  append it to the predefined length and return it as a byte array
 func handleQuestion(dataInput string, question string, p parseData) ([]byte, error) {
 	var q1, q2 []byte
@@ -254,7 +254,7 @@ func handleQuestion(dataInput string, question string, p parseData) ([]byte, err
 	return q2, nil
 }
 
-// If 'password handling' is defined in the OCRA suite, extract and verify that the information from the
+// If 'password handling' is defined in the OCRA Suite, extract and verify that the information from the
 // given password string matches the predefined password options,
 // append it to the predefined length and return it as byte array
 func handlePassword(dataInput string, password string, p parseData) ([]byte, error) {
@@ -262,7 +262,7 @@ func handlePassword(dataInput string, password string, p parseData) ([]byte, err
 
 	pass, _, err := extractDataInputToken(dataInput, p)
 	if err != nil {
-		return nil, fmt.Errorf("OCRA suite %v: password error: %v", dataInput, err)
+		return nil, fmt.Errorf("OCRA Suite %v: Password error: %v", dataInput, err)
 	}
 
 	if len(pass) == 0 {
@@ -281,14 +281,14 @@ func handlePassword(dataInput string, password string, p parseData) ([]byte, err
 	return p2, nil
 }
 
-// If 'session handling' is defined in the OCRA suite, extract the information from the
+// If 'session handling' is defined in the OCRA Suite, extract the information from the
 // given session string, append it to the extracted length and return it as a byte array
 func handleSession(dataInput string, session string, p parseData) ([]byte, error) {
 	var s2 []byte
 
 	ses, _, err := extractDataInputToken(dataInput, p)
 	if err != nil {
-		return nil, fmt.Errorf("OCRA suite %v: session error: %v", dataInput, err)
+		return nil, fmt.Errorf("OCRA Suite %v: Session error: %v", dataInput, err)
 	}
 	if len(ses) == 0 {
 		return nil, nil
@@ -306,14 +306,14 @@ func handleSession(dataInput string, session string, p parseData) ([]byte, error
 	return s2, nil
 }
 
-// If 'timeStamp handling' is defined in the OCRA suite, extract the information from the
+// If 'timeStamp handling' is defined in the OCRA Suite, extract the information from the
 // given timeStamp string, append it to the predefined length and return it as a byte array
 func handleTimeStamp(dataInput string, timeStamp string, p parseData) ([]byte, error) {
 	var t2 []byte
 
 	t, _, err := extractDataInputToken(dataInput, p)
 	if err != nil {
-		return nil, fmt.Errorf("OCRA suite %v: time stamp error: %v", dataInput, err)
+		return nil, fmt.Errorf("OCRA Suite %v: Time stamp error: %v", dataInput, err)
 	}
 	if len(t) == 0 {
 		return t2, nil
@@ -329,7 +329,7 @@ func handleTimeStamp(dataInput string, timeStamp string, p parseData) ([]byte, e
 }
 
 // Generate the data input to be used by the OCRA hash function.
-// This function uses the OCRA suite as guidence for the relevant part of the OCRA suite input strings
+// This function uses the OCRA Suite as guidence for the relevant part of the OCRA Suite input strings
 func getDataInput(dataInput string, counter, question, password, session, timeStamp string) ([]byte, error) {
 	ret := []byte{}
 	val := []string{counter, question, password, session, timeStamp}
@@ -344,19 +344,19 @@ func getDataInput(dataInput string, counter, question, password, session, timeSt
 	return ret, nil
 }
 
-// Parse the OCRA suite string, the OCRA suite format:
+// Parse the OCRA Suite string, the OCRA Suite format:
 // An OCRASuite value is a text string that captures one mode of operation for OCRA,
 //   <Algorithm>:<CryptoFunction>:<DataInput>
 func parseOcraString(ocraSuite string) ([]string, error) {
 	data := strings.Split(ocraSuite, ocraSuiteSplitToken)
 	if len(data) != ocraSuiteNumOfFields {
-		return nil, fmt.Errorf("OcraSuite string '%v' is invalid, it must contains %v fields, seperated by %v",
+		return nil, fmt.Errorf("OCRA Suite string '%v' is invalid: It must contains %v fields, separated by %v",
 			ocraSuite, ocraSuiteNumOfFields, ocraSuiteSplitToken)
 	}
 	return data, nil
 }
 
-// This function extracts the OCRA suite crypto function:
+// This function extracts the OCRA Suite crypto function:
 //  The format of the crypto function is: "HOTP-H-t:".
 //    An HMAC function is used with the hash function H, when
 //		the options for H are: SHA1, SHA256 and SHA512,
@@ -366,12 +366,12 @@ func parseCryptoString(crypto string) (hashesData, error) {
 		if strings.Index(crypto, h.name) != -1 {
 			data := strings.Split(crypto, ocraSuiteDigitSplitToken)
 			if data[ocraSuiteProtocolIdx] != ocraSuiteProtocolToken {
-				return hashesData{}, fmt.Errorf("the protocol in OcraSuite crypto string %v is illegal, the format must be of the form: HOTP-H-t", crypto)
+				return hashesData{}, fmt.Errorf("The protocol in OCRA Suite crypto string %v is illegal: The format must be of the form: HOTP-H-t", crypto)
 			}
 			val, err := strconv.Atoi(data[ocraSuiteHashLengthIdx])
 			_, exists := ocraValidOutputLengthMap[val]
 			if err != nil || exists == false {
-				return hashesData{}, fmt.Errorf("number of digits to present in OcraSuite crypto string: %v is illegal, the format must beof the form: HOTP-H-t and t must be a number from %v", crypto, ocraValidOutputLength)
+				return hashesData{}, fmt.Errorf("Number of digits to present in OCRA Suite crypto string: %v is illegal: The format must beof the form: HOTP-H-t and t must be a number from %v", crypto, ocraValidOutputLength)
 			}
 			if val > 0 {
 				h.length = val
@@ -381,7 +381,7 @@ func parseCryptoString(crypto string) (hashesData, error) {
 			return h, nil
 		}
 	}
-	return hashesData{}, fmt.Errorf("illegal ocraSuite crypto string: %v. The Crypto function must be of the form: %v", crypto, hashes)
+	return hashesData{}, fmt.Errorf("Illegal OCRA Suite crypto string: %v. The Crypto function must be of the form: %v", crypto, hashes)
 }
 
 // Return the extracted data input token (if exists) to be handled by the relevant function
@@ -392,7 +392,7 @@ func extractDataInputToken(dataInput string, p parseData) (string, []string, err
 		length = length + 1
 	}
 	if length > 1 {
-		return "", nil, fmt.Errorf("data input '%v' format is illegal: it contains parameter '%v', which is valid, more than once, %v", dataInput, param, length)
+		return "", nil, fmt.Errorf("Data input '%v' format is illegal: It contains parameter '%v', which is valid, more than once, %v", dataInput, param, length)
 	}
 	vec := p.parse.FindStringSubmatch(dataInput)
 
@@ -406,7 +406,7 @@ func extractDataInputToken(dataInput string, p parseData) (string, []string, err
 func checkOcraDataInputPasswordValidity(dataInput, _ string, p parseData) (int, error) {
 	password, _, err := extractDataInputToken(dataInput, p)
 	if err != nil {
-		return -1, fmt.Errorf("OCRA suite %v: password error: %v", dataInput, err)
+		return -1, fmt.Errorf("OCRA Suite %v: Password error: %v", dataInput, err)
 	}
 
 	if len(password) == 0 {
@@ -417,14 +417,14 @@ func checkOcraDataInputPasswordValidity(dataInput, _ string, p parseData) (int, 
 			return len(password), nil
 		}
 	}
-	return -1, fmt.Errorf("OCRA suite %v password: %v format is illegal, it should be of the form PH where H must be one of %v", dataInput, password, passwords)
+	return -1, fmt.Errorf("OCRA Suite %v password: %v format is illegal, it should be of the form PH where H must be one of %v", dataInput, password, passwords)
 }
 
 // Verify that the counter format is valid. A Valid format should be the counter as the prefix of the dat ainput without any extra characters
 func checkOcraDataInputCounterValidity(dataInput, _ string, p parseData) (int, error) {
 	counter, _, err := extractDataInputToken(dataInput, p)
 	if err != nil {
-		return -1, fmt.Errorf("OCRA suite %v: counter error: %v", dataInput, err)
+		return -1, fmt.Errorf("OCRA Suite %v: counter error: %v", dataInput, err)
 	}
 
 	if len(counter) == 0 {
@@ -432,7 +432,7 @@ func checkOcraDataInputCounterValidity(dataInput, _ string, p parseData) (int, e
 	} else if len(counter) == 1 {
 		return len(counter), nil
 	}
-	return -1, fmt.Errorf("OCRA suite %v counter: %v format must be %v%v", dataInput, counter, ocraSuiteDataInputCounterToken, ocraSuiteDataInputSplitToken)
+	return -1, fmt.Errorf("OCRA Suite %v counter: %v format must be %v%v", dataInput, counter, ocraSuiteDataInputCounterToken, ocraSuiteDataInputSplitToken)
 }
 
 // Verify that the time stamp format is valid
@@ -440,7 +440,7 @@ func checkOcraDataInputCounterValidity(dataInput, _ string, p parseData) (int, e
 func checkOcraDataInputTimeStampValidity(dataInput, _ string, p parseData) (int, error) {
 	timeStamp, _, err := extractDataInputToken(dataInput, p)
 	if err != nil {
-		return -1, fmt.Errorf("OCRA suite %v: time stamp error: %v", dataInput, err)
+		return -1, fmt.Errorf("OCRA Suite %v: time stamp error: %v", dataInput, err)
 	}
 	if len(timeStamp) == 0 {
 		return -1, nil
@@ -449,7 +449,7 @@ func checkOcraDataInputTimeStampValidity(dataInput, _ string, p parseData) (int,
 	data := string(timeStampRegExp.Find([]byte(timeStamp)))
 	logger.Info.Println("data input", dataInput, "time stamp", timeStamp, "data", data, "len:", len(data), len(timeStamp))
 	if len(data) != len(timeStamp) {
-		return 0, fmt.Errorf("OCRA suite %v TimeStamp: %v format must be of the form TV where V must be one of [1-59]S or [1-59]M or [0-48]H", dataInput, timeStamp)
+		return 0, fmt.Errorf("OCRA Suite %v TimeStamp: %v format must be of the form TV where V must be one of [1-59]S or [1-59]M or [0-48]H", dataInput, timeStamp)
 	}
 	return -1, nil
 }
@@ -458,13 +458,13 @@ func checkOcraDataInputTimeStampValidity(dataInput, _ string, p parseData) (int,
 func checkOcraDataInputSessionValidity(dataInput, _ string, p parseData) (int, error) {
 	session, _, err := extractDataInputToken(dataInput, p)
 	if err != nil {
-		return -1, fmt.Errorf("OCRA suite %v: session error: %v", dataInput, err)
+		return -1, fmt.Errorf("OCRA Suite %v: session error: %v", dataInput, err)
 	}
 	if len(session) == 0 {
 		return 0, nil
 	}
 	if len(session) < 4 {
-		return 0, fmt.Errorf("OCRA suite data input %v, session: %v must be in the format Snnn", dataInput, session)
+		return 0, fmt.Errorf("OCRA Suite data input %v, session: %v must be in the format Snnn", dataInput, session)
 	}
 	return strconv.Atoi(session[1:4])
 }
@@ -476,14 +476,14 @@ func parseQuestion(dataInput string, p parseData) (string, int, error) {
 
 	// Verify that the question length is valid
 	if len(vec) < 3 {
-		return "", -1, fmt.Errorf("OCRA suite %v question format length must be 4: QFnn, vec %v", dataInput, vec)
+		return "", -1, fmt.Errorf("OCRA Suite %v question format length must be 4: QFnn, vec %v", dataInput, vec)
 	}
 
 	format := vec[1]
 
 	length, err := strconv.Atoi(vec[2])
 	if err != nil || length < minOcraSuiteDataInputQuestionLength || length > maxOcraSuiteDataInputQuestionLength {
-		return "", -1, fmt.Errorf("OCRA suite %v question format must be of the form QFxx where xx range is %v-%v",
+		return "", -1, fmt.Errorf("OCRA Suite %v question format must be of the form QFxx where xx range is %v-%v",
 			dataInput, minOcraSuiteDataInputQuestionLength, maxOcraSuiteDataInputQuestionLength)
 	}
 	logger.Info.Println("data input:", dataInput, "format:", format, "length:", length)
@@ -500,7 +500,7 @@ func checkOcraDataInputQuestionValidity(dataInput, question string, p parseData)
 		return -1, err
 	}
 	if len(question) < length {
-		return -1, fmt.Errorf("OCRA suite %v question '%v' length is %v but should be at least %v", dataInput, question, len(question), length)
+		return -1, fmt.Errorf("OCRA Suite %v question '%v' length is %v but should be at least %v", dataInput, question, len(question), length)
 	}
 	return length, nil
 }
@@ -517,7 +517,7 @@ func checkOcraDataInputValidity(dataInput string, question string) error {
 		}
 		if len(token) == 0 || exist == false ||
 			(strings.HasPrefix(token, ocraSuiteDataInputCounterToken) && (i > 0 || len(token) > 1)) {
-			return fmt.Errorf("OCRA suite data Input '%v' includes an undefined token '%v'", dataInput, token)
+			return fmt.Errorf("OCRA Suite data Input '%v' includes an undefined token '%v'", dataInput, token)
 		}
 	}
 
@@ -532,7 +532,7 @@ func checkOcraDataInputValidity(dataInput string, question string) error {
 
 func checkOcraProtocolValidity(ocraSuite string, protocol string) error {
 	if strings.HasPrefix(protocol, ocraSuiteOcraProtocol) == false {
-		return fmt.Errorf("OCRA suite %v must start with %v", ocraSuite, ocraSuiteOcraProtocol)
+		return fmt.Errorf("OCRA Suite %v must start with %v", ocraSuite, ocraSuiteOcraProtocol)
 	}
 	return nil
 }
@@ -541,7 +541,7 @@ func checkOcraProtocolValidity(ocraSuite string, protocol string) error {
 func isOcraKeyValid(key []byte) error {
 	_, err := hex.DecodeString(string(key))
 	if err != nil {
-		return fmt.Errorf("key '%v' is illegal, error: %v", key, err)
+		return fmt.Errorf("Key '%v' is illegal, error: %v", key, err)
 	}
 	if len(key) < minKeyLength || len(key) > maxKeyLength {
 		return fmt.Errorf("Key length is (%v) is outside the allowed range %v-%v", len(key), minKeyLength, maxKeyLength)
@@ -549,7 +549,7 @@ func isOcraKeyValid(key []byte) error {
 	return nil
 }
 
-// Check that the OCRA suite is valid by checking each of its 3 parts: <Algorithm>:<CryptoFunction>:<DataInput>
+// Check that the OCRA Suite is valid by checking each of its 3 parts: <Algorithm>:<CryptoFunction>:<DataInput>
 func isOcraSuiteValid(ocraSuite string) error {
 	data, err := parseOcraString(ocraSuite)
 	if err != nil {
@@ -563,7 +563,7 @@ func isOcraSuiteValid(ocraSuite string) error {
 	return err
 }
 
-// Check that the OCRA suite, its question and its key are valid by checking each of its 3 parts: <Algorithm>:<CryptoFunction>:<DataInput>
+// Check that the OCRA Suite, its question and its key are valid by checking each of its 3 parts: <Algorithm>:<CryptoFunction>:<DataInput>
 func isOcraDataValid(ocraSuite, question string, key string) error {
 	err := isOcraSuiteValid(ocraSuite)
 	if err != nil {
@@ -610,7 +610,7 @@ func buildOtpData(ocraSuite, key string, msg []byte) ([]byte, []byte, error) {
 
 	hmacKey, err := hex.DecodeString(key)
 	if err != nil {
-		e := fmt.Errorf("can't convert key %v to hex byte array, error: %v", key, err)
+		e := fmt.Errorf("Cannot convert key %v to hex byte array, error: %v", key, err)
 		return nil, nil, e
 	}
 	return hmacKey, hmacText, nil
@@ -625,7 +625,7 @@ func GenerateOCRA(key string) (string, string, error) {
 }
 
 // GenerateOCRAAdvance : Generates an OCRA HOTP value for the given set of parameters as defined by RFC 6287:
-// OCRA suite: <Algorithm>:<CryptoFunction>:<DataInput>
+// OCRA Suite: <Algorithm>:<CryptoFunction>:<DataInput>
 // key: the shared secret, HEX encoded
 // counter:   the counter that changes per use basis, HEX encoded
 // question   the challenge question, HEX encoded. This is a mandatory parameter
@@ -646,12 +646,12 @@ func GenerateOCRAAdvance(ocraSuite, key, counter, question, password, session, t
 
 	hmacKey, hmacText, err := buildOtpData(ocraSuite, key, msg)
 	if err != nil {
-		return "", fmt.Errorf("can't create key or text for %v, with key %v and text %v, error: %v", ocraSuite, key, msg, err)
+		return "", fmt.Errorf("Cannot create key or text for %v, with key %v and text %v, error: %v", ocraSuite, key, msg, err)
 	}
 
 	otp, err := otp.NewOtpAdvance([]byte(hmacKey), cryptoData.length, cryptoData.digest)
 	if err != nil {
-		return "", fmt.Errorf("can't create new HOTP for key %v (%v), error: %v", key, hmacKey, err)
+		return "", fmt.Errorf("Cannot create new HOTP for key %v (%v), error: %v", key, hmacKey, err)
 	}
 	code := otp.GenerateHmac(hmacText)
 
@@ -659,7 +659,7 @@ func GenerateOCRAAdvance(ocraSuite, key, counter, question, password, session, t
 	return code, nil
 }
 
-// NewOcraUser : Generate a new userOcra for a given key and OCRA suite
+// NewOcraUser : Generate a new userOcra for a given key and OCRA Suite
 func NewOcraUser(key []byte, ocraSuite string) (*UserOcra, error) {
 	err := isOcraKeyValid(key)
 	if err != nil {
@@ -698,7 +698,7 @@ func (u *UserOcra) UpdateOcraSuite(ocraSuite string) error {
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*UserOcra)
 	if ok == false {
-		return "can't print the OCRA property it's of a wrong type"
+		return "Cannot print the OCRA property: Wrong type"
 	}
 	return d.String()
 }
@@ -717,10 +717,10 @@ func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.SecureStorage) error {
 	d, ok := data.(*UserOcra)
 	if ok == false {
-		return fmt.Errorf("can't store the OCRA property: its not in the right type")
+		return fmt.Errorf("Cannot store the OCRA property: Not the right type")
 	}
 	if storage == nil {
-		return fmt.Errorf("can't add OCRA property to storage, storage is nil")
+		return fmt.Errorf("Cannot add OCRA property to storage: Storage is nil")
 	}
 	value, _ := json.Marshal(d)
 	err := storage.AddItem(prefix, string(value))
@@ -735,11 +735,11 @@ func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (inte
 	var user UserOcra
 
 	if storage == nil {
-		return nil, fmt.Errorf("can't read AM property from storage, storage is nil")
+		return nil, fmt.Errorf("Cannot read AM property from storage: Storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if !exist {
-		return nil, fmt.Errorf("key '%v' was not found in storage", key)
+		return nil, fmt.Errorf("Key '%v' was not found in storage", key)
 	}
 	err := json.Unmarshal([]byte(value), &user)
 	if err != nil {

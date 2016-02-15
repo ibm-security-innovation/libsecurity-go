@@ -179,7 +179,7 @@ func (o OcraRestful) getRandString(length int) string {
 	secret := make([]byte, length)
 	_, err := io.ReadFull(rand.Reader, secret)
 	if err != nil {
-		panic(fmt.Errorf("random read failed: %v", err))
+		panic(fmt.Errorf("Random read failed: %v", err))
 	}
 
 	for i := 0; i < length; i++ {

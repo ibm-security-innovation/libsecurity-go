@@ -42,35 +42,35 @@ func (s Salt) String() string {
 
 func isOutputLenValid(val int) error {
 	if val < minOutputLen {
-		return fmt.Errorf("Salt struct is not valid, the used output length %v is less than the minimum %v", val, minOutputLen)
+		return fmt.Errorf("Salt struct is not valid, The output length %v is less than the minimum %v", val, minOutputLen)
 	}
 	return nil
 }
 
 func isDigestValid(digest func() hash.Hash) error {
 	if digest == nil {
-		return fmt.Errorf("Salt struct is not valid, it must have a hash function, but the current hash is nil")
+		return fmt.Errorf("Salt struct is not valid, It must have a hash function, but the current hash is nil")
 	}
 	return nil
 }
 
 func isSecretValid(secret []byte, minSecretLen int, maxSecretLen int) error {
 	if len(secret) < minSecretLen || len(secret) > maxSecretLen {
-		return fmt.Errorf("Secret string has illegal length %v, length must be between %v and %v", len(secret), minSecretLen, maxSecretLen)
+		return fmt.Errorf("Secret string has illegal length %v, The length must be between %v and %v", len(secret), minSecretLen, maxSecretLen)
 	}
 	return nil
 }
 
 func isSaltValid(salt []byte) error {
 	if len(salt) < minSaltLen || len(salt) > maxSaltLen {
-		return fmt.Errorf("Salt string has illegal length %v, length must be between %v and %v", len(salt), minSaltLen, maxSaltLen)
+		return fmt.Errorf("Salt string has illegal length %v, The length must be between %v and %v", len(salt), minSaltLen, maxSaltLen)
 	}
 	return nil
 }
 
 func isNumOfIterationsValid(val int) error {
 	if val < minNumOfItterations {
-		return fmt.Errorf("Salt struct is not valid, the number of iterations %v is less than the minimum %v", val, minNumOfItterations)
+		return fmt.Errorf("Salt struct is not valid, The number of iterations %v is less than the minimum %v", val, minNumOfItterations)
 	}
 	return nil
 }
@@ -179,12 +179,12 @@ func (s Salt) Match(ref []byte, minSecretLen int, maxSecretLen int) (bool, error
 // GetRandomSalt : generate a random salt with the given length
 func GetRandomSalt(size int) ([]byte, error) {
 	if size < 0 {
-		return nil, fmt.Errorf("Size was %v, must be larger than 1", size)
+		return nil, fmt.Errorf("Size %v not valid, Size must be larger than 1", size)
 	}
 	buf := make([]byte, size)
 	_, err := io.ReadFull(rand.Reader, buf)
 	if err != nil {
-		panic(fmt.Errorf("random read failed: %v", err))
+		panic(fmt.Errorf("Random read failed: %v", err))
 	}
 	return buf, nil
 }

@@ -1,3 +1,4 @@
 *.txt
 *.sh
 tmp
+*.out

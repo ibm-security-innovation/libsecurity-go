@@ -99,9 +99,9 @@ func addEntities(el *EntityManager, typeStr string, names []string, expected boo
 			err = el.AddPermission(Permission(name))
 		}
 		if expected == true && err != nil {
-			return false, fmt.Errorf("can't add a valid %v name '%v' to the entity list %v, error: %v", typeStr, name, el, err)
+			return false, fmt.Errorf("Cannot add a valid %v name '%v' to the entity list %v, error: %v", typeStr, name, el, err)
 		} else if expected == false && err == nil {
-			return false, fmt.Errorf("attempting to add an existing %v ('%v') to the entity list %v", typeStr, name, el)
+			return false, fmt.Errorf("Attempting to add an existing %v ('%v') to the entity list %v", typeStr, name, el)
 		}
 		if typeStr == permissionTypeStr {
 			if el.IsPermissionInList(Permission(name)) == false {
@@ -114,10 +114,10 @@ func addEntities(el *EntityManager, typeStr string, names []string, expected boo
 			for j, name1 := range names {
 				err := el.AddUserToGroup(groupName, name1)
 				if err == nil && i < j && expected == true {
-					return false, fmt.Errorf("user '%v' is not part of the entity list %v but was added as a member", name1, el)
+					return false, fmt.Errorf("User '%v' is not part of the entity list %v but was added as a member", name1, el)
 				}
 				if err != nil && i >= j {
-					return false, fmt.Errorf("user '%v' is part of the entity list %v but was not added as a member, error: %v", name1, el, err)
+					return false, fmt.Errorf("User '%v' is part of the entity list %v but was not added as a member, error: %v", name1, el, err)
 				}
 				_, err = el.getGroup(groupName)
 				if err != nil {
@@ -145,9 +145,9 @@ func removeEntities(el *EntityManager, typeStr string, names []string, expected 
 			err = el.RemovePermission(Permission(name))
 		}
 		if expected == true && err != nil {
-			return false, fmt.Errorf("can't remove a valid %v '%v' from the entity list %v", typeStr, name, el)
+			return false, fmt.Errorf("Cannot remove a valid %v '%v' from the entity list %v", typeStr, name, el)
 		} else if expected == false && err == nil {
-			return false, fmt.Errorf("removed an already removed %v '%v' from entity list %v", typeStr, name, el)
+			return false, fmt.Errorf("Removed an already removed %v '%v' from entity list %v", typeStr, name, el)
 		}
 		if typeStr == userTypeStr {
 			_, err = el.getUser(name)

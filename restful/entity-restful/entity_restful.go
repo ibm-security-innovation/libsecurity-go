@@ -204,7 +204,7 @@ func (en EnRestful) getUserByUserID(request *restful.Request, response *restful.
 	userID := request.PathParameter(userIDParam)
 	user, exist := en.st.UsersList.Users[userID]
 	if exist == false {
-		en.setError(response, http.StatusNotFound, fmt.Errorf("Error: user: '%v' can't be found", userID))
+		en.setError(response, http.StatusNotFound, fmt.Errorf("Error: User: '%v' cannot be found", userID))
 		return nil, userID
 	}
 	return user, userID

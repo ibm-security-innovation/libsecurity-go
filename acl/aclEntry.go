@@ -24,7 +24,7 @@ func (a Entry) String() string {
 
 func isPermissionValid(permission en.Permission) error {
 	if len(permission) == 0 {
-		return fmt.Errorf("permission is not valid, its length must be larger than 0")
+		return fmt.Errorf("Permission is not valid: Length must be larger than 0")
 	}
 	return nil
 }
@@ -50,7 +50,7 @@ func (a *Entry) AddPermission(permission en.Permission) (bool, error) {
 	}
 	_, exist := a.Permissions[permission]
 	if exist {
-		return false, fmt.Errorf("can't add permission: '%v', it already exists in the permission list", permission)
+		return false, fmt.Errorf("Cannot add permission: '%v', it already exists in the permission list", permission)
 	}
 	a.Permissions[permission] = ""
 	return true, nil
@@ -67,7 +67,7 @@ func (a *Entry) RemovePermission(permission en.Permission) error {
 	}
 	_, exist := a.Permissions[permission]
 	if exist == false {
-		return fmt.Errorf("can't remove permission: '%v', it does not exist in the permission list", permission)
+		return fmt.Errorf("Cannot remove permission: '%v', it does not exist in the permission list", permission)
 	}
 	delete(a.Permissions, permission)
 	return nil

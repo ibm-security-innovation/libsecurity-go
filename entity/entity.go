@@ -87,7 +87,7 @@ func (g Group) String() string {
 // IsEntityNameValid : Verify that the entity name is valid, the current limit is that its size must be at least 1 character
 func IsEntityNameValid(name string) error {
 	if len(name) == 0 {
-		return fmt.Errorf("name is not valid, its length must be larger than 0")
+		return fmt.Errorf("Name is not valid, its length must be larger than 0")
 	}
 	return nil
 }
@@ -125,7 +125,7 @@ func (g *Group) addUserToGroup(name string) error {
 	defer lock.Unlock()
 
 	if len(name) == 0 {
-		return fmt.Errorf("can't add a nil user")
+		return fmt.Errorf("Cannot add a nil user")
 	}
 	err := IsEntityNameValid(name)
 	if err != nil {
@@ -133,7 +133,7 @@ func (g *Group) addUserToGroup(name string) error {
 	}
 	_, exist := g.Group[name]
 	if exist {
-		return fmt.Errorf("user '%v', is already in the Group '%v'", name, g.Group)
+		return fmt.Errorf("User '%v', is already in group '%v'", name, g.Group)
 	}
 	g.Group[name] = ""
 	return nil
@@ -143,7 +143,7 @@ func (g *Group) addUserToGroup(name string) error {
 func (g *Group) removeUserFromGroup(name string) error {
 	_, exist := g.Group[name]
 	if exist == false {
-		return fmt.Errorf("can't remove user '%v', it is not part of group '%v'", name, g.Group)
+		return fmt.Errorf("Cannot remove user '%v', not part of group '%v'", name, g.Group)
 	}
 	delete(g.Group, name)
 	return nil
@@ -161,11 +161,11 @@ func (e *Entity) addProperty(propertyName string, data interface{}) error {
 	defer propertyLock.Unlock()
 
 	if data == nil {
-		return fmt.Errorf("can't add property of '%v' to the entity, property data is nil", propertyName)
+		return fmt.Errorf("Cannot add property of '%v' to the entity: Property data is nil", propertyName)
 	}
 	_, exist := defs.PropertiesName[propertyName]
 	if exist == false {
-		return fmt.Errorf("the property name '%v' can't be used, the allowed properties names are: %v", propertyName, defs.PropertiesName)
+		return fmt.Errorf("The property name '%v' cannot be used, the allowed properties names are: %v", propertyName, defs.PropertiesName)
 	}
 	e.EntityProperties[propertyName] = data
 	return nil
@@ -178,7 +178,7 @@ func (e *Entity) removeProperty(propertyName string) error {
 
 	_, exist := e.EntityProperties[propertyName]
 	if !exist {
-		return fmt.Errorf("the peroperty '%v' can't be removed, it was not assigned to entity '%v'", propertyName, e.Name)
+		return fmt.Errorf("The property '%v' cannot be removed, it was not assigned to entity '%v'", propertyName, e.Name)
 	}
 	delete(e.EntityProperties, propertyName)
 	return nil
@@ -191,7 +191,7 @@ func (e *Entity) getProperty(propertyName string) (interface{}, error) {
 
 	data, exist := e.EntityProperties[propertyName]
 	if !exist {
-		return nil, fmt.Errorf("%v, peroperty '%v' was not found", e.Name, propertyName)
+		return nil, fmt.Errorf("%v, property '%v' was not found", e.Name, propertyName)
 	}
 	return data, nil
 }
@@ -199,7 +199,7 @@ func (e *Entity) getProperty(propertyName string) (interface{}, error) {
 // Add the group's data to disk (in JSON format)
 func (g *Group) addGroupToStorage(prefix string, storage *ss.SecureStorage) error {
 	if storage == nil {
-		return fmt.Errorf("can't add group to storage, storage is nil")
+		return fmt.Errorf("Cannot add group to storage: Storage is nil")
 	}
 	val, _ := json.Marshal(g)
 	return storage.AddItem(prefix, string(val))
@@ -208,7 +208,7 @@ func (g *Group) addGroupToStorage(prefix string, storage *ss.SecureStorage) erro
 // Add the Entity's data to disk (in JSON format)
 func (e *Entity) addEntityToStorage(prefix string, storage *ss.SecureStorage) error {
 	if storage == nil {
-		return fmt.Errorf("can't add to storage, storage is nil")
+		return fmt.Errorf("Cannot add to storage: Storage is nil")
 	}
 	val, _ := json.Marshal(e)
 	return storage.AddItem(prefix, string(val))
@@ -219,11 +219,11 @@ func readEntityFromStorage(key string, storage *ss.SecureStorage) (*Entity, erro
 	var e Entity
 
 	if storage == nil {
-		return nil, fmt.Errorf("can't read entity from storage, storage is nil")
+		return nil, fmt.Errorf("Cannot read entity from storage: Storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if exist == false {
-		return nil, fmt.Errorf("key '%v' was not found", key)
+		return nil, fmt.Errorf("Key '%v' was not found", key)
 	}
 	err := json.Unmarshal([]byte(value), &e)
 	if err != nil {
@@ -237,11 +237,11 @@ func readGroupFromStorage(key string, storage *ss.SecureStorage) (*Group, error)
 	var g Group
 
 	if storage == nil {
-		return nil, fmt.Errorf("can't read group from storage, storage is nil")
+		return nil, fmt.Errorf("Cannot read group from storage: Storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if exist == false {
-		return nil, fmt.Errorf("key '%v' was not found", key)
+		return nil, fmt.Errorf("Key '%v' was not found", key)
 	}
 	err := json.Unmarshal([]byte(value), &g)
 	if err != nil {

@@ -227,7 +227,7 @@ func (l AmRestful) restGetAm(request *restful.Request, response *restful.Respons
 func (l AmRestful) restDeleteAM(request *restful.Request, response *restful.Response) {
 	name := request.PathParameter(userIDParam)
 	if name == defs.RootUserName {
-		l.setError(response, http.StatusBadRequest, fmt.Errorf("Error: root user can't be deleted"))
+		l.setError(response, http.StatusBadRequest, fmt.Errorf("Error: root user cannot be deleted"))
 		return
 	}
 	err := l.st.UsersList.RemovePropertyFromEntity(name, defs.AmPropertyName)
@@ -242,7 +242,7 @@ func (l AmRestful) restUpdatePrivilege(request *restful.Request, response *restf
 	userName := request.PathParameter(userIDParam)
 
 	if userName == defs.RootUserName {
-		l.setError(response, http.StatusBadRequest, fmt.Errorf("Error: '%v' user privilege can't be changed", defs.RootUserName))
+		l.setError(response, http.StatusBadRequest, fmt.Errorf("Error: User privileges for '%v' cannot be changed", defs.RootUserName))
 		return
 	}
 	privilege := l.getPrivilege(request, response)
@@ -313,7 +313,7 @@ func (l AmRestful) restResetPwd(request *restful.Request, response *restful.Resp
 		return
 	}
 	if userName == defs.RootUserName {
-		l.setError(response, http.StatusBadRequest, fmt.Errorf("Error: root user password can't be reset"))
+		l.setError(response, http.StatusBadRequest, fmt.Errorf("Error: root user password cannot be reset"))
 		return
 	}
 	pwd, err := data.ResetUserPwd()

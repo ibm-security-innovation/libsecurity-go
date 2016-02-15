@@ -128,7 +128,7 @@ func (a *Acl) addAclEntry(aclEntry *Entry) error {
 	}
 	_, exist := a.Permissions[aclEntry.EntityName]
 	if exist == true {
-		return fmt.Errorf("can't add aclEntry '%v', it already exists in the ACL", aclEntry.EntityName)
+		return fmt.Errorf("Cannot add aclEntry '%v', it already exists in the ACL", aclEntry.EntityName)
 	}
 	a.Permissions[aclEntry.EntityName] = aclEntry
 	logger.Trace.Println("Add aclEntry:", aclEntry, "to acl")
@@ -146,7 +146,7 @@ func (a *Acl) removeAclEntry(name string) error {
 	}
 	_, exist := a.Permissions[name]
 	if exist == false {
-		return fmt.Errorf("can't remove Entry '%v', it does not exist in the ACL", name)
+		return fmt.Errorf("Cannot remove ACL entry '%v', it does not exist in the ACL", name)
 	}
 	logger.Trace.Println("Remove Entry:", name, "from acl")
 	delete(a.Permissions, name)
@@ -222,16 +222,16 @@ func GetUserPermissions(el *en.EntityManager, userName string, resourceName stri
 		return nil, err
 	}
 	if el.IsEntityInList(userName) == false {
-		return nil, fmt.Errorf("entity %q is not in the entity manager", userName)
+		return nil, fmt.Errorf("Entity %q is not in the entity manager", userName)
 	}
 	permissions := make(PermissionsMap)
 	data, err := el.GetPropertyAttachedToEntity(resourceName, defs.AclPropertyName)
 	if err != nil {
-		return nil, fmt.Errorf("resource '%v' dose not have an ACL property", resourceName)
+		return nil, fmt.Errorf("Resource '%v' does not have an ACL property", resourceName)
 	}
 	acl, ok := data.(*Acl)
 	if ok == false {
-		return nil, fmt.Errorf("resource '%v' ACL property is in the wrong type", resourceName)
+		return nil, fmt.Errorf("Resource '%v' ACL property is in the wrong type", resourceName)
 	}
 	for name, p := range acl.Permissions {
 		if name == userName || name == defs.AclAllEntryName || el.IsUserPartOfAGroup(name, userName) {
@@ -276,10 +276,10 @@ func (a *Acl) AddPermissionToResource(el *en.EntityManager, userName string, per
 		return err
 	}
 	if el.IsEntityInList(userName) == false {
-		return fmt.Errorf("can't add permission to entity '%v', it is not in the entity list", userName)
+		return fmt.Errorf("Cannot add permission to entity '%v': It is not in the entity list", userName)
 	}
 	if el.IsPermissionInList(permission) == false {
-		return fmt.Errorf("can't add permission '%v' to entity '%v', it is not in the permissions list, please add it first", permission, userName)
+		return fmt.Errorf("Cannot add permission '%v' to entity '%v': It is not in the permissions list, please add it first", permission, userName)
 	}
 	e, exist := a.Permissions[userName]
 	if exist == false {
@@ -298,7 +298,7 @@ func (a *Acl) RemovePermissionFromEntity(entityName string, permission en.Permis
 
 	e, exist := a.Permissions[entityName]
 	if exist == false {
-		return fmt.Errorf("the ACL doesn't contain an Entry with the name '%v'", entityName)
+		return fmt.Errorf("The ACL does not contain an entry with the name '%v'", entityName)
 	}
 	logger.Trace.Println("Remove permission:", permission, "from:", entityName)
 	return e.RemovePermission(permission)
@@ -349,7 +349,7 @@ func GetWhoUseAPermission(el *en.EntityManager, resourceName string, permission 
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*Acl)
 	if ok == false {
-		return "can't print the ACL property it is not in the right type"
+		return "Cannot print the ACL property: Not the right type"
 	}
 	return d.String()
 }
@@ -371,10 +371,10 @@ func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.Se
 
 	d, ok := data.(*Acl)
 	if ok == false {
-		return fmt.Errorf("can't store the ACL property as it has an illegal type")
+		return fmt.Errorf("Cannot store the ACL property: Illegal type")
 	}
 	if storage == nil {
-		return fmt.Errorf("can't add an ACL property to storage, storage is nil")
+		return fmt.Errorf("Cannot add an ACL property to storage: Storage is nil")
 	}
 	value, err := json.Marshal(d)
 	err = storage.AddItem(prefix, string(value))
@@ -389,11 +389,11 @@ func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (inte
 	var user Acl
 
 	if storage == nil {
-		return nil, fmt.Errorf("can't read an ACL property from storage, storage is nil")
+		return nil, fmt.Errorf("Cannot read an ACL property from storage: Storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if exist == false {
-		return nil, fmt.Errorf("key '%v' was not found", key)
+		return nil, fmt.Errorf("Key '%v' was not found", key)
 	}
 	err := json.Unmarshal([]byte(value), &user)
 	if err != nil {

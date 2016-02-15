@@ -88,7 +88,7 @@ func init() {
 func isPwdLengthValid(pwd []byte) error {
 	pLen := len(pwd)
 	if pLen < MinPasswordLength || pLen > MaxPasswordLength {
-		return fmt.Errorf("password length %v is not in the allowed range %v-%v", pLen, MinPasswordLength, MaxPasswordLength)
+		return fmt.Errorf("Password length %v is not in the allowed range %v-%v", pLen, MinPasswordLength, MaxPasswordLength)
 	}
 	return nil
 }
@@ -105,11 +105,11 @@ func (u UserPwd) IsNewPwdValid(pwd []byte, checkPwdStrength bool) error {
 	}
 	newPwd := GetHashedPwd(pwd)
 	if compareHashedPwd(newPwd, u.Password) == true {
-		return fmt.Errorf("the new password is illegal: it is the same as the current password, please select a new password")
+		return fmt.Errorf("The new password is illegal: It is the same as the current password. Please select a new password.")
 	}
 	for _, s := range u.OldPasswords {
 		if bytes.Compare(newPwd, s) == 0 { // the constant delay comparison must be used only once
-			return fmt.Errorf("the new password is illegal: it was already used, please select a new password")
+			return fmt.Errorf("The new password is illegal: It was already used. Please select a new password")
 		}
 	}
 	return nil
@@ -180,7 +180,7 @@ func (u *UserPwd) updatePasswordHandler(currentPwd []byte, pwd []byte, expiratio
 	}
 	tmpPwd, err := salt.GenerateSaltedPassword(pwd, MinPasswordLength, MaxPasswordLength, u.Salt, -1)
 	if err != nil {
-		return nil, fmt.Errorf("problems while generating the new password: %v", err)
+		return nil, fmt.Errorf("There was a problem while generating the new password: %v", err)
 	}
 	err = u.IsNewPwdValid(tmpPwd, false)
 	if err != nil {
@@ -210,7 +210,7 @@ func (u *UserPwd) isPasswordMatchHandler(pwd []byte, overrideChecks bool) error 
 	if overrideChecks == false {
 		if u.ErrorsCounter >= maxPwdAttempts {
 			compareHashedPwd(pwd, u.Password) // against timing attacks
-			return fmt.Errorf("too many password attempts, Reset password before trying again")
+			return fmt.Errorf("Too many password attempts. You must reset password before trying again.")
 		}
 		err := isPwdLengthValid(pwd)
 		if err != nil {
@@ -218,17 +218,17 @@ func (u *UserPwd) isPasswordMatchHandler(pwd []byte, overrideChecks bool) error 
 		}
 		if compareHashedPwd(pwd, u.Password) == false {
 			u.ErrorsCounter = u.ErrorsCounter + 1
-			return fmt.Errorf("password is wrong, please try again")
+			return fmt.Errorf("Password is wrong, please try again")
 		} // don't check it again
 		// Check expiration only for valid password: to hide the information that the user is valid
 		if time.Now().After(u.Expiration) {
-			return fmt.Errorf("password has expired, please replace it")
+			return fmt.Errorf("Password has expired, please replace it")
 		}
 	}
 	// the error counter must be increased also for password update to avoid backdoors
 	if overrideChecks != false && compareHashedPwd(pwd, u.Password) == false {
 		u.ErrorsCounter = u.ErrorsCounter + 1
-		return fmt.Errorf("password is wrong, please try again")
+		return fmt.Errorf("Password is wrong, please try again")
 	}
 	if u.TemporaryPwd == true {
 		u.Expiration = defs.GetBeginningOfTime() // old use time.Now()              // The password expired => it can't be used any more.
@@ -279,7 +279,7 @@ func CheckPasswordStrength(pass string) error {
 	}
 	if len(pass) < MinPasswordLength || extraCnt < minExtraChars || digitCnt < minDigits ||
 		upperCaseCnt < minUpperCase || lowerCaseCnt < minLowerCase {
-		return fmt.Errorf("The checked password does not pass the password strength test. In order to be strong, the password must contain at least %v characters, and include at least: %v digits, %v letters (%v must be upper-case and %v must be lower-case) and %v extra character from the list bellow.\nList of possible extra characters: '%v'",
+		return fmt.Errorf("The checked password does not pass the password strength test. In order to be strong, the password must adhere to all of the following:\nContains at least %v characters\nIncludes at least %v digits\nIncludes at least %v letters, where at least %v must be uppercase and at least %v must be lowercase\nIncludes at least %v special characters from the following list:\nSpecial characters: '%v'",
 			MinPasswordLength, minDigits, minUpperCase+minLowerCase, minUpperCase, minLowerCase, minExtraChars, defs.ExtraCharStr)
 	}
 	return nil
@@ -295,7 +295,7 @@ func GenerateNewValidPassword() []byte {
 	pwd := make([]byte, defaultPasswordLen)
 	_, err := io.ReadFull(rand.Reader, pwd)
 	if err != nil {
-		panic(fmt.Errorf("random read failed: %v", err))
+		panic(fmt.Errorf("Random read failed: %v", err))
 	}
 	// Entropy is not the best: random is 0-255 map to 0-21
 	for i := 0; i < defaultPasswordLen; i++ {
@@ -336,7 +336,7 @@ func GenerateNewValidPassword() []byte {
 func (s Serializer) PrintProperties(data interface{}) string {
 	d, ok := data.(*UserPwd)
 	if ok == false {
-		return "can't print the Password property its not in the right type"
+		return "Cannot print the Password property: Not the right type"
 	}
 	return d.String()
 }
@@ -355,10 +355,10 @@ func (s Serializer) IsEqualProperties(da1 interface{}, da2 interface{}) bool {
 func (s Serializer) AddToStorage(prefix string, data interface{}, storage *ss.SecureStorage) error {
 	d, ok := data.(*UserPwd)
 	if ok == false {
-		return fmt.Errorf("can't store the Password property: its not in the right type")
+		return fmt.Errorf("Cannot store the password property: Not the right type")
 	}
 	if storage == nil {
-		return fmt.Errorf("can't add Password property to storage, storage is nil")
+		return fmt.Errorf("Cannot add password property to storage: Storage is nil")
 	}
 	value, _ := json.Marshal(d)
 	err := storage.AddItem(prefix, string(value))
@@ -373,11 +373,11 @@ func (s Serializer) ReadFromStorage(key string, storage *ss.SecureStorage) (inte
 	var user UserPwd
 
 	if storage == nil {
-		return nil, fmt.Errorf("can't read Password property from storage, storage is nil")
+		return nil, fmt.Errorf("Cannot read password property from storage: Storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if !exist {
-		return nil, fmt.Errorf("key '%v' was not found in storage", key)
+		return nil, fmt.Errorf("Key '%v' was not found in storage", key)
 	}
 	err := json.Unmarshal([]byte(value), &user)
 	if err != nil {
