@@ -124,6 +124,10 @@ func (en EnRestful) restGetGroup(request *restful.Request, response *restful.Res
 	response.WriteHeaderAndEntity(http.StatusOK, group)
 }
 
+func (en EnRestful) restGetAllGroups(request *restful.Request, response *restful.Response) {
+	response.WriteHeaderAndEntity(http.StatusOK, en.st.UsersList.Groups)
+}
+
 func (en *EnRestful) restRemoveGroup(request *restful.Request, response *restful.Response) {
 	groupID := request.PathParameter(groupIDParam)
 	err := en.st.UsersList.RemoveGroup(groupID)
@@ -180,6 +184,10 @@ func (en EnRestful) restGetUser(request *restful.Request, response *restful.Resp
 	response.WriteHeaderAndEntity(http.StatusOK, user)
 }
 
+func (en EnRestful) restGetAllUsers(request *restful.Request, response *restful.Response) {
+	response.WriteHeaderAndEntity(http.StatusOK, en.st.UsersList.Users)
+}
+
 func (en *EnRestful) restRemoveAllUsers(request *restful.Request, response *restful.Response) {
 	for name := range en.st.UsersList.Users {
 		if name == defs.RootUserName || name == defs.AclAllEntryName {
@@ -234,6 +242,10 @@ func (en EnRestful) restGetResource(request *restful.Request, response *restful.
 		return
 	}
 	response.WriteHeaderAndEntity(http.StatusOK, user)
+}
+
+func (en EnRestful) restGetAllResources(request *restful.Request, response *restful.Response) {
+	response.WriteHeaderAndEntity(http.StatusOK, en.st.UsersList.Resources)
 }
 
 func (en *EnRestful) restRemoveAllResources(request *restful.Request, response *restful.Response) {

@@ -73,6 +73,13 @@ func (en EnRestful) setGroupRoute(ws *restful.WebService) {
 		Param(ws.PathParameter(groupIDParam, groupIDComment).DataType("string")))
 
 	str = fmt.Sprintf(urlCommands[handleAllUmGroupCommand])
+	ws.Route(ws.GET(str).
+		Filter(en.st.SuperUserFilter).
+		To(en.restGetAllGroups).
+		Doc("Get all groups").
+		Operation("getAllGroups"))
+
+	str = fmt.Sprintf(urlCommands[handleAllUmGroupCommand])
 	ws.Route(ws.DELETE(str).
 		Filter(en.st.SuperUserFilter).
 		To(en.restRemoveAllGroups).
@@ -105,7 +112,7 @@ func (en EnRestful) setUserRoute(ws *restful.WebService) {
 	ws.Route(ws.GET(str).
 		Filter(en.st.SuperUserFilter).
 		To(en.restGetEntityManager).
-		Doc("Get Entity management").
+		Doc("Get entity management").
 		Operation("getEntityManager").
 		Writes(ent.EntityManager{}))
 
@@ -134,6 +141,13 @@ func (en EnRestful) setUserRoute(ws *restful.WebService) {
 		Doc("Delete user").
 		Operation("removeUser").
 		Param(ws.PathParameter(userIDParam, userIDComment).DataType("string")))
+
+	str = fmt.Sprintf(urlCommands[handleAllUmUserCommand])
+	ws.Route(ws.GET(str).
+		Filter(en.st.SuperUserFilter).
+		To(en.restGetAllUsers).
+		Doc("Get all users").
+		Operation("getAllUsers"))
 
 	str = fmt.Sprintf(urlCommands[handleAllUmUserCommand])
 	ws.Route(ws.DELETE(str).
@@ -171,12 +185,18 @@ func (en EnRestful) setResourceRoute(ws *restful.WebService) {
 		Param(ws.PathParameter(resourceIDParam, resourceIDComment).DataType("string")))
 
 	str = fmt.Sprintf(urlCommands[handleAllUmResourceCommand])
+	ws.Route(ws.GET(str).
+		Filter(en.st.SuperUserFilter).
+		To(en.restGetAllResources).
+		Doc("Get all resources").
+		Operation("getAllResources"))
+
+	str = fmt.Sprintf(urlCommands[handleAllUmResourceCommand])
 	ws.Route(ws.DELETE(str).
 		Filter(en.st.SuperUserFilter).
 		To(en.restRemoveAllResources).
 		Doc("Delete all resources").
 		Operation("removeAllResources"))
-
 }
 
 func (en EnRestful) setPermissionsRoute(ws *restful.WebService) {
@@ -189,13 +209,6 @@ func (en EnRestful) setPermissionsRoute(ws *restful.WebService) {
 		Param(ws.PathParameter(permissionIDParam, permissionIDComment).DataType("string")).
 		Writes(cr.URL{}))
 
-	str = fmt.Sprintf(urlCommands[handleAllPermissionsCommand])
-	ws.Route(ws.GET(str).
-		Filter(en.st.SuperUserFilter).
-		To(en.restGetAllPermissions).
-		Doc("Get all permissions").
-		Operation("getAllPermissions"))
-
 	str = fmt.Sprintf(urlCommands[handlePermissionCommand], permissionIDParam)
 	ws.Route(ws.DELETE(str).
 		Filter(en.st.SuperUserFilter).
@@ -203,6 +216,13 @@ func (en EnRestful) setPermissionsRoute(ws *restful.WebService) {
 		Doc("Delete permission").
 		Operation("removePermission").
 		Param(ws.PathParameter(permissionIDParam, permissionIDComment).DataType("string")))
+
+	str = fmt.Sprintf(urlCommands[handleAllPermissionsCommand])
+	ws.Route(ws.GET(str).
+		Filter(en.st.SuperUserFilter).
+		To(en.restGetAllPermissions).
+		Doc("Get all permissions").
+		Operation("getAllPermissions"))
 
 	str = fmt.Sprintf(urlCommands[handleAllPermissionsCommand])
 	ws.Route(ws.DELETE(str).
