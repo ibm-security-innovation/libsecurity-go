@@ -1,5 +1,9 @@
 #!/bin/bash
 
+c1=`pwd`
+mkdir res >& /dev/null
+cpwd=$c1/res
+
 pushd .
 cd ..
 
@@ -8,10 +12,6 @@ code=(
    "restful/accounts-restful" "restful/entity-restful" "restful/libsecurity-restful" "restful/ocra-restful" "restful/otp-restful" "restful/password-restful" "restful/storage-restful" "restful/acl-restful"
    "app/token"
 )
-
-c1=`pwd`
-mkdir res >& /dev/null
-cpwd=$c1/res
 
 rm -f $cpwd/res
 rm -f $cpwd/full-res
