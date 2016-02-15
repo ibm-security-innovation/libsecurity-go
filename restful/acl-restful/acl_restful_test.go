@@ -126,9 +126,11 @@ func generateAcl() (string, *acl.Acl, error) {
 	aclData := acl.NewACL()
 	for _, name := range usersName {
 		for _, p := range usersPermissions {
-			aclData.AddPermissionToResource(stRestful.UsersList, name, acl.Permission(p))
+			stRestful.UsersList.AddPermission(en.Permission(p))
+			aclData.AddPermissionToResource(stRestful.UsersList, name, en.Permission(p))
 		}
 	}
+	stRestful.UsersList.AddPermission(en.Permission(perAll))
 	aclData.AddPermissionToResource(stRestful.UsersList, defs.AclAllEntryName, perAll)
 	stRestful.UsersList.AddPropertyToEntity(resourceName1, defs.AclPropertyName, aclData)
 	data, _ := json.Marshal(aclData)
@@ -167,7 +169,9 @@ func Test_addGetRemoveAcl(t *testing.T) {
 func Test_addCheckDeletePermission(t *testing.T) {
 	initState()
 	strFmt := "%v/%v"
-	permission := perRead
+	permission := en.Permission(perRead)
+
+	stRestful.UsersList.AddPermission(en.Permission(permission))
 	baseURL := fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handlePermissionCommand]),
 		entityToken, userName1, resourceToken, resourceName1, permissionsToken, permission)
 	okURLJ := cr.URL{URL: fmt.Sprintf(strFmt, servicePath, baseURL)}

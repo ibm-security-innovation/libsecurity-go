@@ -27,6 +27,8 @@ const (
 	userTypeStr     = "User"
 	groupTypeStr    = "Group"
 	resourceTypeStr = "Resource"
+
+	permissionTypeStr = "Permission"
 )
 
 // TODO group of groups are not handled
@@ -217,7 +219,7 @@ func readEntityFromStorage(key string, storage *ss.SecureStorage) (*Entity, erro
 	var e Entity
 
 	if storage == nil {
-		return nil, fmt.Errorf("can't add entity to storage, storage is nil")
+		return nil, fmt.Errorf("can't read entity from storage, storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if exist == false {
@@ -235,7 +237,7 @@ func readGroupFromStorage(key string, storage *ss.SecureStorage) (*Group, error)
 	var g Group
 
 	if storage == nil {
-		return nil, fmt.Errorf("can't add group to storage, storage is nil")
+		return nil, fmt.Errorf("can't read group from storage, storage is nil")
 	}
 	value, exist := storage.Data[key]
 	if exist == false {

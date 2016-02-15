@@ -22,12 +22,12 @@ var ()
 
 type aclTestEntry struct {
 	name        string // aclAclEntry name
-	permissions []Permission
+	permissions []en.Permission
 }
 
 type expectTest struct {
 	name        string // aclAclEntry name
-	permissions []Permission
+	permissions []en.Permission
 }
 
 type expectWhoUsePermissions struct {
@@ -137,7 +137,7 @@ func Test_AddRemoveaclEntry(t *testing.T) {
 	}
 }
 
-func isPermissionExp(pVec []Permission, permission Permission) bool {
+func isPermissionExp(pVec []en.Permission, permission en.Permission) bool {
 	for _, p := range pVec {
 		if p == permission {
 			return true
@@ -169,29 +169,29 @@ func setupCheckPermissions(setPermissionData bool) (*en.EntityManager, *Acl, []s
 		{groupsName[1], []string{usersName[1]}}}
 
 	setEntries := []aclTestEntry{
-		{usersName[0], []Permission{PerRead, PerWrite, PerExe}},
-		{groupsName[0], []Permission{PerRead}},
-		{groupsName[1], []Permission{PerExe, PerTake}},
-		{defs.AclAllEntryName, []Permission{PerAll}}}
+		{usersName[0], []en.Permission{PerRead, PerWrite, PerExe}},
+		{groupsName[0], []en.Permission{PerRead}},
+		{groupsName[1], []en.Permission{PerExe, PerTake}},
+		{defs.AclAllEntryName, []en.Permission{PerAll}}}
 	resetEntries := []aclTestEntry{ // note the remove can be done for a single user/group in each step
 		{}, // check the setup
-		{groupsName[1], []Permission{PerExe}},
-		{usersName[0], []Permission{PerRead}},
-		{groupsName[0], []Permission{PerRead}},
-		{usersName[0], []Permission{PerWrite}}}
+		{groupsName[1], []en.Permission{PerExe}},
+		{usersName[0], []en.Permission{PerRead}},
+		{groupsName[0], []en.Permission{PerRead}},
+		{usersName[0], []en.Permission{PerWrite}}}
 	// test both that the expected permissions are set and that the others are clear
 	expectUserPermissions := [][]expectTest{
-		{{usersName[0], []Permission{PerRead, PerWrite, PerExe, PerAll}}, {usersName[1], []Permission{PerExe, PerTake, PerAll}}},
-		{{usersName[0], []Permission{PerRead, PerWrite, PerExe, PerAll}}, {usersName[1], []Permission{PerAll, PerTake}}},
-		{{usersName[0], []Permission{PerWrite, PerExe, PerRead, PerAll}}, {usersName[1], []Permission{PerAll, PerTake}}},
-		{{usersName[0], []Permission{PerWrite, PerExe, PerAll}}, {usersName[1], []Permission{PerAll, PerTake}}},
-		{{usersName[0], []Permission{PerExe, PerAll}}, {usersName[1], []Permission{PerAll, PerTake}}}}
+		{{usersName[0], []en.Permission{PerRead, PerWrite, PerExe, PerAll}}, {usersName[1], []en.Permission{PerExe, PerTake, PerAll}}},
+		{{usersName[0], []en.Permission{PerRead, PerWrite, PerExe, PerAll}}, {usersName[1], []en.Permission{PerAll, PerTake}}},
+		{{usersName[0], []en.Permission{PerWrite, PerExe, PerRead, PerAll}}, {usersName[1], []en.Permission{PerAll, PerTake}}},
+		{{usersName[0], []en.Permission{PerWrite, PerExe, PerAll}}, {usersName[1], []en.Permission{PerAll, PerTake}}},
+		{{usersName[0], []en.Permission{PerExe, PerAll}}, {usersName[1], []en.Permission{PerAll, PerTake}}}}
 	expectGroupPermissions := [][]expectTest{
-		{{groupsName[0], []Permission{PerRead, PerAll}}, {groupsName[1], []Permission{PerExe, PerTake, PerAll}}},
-		{{groupsName[0], []Permission{PerRead, PerAll}}, {groupsName[1], []Permission{PerTake, PerAll}}},
-		{{groupsName[0], []Permission{PerRead, PerAll}}, {groupsName[1], []Permission{PerTake, PerAll}}},
-		{{groupsName[0], []Permission{PerAll}}, {groupsName[1], []Permission{PerTake, PerAll}}},
-		{{groupsName[0], []Permission{PerAll}}, {groupsName[1], []Permission{PerTake, PerAll}}}}
+		{{groupsName[0], []en.Permission{PerRead, PerAll}}, {groupsName[1], []en.Permission{PerExe, PerTake, PerAll}}},
+		{{groupsName[0], []en.Permission{PerRead, PerAll}}, {groupsName[1], []en.Permission{PerTake, PerAll}}},
+		{{groupsName[0], []en.Permission{PerRead, PerAll}}, {groupsName[1], []en.Permission{PerTake, PerAll}}},
+		{{groupsName[0], []en.Permission{PerAll}}, {groupsName[1], []en.Permission{PerTake, PerAll}}},
+		{{groupsName[0], []en.Permission{PerAll}}, {groupsName[1], []en.Permission{PerTake, PerAll}}}}
 	expectWhoUsePermission := []expectWhoUsePermissions{
 		{PerExe, []string{usersName[0], usersName[1], groupsName[1]}},
 		{PerAll, []string{usersName[0], usersName[1], usersName[2], groupsName[0], groupsName[1], defs.AclAllEntryName}},
@@ -282,6 +282,7 @@ func Test_UpdatePermissions(t *testing.T) {
 
 	for _, v := range setEntries {
 		for _, p := range v.permissions {
+			el.AddPermission(en.Permission(p))
 			a.AddPermissionToResource(el, v.name, p)
 		}
 	}
@@ -309,6 +310,7 @@ func Test_GroupListCorrectness(t *testing.T) {
 	if CheckUserPermission(el, userName, resourceName, PerRead) == true {
 		t.Error("Test fail: Have permissions for empty lists")
 	}
+	el.AddPermission(en.Permission(PerRead))
 	err := a.AddPermissionToResource(el, groupName, PerRead)
 	if err == nil {
 		t.Error("Test fail: Set permissions for a group but the group list is nil", a)
@@ -338,6 +340,7 @@ func Test_AllListPermissions(t *testing.T) {
 	a := NewACL()
 	el.AddUser(userName)
 	el.AddPropertyToEntity(resourceName, defs.AclPropertyName, a)
+	el.AddPermission(en.Permission(PerRead))
 	a.AddPermissionToResource(el, defs.AclAllEntryName, PerRead)
 	if CheckUserPermission(el, userName, resourceName, PerRead) != true {
 		t.Errorf("Test fail: '%v' permission must be set, %v", PerRead, a)
@@ -354,7 +357,7 @@ func Test_AllListPermissions(t *testing.T) {
 func Test_CheckPermissionWhenUserIsRemovedAndAdded(t *testing.T) {
 	el := initEntityManager()
 	a := NewACL()
-	p := Permission(PerRead)
+	p := en.Permission(PerRead)
 	// create entity list with disk, user, group entities (user1 is part of group)
 	// set ACL to disk, add the group aclAclEntry with read permission to disk ACL
 	el.AddUser(userName)
@@ -407,7 +410,7 @@ func generateAcl(el *en.EntityManager) bool {
 			return false
 		}
 		for name := range el.Users {
-			a.AddPermissionToResource(el, name, Permission("uP"+n))
+			a.AddPermissionToResource(el, name, en.Permission("uP"+n))
 		}
 	}
 	return true

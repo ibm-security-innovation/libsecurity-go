@@ -7,6 +7,7 @@ import (
 
 	"github.com/emicklei/go-restful"
 	"github.com/ibm-security-innovation/libsecurity-go/acl"
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
 	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common-restful"
 	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity-restful"
@@ -139,7 +140,7 @@ func (a AclRestful) restCheckPermission(request *restful.Request, response *rest
 	ok := false
 	status := http.StatusOK
 	if a1 != nil && aclInfo != nil {
-		ok = acl.CheckUserPermission(a.st.UsersList, aclInfo.UserName, aclInfo.ResourceName, acl.Permission(aclInfo.Permission))
+		ok = acl.CheckUserPermission(a.st.UsersList, aclInfo.UserName, aclInfo.ResourceName, en.Permission(aclInfo.Permission))
 	}
 	str := fmt.Sprintf("Permission '%v' is allowed", aclInfo.Permission)
 	if ok == false {
@@ -165,7 +166,7 @@ func (a AclRestful) restSetPermission(request *restful.Request, response *restfu
 			return
 		}
 	}
-	err = a1.AddPermissionToResource(a.st.UsersList, aclInfo.UserName, acl.Permission(aclInfo.Permission))
+	err = a1.AddPermissionToResource(a.st.UsersList, aclInfo.UserName, en.Permission(aclInfo.Permission))
 	if err != nil {
 		a.setError(response, http.StatusNotFound, err)
 	} else {
@@ -179,7 +180,7 @@ func (a AclRestful) restDeletePermission(request *restful.Request, response *res
 		a.setError(response, http.StatusNotFound, err)
 		return
 	}
-	err = aclData.RemovePermissionFromEntity(aclInfo.UserName, acl.Permission(aclInfo.Permission))
+	err = aclData.RemovePermissionFromEntity(aclInfo.UserName, en.Permission(aclInfo.Permission))
 	if err != nil {
 		a.setError(response, http.StatusNotFound, err)
 	} else {

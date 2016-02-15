@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"strings"
 	"time"
 
 	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
@@ -44,6 +45,15 @@ var (
 
 // UsersPrivilege : hash structure that defines the allowed privileges
 type UsersPrivilege map[string]interface{}
+
+func (u UsersPrivilege) String() string {
+	pArray := make([]string, 0, len(u))
+
+	for p := range u {
+		pArray = append(pArray, fmt.Sprintf("'%v'", p))
+	}
+	return strings.Join(pArray, ",")
+}
 
 // AmUserInfo : structure that defines the data atached to the user: password and privilege
 type AmUserInfo struct {

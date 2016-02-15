@@ -48,28 +48,28 @@ func Example_acl() {
 	entityManager := initEntityManager()
 	fmt.Println("ExampleShowACLAddCheckRemovePermissions")
 	fmt.Printf("User: %q, permission %q is: %v\n", userName1, canUsePermission,
-		acl.CheckUserPermission(entityManager, userName1, resourceName, acl.Permission(canUsePermission)))
+		acl.CheckUserPermission(entityManager, userName1, resourceName, en.Permission(canUsePermission)))
 	data, _ := entityManager.GetPropertyAttachedToEntity(resourceName, defs.AclPropertyName)
 	a, ok := data.(*acl.Acl)
 	if ok == false {
 		fmt.Println("Error: can't get property", defs.AclPropertyName, "attached to resource", resourceName)
 		return
 	}
-	a.AddPermissionToResource(entityManager, userName1, acl.Permission(canUsePermission))
+	a.AddPermissionToResource(entityManager, userName1, en.Permission(canUsePermission))
 	fmt.Printf("User: %q, permission %q is: %v\n", userName1, canUsePermission,
-		acl.CheckUserPermission(entityManager, userName1, resourceName, acl.Permission(canUsePermission)))
-	a.AddPermissionToResource(entityManager, groupName, acl.Permission(supportPermission))
-	a.AddPermissionToResource(entityManager, groupName, acl.Permission(canUsePermission))
-	a.AddPermissionToResource(entityManager, defs.AclAllEntryName, acl.Permission(allPermission))
-	a.AddPermissionToResource(entityManager, userInGroupName1, acl.Permission(usersPermission))
+		acl.CheckUserPermission(entityManager, userName1, resourceName, en.Permission(canUsePermission)))
+	a.AddPermissionToResource(entityManager, groupName, en.Permission(supportPermission))
+	a.AddPermissionToResource(entityManager, groupName, en.Permission(canUsePermission))
+	a.AddPermissionToResource(entityManager, defs.AclAllEntryName, en.Permission(allPermission))
+	a.AddPermissionToResource(entityManager, userInGroupName1, en.Permission(usersPermission))
 	permissions, _ := acl.GetUserPermissions(entityManager, userInGroupName1, resourceName)
 	fmt.Printf("All the permissions for user: %q, on resource %q are: %q\n",
 		userInGroupName1, resourceName, permissions)
 	permissions, _ = acl.GetUserPermissions(entityManager, groupName, resourceName)
 	fmt.Printf("All the permissions for group %q on resource %q are: %q\n", groupName, resourceName, permissions)
-	a.RemovePermissionFromEntity(groupName, acl.Permission(canUsePermission))
+	a.RemovePermissionFromEntity(groupName, en.Permission(canUsePermission))
 	fmt.Printf("After remove permission: %q from group %q\n", canUsePermission, groupName)
 	fmt.Printf("User: %q, permission %q is: %v\n", userInGroupName1, canUsePermission,
-		acl.CheckUserPermission(entityManager, userInGroupName1, resourceName, acl.Permission(canUsePermission)))
+		acl.CheckUserPermission(entityManager, userInGroupName1, resourceName, en.Permission(canUsePermission)))
 	fmt.Printf("All the permissions are: %q\n", a.GetAllPermissions())
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/emicklei/go-restful"
 	defs "github.com/ibm-security-innovation/libsecurity-go/defs"
 	ent "github.com/ibm-security-innovation/libsecurity-go/entity"
+	acl "github.com/ibm-security-innovation/libsecurity-go/acl"
 	cr "github.com/ibm-security-innovation/libsecurity-go/restful/common-restful"
 	"github.com/ibm-security-innovation/libsecurity-go/restful/libsecurity-restful"
 )
@@ -17,6 +18,7 @@ const (
 	usersPath         = "/users"
 	groupsPath        = "/groups"
 	resourcesPath     = "/resources"
+	permissionsPath     = "/permissions"
 	groupIDToken      = "groups"
 	groupIDParam      = "group-name"
 	groupIDComment    = "identifier of the group"
@@ -25,6 +27,9 @@ const (
 	resourceIDParam   = "resource-name"
 	userIDComment     = "identifier of the user"
 	resourceIDComment = "identifier of the resource"
+	permissionIDToken       = "permissions"
+	permissionIDParam       = "permission"
+	permissionIDComment = "permission"
 
 	originToken = "Origin"
 )
@@ -34,6 +39,7 @@ var (
 	usersServicePath    string // = enServicePath + usersPath
 	groupServicePath    string // = enServicePath + groupsPath
 	resourceServicePath string // = enServicePath + ResourcePath
+	permissionServicePath string // = enServicePath + PermissionPath
 )
 
 // EnRestful : Entity structure
@@ -46,6 +52,7 @@ func init() {
 	usersServicePath = enServicePath + usersPath
 	groupServicePath = enServicePath + groupsPath
 	resourceServicePath = enServicePath + resourcesPath
+	permissionServicePath = enServicePath + permissionsPath
 
 	initCommandToPath()
 }
@@ -70,6 +77,10 @@ func (en EnRestful) getUserURLPath(request *restful.Request, name string) cr.URL
 
 func (en EnRestful) getResourceURLPath(request *restful.Request, name string) cr.URL {
 	return cr.URL{URL: fmt.Sprintf("%v%v/%v", enServicePath, resourcesPath, name)}
+}
+
+func (en EnRestful) getPermissionURLPath(request *restful.Request, name string) cr.URL {
+	return cr.URL{URL: fmt.Sprintf("%v%v/%v", enServicePath, permissionsPath, name)}
 }
 
 func (en EnRestful) setError(response *restful.Response, httpStatusCode int, err error) {
@@ -206,6 +217,12 @@ func (en *EnRestful) restCreateResource(request *restful.Request, response *rest
 		en.setError(response, http.StatusPreconditionFailed, err)
 		return
 	}
+	newAcl := acl.NewACL()
+	err = en.st.UsersList.AddPropertyToEntity(id, defs.AclPropertyName, newAcl)
+	if err != nil {
+		en.setError(response, http.StatusPreconditionFailed, err)
+		return
+	}
 	response.WriteHeaderAndEntity(http.StatusCreated, en.getResourceURLPath(request, id))
 }
 
@@ -229,6 +246,37 @@ func (en *EnRestful) restRemoveAllResources(request *restful.Request, response *
 func (en *EnRestful) restRemoveResource(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter(resourceIDParam)
 	err := en.st.UsersList.RemoveResource(id)
+	if err != nil {
+		en.setError(response, http.StatusNotFound, err)
+	} else {
+		response.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func (en *EnRestful) restCreatePermission(request *restful.Request, response *restful.Response) {
+	id := request.PathParameter(permissionIDParam)
+	err := en.st.UsersList.AddPermission(ent.Permission(id))
+	if err != nil {
+		en.setError(response, http.StatusPreconditionFailed, err)
+		return
+	}
+	response.WriteHeaderAndEntity(http.StatusCreated, en.getPermissionURLPath(request, id))
+}
+
+func (en EnRestful) restGetAllPermissions(request *restful.Request, response *restful.Response) {
+	response.WriteHeaderAndEntity(http.StatusOK, en.st.UsersList.Permissions)
+}
+
+func (en *EnRestful) restRemoveAllPermissions(request *restful.Request, response *restful.Response) {
+	for name := range en.st.UsersList.Permissions {
+		en.st.UsersList.RemovePermission(name)
+	}
+	response.WriteHeader(http.StatusNoContent)
+}
+
+func (en *EnRestful) restRemovePermission(request *restful.Request, response *restful.Response) {
+	id := request.PathParameter(permissionIDParam)
+	err := en.st.UsersList.RemovePermission(ent.Permission(id))
 	if err != nil {
 		en.setError(response, http.StatusNotFound, err)
 	} else {

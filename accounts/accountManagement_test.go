@@ -164,6 +164,12 @@ func Test_IsPasswordMatch_Should_Not_Allow_Second_Login_With_Temporary_Password(
 	}
 }
 
+func Test_StoreLoadAM(t *testing.T) {
+	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
+
+	defs.StoreLoadTest(t, userAm, defs.AmPropertyName)
+}	
+
 // Test corners: String, logger etc
 func Test_corners(t *testing.T) {
 	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
@@ -176,9 +182,3 @@ func Test_corners(t *testing.T) {
 		}
 	}
 }
-
-func Test_StoreLoadAM(t *testing.T) {
-	userAm, _ := NewUserAm(SuperUserPermission, defaultPassword, defaultSalt, true)
-
-	defs.StoreLoadTest(t, userAm, defs.AmPropertyName)
-}	

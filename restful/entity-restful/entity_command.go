@@ -18,6 +18,8 @@ const (
 	handleAllUmResourceCommand
 	handleAllUmCommand
 	addToGroupCommand
+	handlePermissionCommand
+	handleAllPermissionsCommand
 )
 
 var (
@@ -31,6 +33,8 @@ var (
 		{handleAllUmResourceCommand, resourcesPath},
 		{handleAllUmCommand, ""},
 		{addToGroupCommand, "/{%v}/%v/{%v}"},
+		{handlePermissionCommand, permissionsPath + "/{%v}"},
+		{handleAllPermissionsCommand, permissionsPath},
 	}
 	urlCommands = make(cr.CommandToPath)
 )
@@ -175,6 +179,39 @@ func (en EnRestful) setResourceRoute(ws *restful.WebService) {
 
 }
 
+func (en EnRestful) setPermissionsRoute(ws *restful.WebService) {
+	str := fmt.Sprintf(urlCommands[handlePermissionCommand], permissionIDParam)
+	ws.Route(ws.PUT(str).
+		Filter(en.st.SuperUserFilter).
+		To(en.restCreatePermission).
+		Doc("Create permission").
+		Operation("createPermission").
+		Param(ws.PathParameter(permissionIDParam, permissionIDComment).DataType("string")).
+		Writes(cr.URL{}))
+
+	str = fmt.Sprintf(urlCommands[handleAllPermissionsCommand])
+	ws.Route(ws.GET(str).
+		Filter(en.st.SuperUserFilter).
+		To(en.restGetAllPermissions).
+		Doc("Get all permissions").
+		Operation("getAllPermissions"))
+
+	str = fmt.Sprintf(urlCommands[handlePermissionCommand], permissionIDParam)
+	ws.Route(ws.DELETE(str).
+		Filter(en.st.SuperUserFilter).
+		To(en.restRemovePermission).
+		Doc("Delete permission").
+		Operation("removePermission").
+		Param(ws.PathParameter(permissionIDParam, permissionIDComment).DataType("string")))
+
+	str = fmt.Sprintf(urlCommands[handleAllPermissionsCommand])
+	ws.Route(ws.DELETE(str).
+		Filter(en.st.SuperUserFilter).
+		To(en.restRemoveAllPermissions).
+		Doc("Delete all permissions").
+		Operation("removeAllPermissions"))
+}
+
 // RegisterBasic : register the entity to the RESTFul API container
 func (en EnRestful) RegisterBasic(container *restful.Container) {
 	enServicePath = cr.ServicePathPrefix + cr.Version + umPrefix
@@ -189,5 +226,6 @@ func (en EnRestful) RegisterBasic(container *restful.Container) {
 	en.setUserRoute(service)
 	en.setGroupRoute(service)
 	en.setResourceRoute(service)
+	en.setPermissionsRoute(service)
 	container.Add(service)
 }

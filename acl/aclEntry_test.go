@@ -2,6 +2,8 @@ package acl
 
 import (
 	"testing"
+
+	en "github.com/ibm-security-innovation/libsecurity-go/entity"
 )
 
 const (
@@ -16,9 +18,9 @@ const (
 	entryName = "test1"
 )
 
-var permissionsVec = []Permission{PerRead, PerWrite, PerExe, PerTake, PerAll}
-var notPermissionsVec = []Permission{PerNotAnEntry1, "", PerNotAnEntry2}
-var permissionsMap = make(map[Permission]bool)
+var permissionsVec = []en.Permission{PerRead, PerWrite, PerExe, PerTake, PerAll}
+var notPermissionsVec = []en.Permission{PerNotAnEntry1, "", PerNotAnEntry2}
+var permissionsMap = make(map[en.Permission]bool)
 
 func init() {
 	for _, p := range permissionsVec {
@@ -29,7 +31,7 @@ func init() {
 	}
 }
 
-func addPermissions(a *Entry, permissions map[Permission]bool, expected bool) (bool, *Permission) {
+func addPermissions(a *Entry, permissions map[en.Permission]bool, expected bool) (bool, *en.Permission) {
 	for p, val := range permissions {
 		if val == true {
 			val, err := a.AddPermission(p)
@@ -55,7 +57,7 @@ func Test_AddRemovePermissions(t *testing.T) {
 
 	a, _ := NewEntry(name)
 	// verify that empty permission can't be added
-	p := Permission("")
+	p := en.Permission("")
 	_, err := a.AddPermission(p)
 	if err == nil {
 		t.Errorf("Test fail: Invalid permission: '%v' was added to the %v", p, a)

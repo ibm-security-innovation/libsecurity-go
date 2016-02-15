@@ -6,8 +6,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 	"hash"
 	"testing"
+
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 )
 
 // TODO not tested: static external tests for iterations other than 1 (I couldn't find an online site)
@@ -149,5 +152,31 @@ func Test_RandomSalt(t *testing.T) {
 		} else if err != nil && i >= 0 {
 			t.Error("Test fail: Generating of random salt for size", i, " fail, error:", err)
 		}
+	}
+}
+
+
+// Test corners: String, logger etc
+func Test_corners(t *testing.T) {
+	pwd := []byte("ABCD12");
+	ilegalPwd := "AB"
+	salt := []byte("salt123")
+	minSecret := 4
+	maxSecret := 10
+
+	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard)
+	salt1, _ := NewSalt(pwd, minSecret, maxSecret, salt)
+	logger.Trace.Println("The salt info is", salt1)
+	_, err := GenerateSaltedPassword(pwd, minSecret, maxSecret, salt, len(pwd))
+	if err != nil {
+		t.Error("Test fail: Can't generate salted password, error:", err)
+	}
+	_, _, err = GeneratePasswordWithRndSalt(ilegalPwd, minSecret, maxSecret)
+	if err == nil {
+		t.Error("Test fail: Successfully generated password with random salt for ilegal password", ilegalPwd)
+	}
+	_, _, err = GeneratePasswordWithRndSalt(string(pwd), minSecret, maxSecret)
+	if err != nil {
+		t.Error("Test fail: Can't generate password with random salt, error:", err)
 	}
 }

@@ -7,11 +7,8 @@ import (
 	en "github.com/ibm-security-innovation/libsecurity-go/entity"
 )
 
-// Permission could be any string
-type Permission string
-
 // PermissionsMap : hash to check if a premission was defined
-type PermissionsMap map[Permission]interface{}
+type PermissionsMap map[en.Permission]interface{}
 
 var pLock sync.Mutex
 
@@ -25,7 +22,7 @@ func (a Entry) String() string {
 	return fmt.Sprintf("Name: %v, permissions: %v", a.EntityName, a.Permissions)
 }
 
-func isPermissionValid(permission Permission) error {
+func isPermissionValid(permission en.Permission) error {
 	if len(permission) == 0 {
 		return fmt.Errorf("permission is not valid, its length must be larger than 0")
 	}
@@ -43,7 +40,7 @@ func NewEntry(name string) (*Entry, error) {
 }
 
 // AddPermission : If the permission is valid and was not set yet, add it to the entry's permission list
-func (a *Entry) AddPermission(permission Permission) (bool, error) {
+func (a *Entry) AddPermission(permission en.Permission) (bool, error) {
 	pLock.Lock()
 	defer pLock.Unlock()
 
@@ -60,7 +57,7 @@ func (a *Entry) AddPermission(permission Permission) (bool, error) {
 }
 
 // RemovePermission : Remove the given permission from the ACL entry
-func (a *Entry) RemovePermission(permission Permission) error {
+func (a *Entry) RemovePermission(permission en.Permission) error {
 	pLock.Lock()
 	defer pLock.Unlock()
 
@@ -77,7 +74,7 @@ func (a *Entry) RemovePermission(permission Permission) error {
 }
 
 // CheckPermission : Check if a given permission is in the entry's list
-func (a Entry) CheckPermission(permission Permission) (bool, error) {
+func (a Entry) CheckPermission(permission en.Permission) (bool, error) {
 	pLock.Lock()
 	defer pLock.Unlock()
 

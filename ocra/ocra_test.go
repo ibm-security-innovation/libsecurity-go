@@ -447,11 +447,11 @@ func Test_StoreLoad(t *testing.T) {
 	userOcra, err := NewOcraUser(secret, ocraSuite)
 	err = userOcra.UpdateOcraKey(secret)
 	if err != nil {
-		t.Fatal("Fatal error: OCRA key couldn't be updated, error: %v", err)
+		t.Errorf("Fatal error: OCRA key couldn't be updated, error: %v", err)
 	}
 	err = userOcra.UpdateOcraSuite(ocraSuite)
 	if err != nil {
-		t.Fatal("Fatal error: OCRA suite couldn't be updated, error: %v", err)
+		t.Errorf("Fatal error: OCRA suite couldn't be updated, error: %v", err)
 	}
 
 	defs.StoreLoadTest(t, userOcra, defs.OcraPropertyName)

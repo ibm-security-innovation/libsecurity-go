@@ -3,6 +3,8 @@ package entityManagement
 import (
 	"fmt"
 	"strings"
+	"reflect"
+	"encoding/json"
 	"sync"
 
 	"github.com/ibm-security-innovation/libsecurity-go/accounts"
@@ -26,15 +28,20 @@ var (
 	RemoveEntityFromAcl func(el1 interface{}, name string)
 )
 
+// Permission could be any string
+type Permission string
+
 type uList map[string]*User
 type gList map[string]*Group
 type rList map[string]*Resource
+type pList map[Permission]interface{}
 
 // EntityManager : structure that holds lists of users, gropus and resources
 type EntityManager struct {
 	Users     uList
 	Groups    gList
 	Resources rList
+	Permissions pList
 }
 
 func (el EntityManager) String() string {
@@ -57,7 +64,7 @@ func (el EntityManager) String() string {
 // Create and initilize a new EntityManager, add all the protected entities
 // to avoid giving regular entities protected names
 func initList() *EntityManager {
-	entityManager := &EntityManager{Users: make(uList), Groups: make(gList), Resources: make(rList)}
+	entityManager := &EntityManager{Users: make(uList), Groups: make(gList), Resources: make(rList), Permissions: make(pList)}
 	for _, name := range protectedEntityManager {
 		entityManager.AddUser(name)
 	}
@@ -434,8 +441,10 @@ func LoadInfo(filePath string, secret []byte, el *EntityManager) error {
 		userType := strings.HasPrefix(key, getEntityStoreFmt(userTypeStr+prefix, entityToken, ""))
 		groupType := strings.HasPrefix(key, getEntityStoreFmt(groupTypeStr+prefix, entityToken, ""))
 		resourceType := strings.HasPrefix(key, getEntityStoreFmt(resourceTypeStr+prefix, entityToken, ""))
+		permissionType := strings.HasPrefix(key, getEntityStoreFmt(permissionTypeStr+prefix, "", ""))
 		var err error
 		var name string
+		var permission Permission
 		var e *Entity
 		var g *Group
 		if userType {
@@ -450,6 +459,8 @@ func LoadInfo(filePath string, secret []byte, el *EntityManager) error {
 			e, err = readEntityFromStorage(key, storage)
 			name = e.Name
 			el.Resources[name] = &(Resource{Entity: *e})
+		} else if permissionType {
+			permission, err = readPermissionFromStorage(key, storage)
 		}
 		if err != nil {
 			return fmt.Errorf("while reading file: '%s', string: '%s', error: %s", filePath, value, err)
@@ -466,6 +477,8 @@ func LoadInfo(filePath string, secret []byte, el *EntityManager) error {
 					}
 				}
 			}
+		}else if permissionType {
+			el.AddPermission(permission)
 		}
 	}
 	return nil
@@ -500,6 +513,101 @@ func (el *EntityManager) StoreInfo(filePath string, secret []byte, checkSecretSt
 			return err
 		}
 	}
+	for name := range el.Permissions {
+		err := addPermissionToStorage(name, prefix, storage)
+		if err != nil {
+			return err
+		}
+	}
 	logger.Info.Println("Store Security Tool data to file:", filePath)
 	return storage.StoreInfo(filePath)
+}
+
+//------------------- ACL global Permissions list handler
+
+func (el EntityManager) getPermissions() string {
+	pArray := make([]string, 0, len(el.Permissions))
+
+	for p := range el.Permissions {
+		pArray = append(pArray, string(p))
+	}
+	return fmt.Sprintf("Permissions: %v", strings.Join(pArray, ","))
+}
+
+// IsEqual : Check if the given permission list is equal to the EntityManager permissions list
+func (p pList) IsEqual(p1 pList) bool {
+	return (reflect.DeepEqual(p, p1) == true)
+}
+
+// IsPermissionInList : Check if the given permission is in the permissions list
+func (el *EntityManager) IsPermissionInList(permission Permission) bool {
+	_, exist := el.Permissions[permission]
+	return exist
+}
+
+// isPermissionValid : Check if the given permission is valid: length is OK and it is not in the list
+func (el EntityManager) isPermissionValid(permission Permission) error {
+	if len(permission) == 0 {
+		return fmt.Errorf("permission is not valid, its length must be larger than 0")
+	}
+	return nil
+}
+
+// AddPermission : Add a new permission to the EntityManager permisions list (only for valid permissions)
+func (el *EntityManager)  AddPermission(permission Permission) error {
+	lock.Lock()
+	defer lock.Unlock()
+
+	err := el.isPermissionValid(permission)
+	if err != nil {
+		return err
+	}
+	_, exist := el.Permissions[permission]
+	if exist == true {
+		return fmt.Errorf("can't add permission '%v', it already exists in the permissions set", permission)
+	}
+	el.Permissions[permission] = ""
+	logger.Trace.Println("Add permission:", permission, "to permissions list")
+	return nil
+}
+
+// RemovePermission the given permission from the EntityManager permissions list
+func (el *EntityManager) RemovePermission(permission Permission) error {
+	lock.Lock()
+	defer lock.Unlock()
+
+	err := el.isPermissionValid(permission)
+	if err != nil {
+		return err
+	}
+	_, exist := el.Permissions[permission]
+	if exist == false {
+		return fmt.Errorf("can't remove permission '%v', it does not exist in the permissions list", permission)
+	}
+	logger.Trace.Println("Remove permission:", permission, "from permissions list")
+	delete(el.Permissions, permission)
+	return nil
+}
+
+// Read the permission name from disk (in JSON format)
+func readPermissionFromStorage(key string, storage *ss.SecureStorage) (Permission, error) {
+	if storage == nil {
+		return "", fmt.Errorf("can't read permission from storage, storage is nil")
+	}
+	permission, exist := storage.Data[key]
+	if exist == false {
+		return "", fmt.Errorf("key '%v' was not found", key)
+	}
+	// remove the added ""
+	p1 := strings.TrimPrefix(permission, "\"")
+	p2 := strings.TrimSuffix(p1, "\"")
+	return Permission(p2), nil
+}
+
+func addPermissionToStorage(permission Permission, prefix string, storage *ss.SecureStorage) error {
+	if storage == nil {
+		return fmt.Errorf("can't add to storage, storage is nil")
+	}
+	val, _ := json.Marshal(permission)
+	return storage.AddItem(getEntityStoreFmt(permissionTypeStr+prefix, "", string(permission)), string(val))
 }

@@ -64,7 +64,6 @@ var (
 	lock sync.Mutex
 )
 
-// Permission could be any string
 type aclEntryMap map[string]*Entry
 
 // PermissionSet : hash to check if a premission was defined
@@ -246,7 +245,7 @@ func GetUserPermissions(el *en.EntityManager, userName string, resourceName stri
 }
 
 // CheckUserPermission : Check if the given user name has a given permission to the given entity
-func CheckUserPermission(el *en.EntityManager, userName string, resourceName string, permission Permission) bool {
+func CheckUserPermission(el *en.EntityManager, userName string, resourceName string, permission en.Permission) bool {
 	if el == nil {
 		return false
 	}
@@ -265,7 +264,7 @@ func CheckUserPermission(el *en.EntityManager, userName string, resourceName str
 }
 
 // AddPermissionToResource : Add the given permission to the given resource for the given user
-func (a *Acl) AddPermissionToResource(el *en.EntityManager, userName string, permission Permission) error {
+func (a *Acl) AddPermissionToResource(el *en.EntityManager, userName string, permission en.Permission) error {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -279,6 +278,9 @@ func (a *Acl) AddPermissionToResource(el *en.EntityManager, userName string, per
 	if el.IsEntityInList(userName) == false {
 		return fmt.Errorf("can't add permission to entity '%v', it is not in the entity list", userName)
 	}
+	if el.IsPermissionInList(permission) == false {
+		return fmt.Errorf("can't add permission '%v' to entity '%v', it is not in the permissions list, please add it first", permission, userName)
+	}
 	e, exist := a.Permissions[userName]
 	if exist == false {
 		e, _ = NewEntry(userName)
@@ -290,7 +292,7 @@ func (a *Acl) AddPermissionToResource(el *en.EntityManager, userName string, per
 }
 
 // RemovePermissionFromEntity : Remove the given permission from the given resource for the given user
-func (a *Acl) RemovePermissionFromEntity(entityName string, permission Permission) error {
+func (a *Acl) RemovePermissionFromEntity(entityName string, permission en.Permission) error {
 	lock.Lock()
 	defer lock.Unlock()
 

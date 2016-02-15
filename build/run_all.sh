@@ -10,8 +10,9 @@ code=(
 )
 
 c1=`pwd`
-mkdir tmp >& /dev/null
-cpwd=$c1/tmp
+mkdir res >& /dev/null
+cpwd=$c1/res
+
 rm -f $cpwd/res
 rm -f $cpwd/full-res
 rm -f $cpwd/tmp-res

@@ -9,6 +9,7 @@ import (
 	ss "github.com/ibm-security-innovation/libsecurity-go/storage"
 )
 
+// StoreLoadTest : common store load testing for all the different properties
 func StoreLoadTest(t *testing.T, userData interface{}, propertyName string) {
 	filePath := "./tmp.txt"
 	key := "key"
@@ -17,7 +18,7 @@ func StoreLoadTest(t *testing.T, userData interface{}, propertyName string) {
 
 	storage, err := ss.NewStorage(secret, false)
 	if err != nil {
-		t.Fatal("Fatal error: can't create storage, error: %v", err)
+		t.Errorf("Fatal error: can't create storage, error: %v", err)
 	}
 	s := Serializers[propertyName]	
 	err = s.AddToStorage(key, userData, storage)

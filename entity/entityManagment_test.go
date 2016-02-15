@@ -93,15 +93,21 @@ func addEntities(el *EntityManager, typeStr string, names []string, expected boo
 			el.AddUser(name)
 			groupName = getGroupFormat(name)
 			err = el.AddGroup(groupName)
-		} else {
+		} else if typeStr == resourceTypeStr {
 			err = el.AddResource(name)
+		}else {
+			err = el.AddPermission(Permission(name))
 		}
 		if expected == true && err != nil {
 			return false, fmt.Errorf("can't add a valid %v name '%v' to the entity list %v, error: %v", typeStr, name, el, err)
 		} else if expected == false && err == nil {
 			return false, fmt.Errorf("attempting to add an existing %v ('%v') to the entity list %v", typeStr, name, el)
 		}
-		if el.IsEntityInList(name) == false {
+		if typeStr == permissionTypeStr {
+			if el.IsPermissionInList(Permission(name)) == false {
+				return false, fmt.Errorf("%v '%v' added to the permissions list but was not found in %v", typeStr, name, el.Permissions)
+			}
+		}else if el.IsEntityInList(name) == false {
 			return false, fmt.Errorf("%v '%v' added to the entity list but was not found in %v", typeStr, name, el)
 		}
 		if typeStr == groupTypeStr {
@@ -133,8 +139,10 @@ func removeEntities(el *EntityManager, typeStr string, names []string, expected 
 		} else if typeStr == groupTypeStr {
 			el.RemoveUser(name)
 			err = el.RemoveGroup(getGroupFormat(name))
-		} else {
+		} else if typeStr == resourceTypeStr{
 			err = el.RemoveResource(name)
+		}else {
+			err = el.RemovePermission(Permission(name))
 		}
 		if expected == true && err != nil {
 			return false, fmt.Errorf("can't remove a valid %v '%v' from the entity list %v", typeStr, name, el)
@@ -145,10 +153,14 @@ func removeEntities(el *EntityManager, typeStr string, names []string, expected 
 			_, err = el.getUser(name)
 		} else if typeStr == groupTypeStr {
 			_, err = el.getGroup(name)
-		} else {
+		} else if typeStr == resourceTypeStr {
 			_, err = el.getResource(name)
+		} else {
+			if el.IsPermissionInList(Permission(name)) == true {
+				return false, fmt.Errorf("%v '%v' found in permissions list %v after it was removed", typeStr, name, el.Permissions)
+			}
 		}
-		if err == nil {
+		if err == nil && typeStr != permissionTypeStr {
 			return false, fmt.Errorf("%v '%v' found in entity list %v after it was removed", typeStr, name, el)
 		}
 	}
@@ -173,7 +185,7 @@ func removeEntities(el *EntityManager, typeStr string, names []string, expected 
 func Test_AddGetRemoveEntity(t *testing.T) {
 	expected := []bool{true, false}
 	names := []string{"a", "a1", "a2"}
-	types := []string{userTypeStr, groupTypeStr, resourceTypeStr}
+	types := []string{userTypeStr, groupTypeStr, resourceTypeStr, permissionTypeStr}
 
 	for _, typeStr := range types {
 		el := New()
@@ -192,6 +204,9 @@ func Test_AddGetRemoveEntity(t *testing.T) {
 		}
 		if len(el.Users) != len(protectedEntityManager) || len(el.Groups) != 0 || len(el.Resources) != 0 {
 			t.Error("Test fail: The entity list:", el, "must be with only the following entities:", protectedEntityManager)
+		}
+		if len(el.Permissions) != 0 {
+			t.Error("Test fail: The permissions list:", el.Permissions, "must be empty")
 		}
 	}
 }
@@ -321,6 +336,7 @@ func Test_VerifyEntityPasswordAndTimmingAttack(t *testing.T) {
 
 func Test_StoreLoad(t *testing.T) {
 	filePath := "./try.txt"
+	permissions := map[string]interface{}{"add":"", "save":"", "can use it":""}
 	size := 20
 	usersName := make([]string, size, size)
 
@@ -330,6 +346,9 @@ func Test_StoreLoad(t *testing.T) {
 	usersList := New()
 	GenerateUserData(usersList, usersName, secret, salt)
 	GenerateGroupList(usersList, usersName)
+	for p := range permissions {
+		usersList.AddPermission(Permission(p))
+	}
 	//GenerateAcl(st) // done in the acl_test
 	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard)
 	err := usersList.StoreInfo(filePath, []byte("1234"), true)
@@ -354,6 +373,11 @@ func Test_StoreLoad(t *testing.T) {
 		t.Errorf("Test fail, Stored users list != loaded one")
 		fmt.Println("The stored entity list:", usersList.getEntityManagerStrWithProperties())
 		fmt.Println("The loaded entity list:", usersList1.getEntityManagerStrWithProperties())
+	}
+	if usersList.Permissions.IsEqual(usersList1.Permissions) == false {
+		t.Errorf("Test fail, Stored permissions != loaded one")
+		fmt.Println("The stored permisions list:", usersList.Permissions)
+		fmt.Println("The loaded permisions list:", usersList1.getPermissions())
 	}
 }
 
