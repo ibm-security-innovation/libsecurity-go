@@ -263,31 +263,31 @@ func CheckUserPermission(el *en.EntityManager, userName string, resourceName str
 	return exist
 }
 
-// AddPermissionToResource : Add the given permission to the given resource for the given user
-func (a *Acl) AddPermissionToResource(el *en.EntityManager, userName string, permission en.Permission) error {
+// AddPermissionToEntity : Add the given permission to the given resource for the given entity
+func (a *Acl) AddPermissionToEntity(el *en.EntityManager, entityName string, permission en.Permission) error {
 	lock.Lock()
 	defer lock.Unlock()
 
 	if el == nil {
 		return fmt.Errorf("entityManager is nil")
 	}
-	err := en.IsEntityNameValid(userName)
+	err := en.IsEntityNameValid(entityName)
 	if err != nil {
 		return err
 	}
-	if el.IsEntityInList(userName) == false {
-		return fmt.Errorf("Cannot add permission to entity '%v': It is not in the entity list", userName)
+	if el.IsEntityInList(entityName) == false {
+		return fmt.Errorf("Cannot add permission to entity '%v': It is not in the entity list", entityName)
 	}
 	if el.IsPermissionInList(permission) == false {
-		return fmt.Errorf("Cannot add permission '%v' to entity '%v': It is not in the permissions list, please add it first", permission, userName)
+		return fmt.Errorf("Cannot add permission '%v' to entity '%v': It is not in the permissions list, please add it first", permission, entityName)
 	}
-	e, exist := a.Permissions[userName]
+	e, exist := a.Permissions[entityName]
 	if exist == false {
-		e, _ = NewEntry(userName)
+		e, _ = NewEntry(entityName)
 	}
-	logger.Trace.Println("Add permission:", permission, "to:", userName)
+	logger.Trace.Println("Add permission:", permission, "to:", entityName)
 	_, err = e.AddPermission(permission)
-	a.Permissions[userName] = e
+	a.Permissions[entityName] = e
 	return err
 }
 

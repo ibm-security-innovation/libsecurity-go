@@ -127,11 +127,11 @@ func generateAcl() (string, *acl.Acl, error) {
 	for _, name := range usersName {
 		for _, p := range usersPermissions {
 			stRestful.UsersList.AddPermission(en.Permission(p))
-			aclData.AddPermissionToResource(stRestful.UsersList, name, en.Permission(p))
+			aclData.AddPermissionToEntity(stRestful.UsersList, name, en.Permission(p))
 		}
 	}
 	stRestful.UsersList.AddPermission(en.Permission(perAll))
-	aclData.AddPermissionToResource(stRestful.UsersList, defs.AclAllEntryName, perAll)
+	aclData.AddPermissionToEntity(stRestful.UsersList, defs.AclAllEntryName, perAll)
 	stRestful.UsersList.AddPropertyToEntity(resourceName1, defs.AclPropertyName, aclData)
 	data, _ := json.Marshal(aclData)
 	return string(data), aclData, nil

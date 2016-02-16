@@ -55,13 +55,13 @@ func Example_acl() {
 		fmt.Println("Error: Cannot get property", defs.AclPropertyName, "attached to resource", resourceName)
 		return
 	}
-	a.AddPermissionToResource(entityManager, userName1, en.Permission(canUsePermission))
+	a.AddPermissionToEntity(entityManager, userName1, en.Permission(canUsePermission))
 	fmt.Printf("User %q permission %q is: %v\n", userName1, canUsePermission,
 		acl.CheckUserPermission(entityManager, userName1, resourceName, en.Permission(canUsePermission)))
-	a.AddPermissionToResource(entityManager, groupName, en.Permission(supportPermission))
-	a.AddPermissionToResource(entityManager, groupName, en.Permission(canUsePermission))
-	a.AddPermissionToResource(entityManager, defs.AclAllEntryName, en.Permission(allPermission))
-	a.AddPermissionToResource(entityManager, userInGroupName1, en.Permission(usersPermission))
+	a.AddPermissionToEntity(entityManager, groupName, en.Permission(supportPermission))
+	a.AddPermissionToEntity(entityManager, groupName, en.Permission(canUsePermission))
+	a.AddPermissionToEntity(entityManager, defs.AclAllEntryName, en.Permission(allPermission))
+	a.AddPermissionToEntity(entityManager, userInGroupName1, en.Permission(usersPermission))
 	permissions, _ := acl.GetUserPermissions(entityManager, userInGroupName1, resourceName)
 	fmt.Printf("All the permissions for user %q on resource %q are: %q\n",
 		userInGroupName1, resourceName, permissions)

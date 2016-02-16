@@ -283,7 +283,7 @@ func Test_UpdatePermissions(t *testing.T) {
 	for _, v := range setEntries {
 		for _, p := range v.permissions {
 			el.AddPermission(en.Permission(p))
-			a.AddPermissionToResource(el, v.name, p)
+			a.AddPermissionToEntity(el, v.name, p)
 		}
 	}
 
@@ -311,11 +311,11 @@ func Test_GroupListCorrectness(t *testing.T) {
 		t.Error("Test fail: Have permissions for empty lists")
 	}
 	el.AddPermission(en.Permission(PerRead))
-	err := a.AddPermissionToResource(el, groupName, PerRead)
+	err := a.AddPermissionToEntity(el, groupName, PerRead)
 	if err == nil {
 		t.Error("Test fail: Set permissions for a group but the group list is nil", a)
 	}
-	err = a.AddPermissionToResource(el, groupName, PerRead)
+	err = a.AddPermissionToEntity(el, groupName, PerRead)
 	if err == nil {
 		t.Error("Test fail: Set permissions for an unknown group", groupName, a)
 	}
@@ -324,7 +324,7 @@ func Test_GroupListCorrectness(t *testing.T) {
 	el.AddUserToGroup(groupName, userName)
 	e, _ := NewEntry(groupName)
 	a.addAclEntry(e)
-	a.AddPermissionToResource(el, groupName, PerRead)
+	a.AddPermissionToEntity(el, groupName, PerRead)
 	if CheckUserPermission(el, userName, resourceName, PerRead) != true {
 		t.Errorf("Test fail: '%v' permission must be set, %v", PerRead, a)
 	}
@@ -341,7 +341,7 @@ func Test_AllListPermissions(t *testing.T) {
 	el.AddUser(userName)
 	el.AddPropertyToEntity(resourceName, defs.AclPropertyName, a)
 	el.AddPermission(en.Permission(PerRead))
-	a.AddPermissionToResource(el, defs.AclAllEntryName, PerRead)
+	a.AddPermissionToEntity(el, defs.AclAllEntryName, PerRead)
 	if CheckUserPermission(el, userName, resourceName, PerRead) != true {
 		t.Errorf("Test fail: '%v' permission must be set, %v", PerRead, a)
 	}
@@ -410,7 +410,7 @@ func generateAcl(el *en.EntityManager) bool {
 			return false
 		}
 		for name := range el.Users {
-			a.AddPermissionToResource(el, name, en.Permission("uP"+n))
+			a.AddPermissionToEntity(el, name, en.Permission("uP"+n))
 		}
 	}
 	return true

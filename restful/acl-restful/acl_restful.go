@@ -166,7 +166,7 @@ func (a AclRestful) restSetPermission(request *restful.Request, response *restfu
 			return
 		}
 	}
-	err = a1.AddPermissionToResource(a.st.UsersList, aclInfo.UserName, en.Permission(aclInfo.Permission))
+	err = a1.AddPermissionToEntity(a.st.UsersList, aclInfo.UserName, en.Permission(aclInfo.Permission))
 	if err != nil {
 		a.setError(response, http.StatusNotFound, err)
 	} else {
