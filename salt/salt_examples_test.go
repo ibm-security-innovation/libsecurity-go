@@ -67,14 +67,14 @@ func ExampleGetRandomSalt() {
 	randSalt, _ := salt.GetRandomSalt(saltLen)
 	mySalt, err := salt.NewSalt(BasicSecret, minSecretLen, maxSecretLen, randSalt)
 	if err != nil {
-		fmt.Println("Error while creating new salt structure:", err)
+		fmt.Println("Error while creating the new salt structure:", err)
 	}
 	mySalt.Iterations = iter
 	mySalt.OutputLen = size
 	mySalt.Digest = f
 	res, err := mySalt.Generate(minSecretLen, maxSecretLen)
 	if err != nil {
-		fmt.Println("GetRandomSaltExample failed, error:", err)
+		fmt.Println("GetRandomSaltExample failed with error:", err)
 	} else {
 		fmt.Println("* Salted password of secret key:", string(BasicSecret), ",random salt length:", saltLen, randSalt,
 			"with", iter, "iterations, output password length:", size, "bytes and MD5 function is:", res)

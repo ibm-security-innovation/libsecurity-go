@@ -30,32 +30,32 @@ func ExampleUserPwd() {
 	newPwd := password.GetHashedPwd(tPwd)
 	err := userPwd.IsPasswordMatch(newPwd)
 	if err != nil {
-		fmt.Println("Ravid: error", err)
+		fmt.Println("Error", err)
 	}
 	userNewPwd := []byte(string(pwd) + "a")
 	newPwd, err = userPwd.UpdatePassword(userPwd.Password, userNewPwd, true)
 	if err != nil {
-		fmt.Printf("Password update for user %v to new password '%v' (%v) failed, error: %v\n", id, newPwd, string(userNewPwd), err)
+		fmt.Printf("Password update for user %v to new password '%v' (%v) failed, error %v\n", id, newPwd, string(userNewPwd), err)
 	} else {
-		fmt.Printf("User: '%v', updated password to '%v' (%v)\n", id, newPwd, string(userNewPwd))
+		fmt.Printf("User '%v', updated password to '%v' (%v)\n", id, newPwd, string(userNewPwd))
 	}
 	err = userPwd.IsPasswordMatch(newPwd)
 	if err != nil {
-		fmt.Printf("Check of the new password: '%v' (%v) for user: %v failed, error: %v\n", newPwd, string(userNewPwd), id, err)
+		fmt.Printf("Check of the new password, '%v' (%v), for user %v failed, error %v\n", newPwd, string(userNewPwd), id, err)
 	} else {
-		fmt.Printf("User: '%v', new password '%v' (%v) verified successfuly\n", id, newPwd, string(userNewPwd))
+		fmt.Printf("User '%v', new password '%v' (%v) verified successfully\n", id, newPwd, string(userNewPwd))
 	}
 	err = userPwd.IsPasswordMatch(pwd)
 	if err == nil {
-		fmt.Printf("Error: Old password: '%v' (%v) for user: %v accepted\n", pwd, string(pwd), id)
+		fmt.Printf("Error: Old password '%v' (%v) for user %v accepted\n", pwd, string(pwd), id)
 	} else {
-		fmt.Printf("User: '%v', Note that the old password '%v' (%v) can't be used anymore\n", id, pwd, string(pwd))
+		fmt.Printf("User '%v', Note that the old password '%v' (%v) cannot be used anymore\n", id, pwd, string(pwd))
 	}
 	newPwd, err = userPwd.UpdatePassword(userPwd.Password, pwd, true)
 	if err == nil {
-		fmt.Printf("Error: Password '%v' (typed password %v) for user %v was alredy used\n", newPwd, string(pwd), id)
+		fmt.Printf("Error: Password '%v' (typed password %v) for user %v was already used\n", newPwd, string(pwd), id)
 	} else {
-		fmt.Printf("Entity: '%v', Note that the old password (entered password) %v as it was already used\n", id, string(pwd))
+		fmt.Printf("Entity '%v'. Note that the old password (entered password) %v was already used\n", id, string(pwd))
 	}
 }
 
@@ -74,14 +74,14 @@ func ExampleUserPwd_ResetPassword() {
 	newPwd := password.GetHashedPwd(tPwd)
 	err := userPwd.IsPasswordMatch(newPwd)
 	if err != nil {
-		fmt.Printf("Check of newly generated password: '%v' for user: %v failed, error: %v\n", newPwd, id, err)
+		fmt.Printf("Check of newly generated password '%v' for user %v failed, error %v\n", newPwd, id, err)
 	} else {
-		fmt.Printf("Entity %v, after reseting password '%v' verified successfuly\n", id, newPwd)
+		fmt.Printf("Entity %v, after resetting password '%v' verified successfully\n", id, newPwd)
 	}
 	err = userPwd.IsPasswordMatch(newPwd)
 	if err == nil {
-		fmt.Printf("Error: Newly generated password: '%v' could be used only once\n", newPwd)
+		fmt.Printf("Error: Newly generated password '%v' could be used only once\n", newPwd)
 	} else {
-		fmt.Printf("Newly generated password: '%v', for entity: %v, can only be used once\n", newPwd, id)
+		fmt.Printf("Newly generated password '%v', for entity %v, can only be used once\n", newPwd, id)
 	}
 }

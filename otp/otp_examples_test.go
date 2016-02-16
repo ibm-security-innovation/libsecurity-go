@@ -36,11 +36,11 @@ func ExampleTotp() {
 
 	totp, err := otp.NewTotp(secret)
 	if err != nil {
-		fmt.Println("TOTP can't be initialized, Error: ", err)
+		fmt.Println("TOTP cannot be initialized, Error: ", err)
 	}
 	code, err := totp.Now()
 	if err != nil {
-		fmt.Println("Can't generate TOTP, error: ", err)
+		fmt.Println("Cannot generate TOTP, error: ", err)
 	} else {
 		e, _ := entityManager.GetPropertyAttachedToEntity(entityName, defs.OtpPropertyName)
 		if e == nil {
@@ -74,7 +74,7 @@ func initHotpUserslist(users []HotpUser, secret []byte) {
 		addOtpUser(user.name, secret, user.counter)
 		hotp, err := otp.NewHotp(secret, user.counter)
 		if err != nil {
-			fmt.Println("HOTP can't be initialized, error: ", err)
+			fmt.Println("HOTP cannot be initialized, error: ", err)
 		}
 		users[i].hotp = hotp
 	}
@@ -95,7 +95,7 @@ func ExampleHotp() {
 		hotp := users[idx].hotp
 		code, err := hotp.Next()
 		if err != nil {
-			fmt.Println("Can't generate HOTP, error: ", err)
+			fmt.Println("Cannot generate HOTP, error: ", err)
 		} else {
 			entity, _ := entityManager.GetPropertyAttachedToEntity(users[idx].name, defs.OtpPropertyName)
 			if entity != nil {
