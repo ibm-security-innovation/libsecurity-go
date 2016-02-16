@@ -143,10 +143,11 @@ func loginRoot(t *testing.T) {
 	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusOK, string(userLogin), cr.Match{Match: true})
 }
 
-// Verify that a root login with appropriate password successfully
-// Verify that a root login with wrong password fails
-// Verify that an unknown user can't login
-// Verify that logout works ok
+// 1. Verify that a root login with appropriate password successfully
+// 2. Verify that a root login with wrong password fails
+// 3. Verify that an unknown user can't login
+// 4. Verify that logout works ok
+// 5. VErify that undefined user can't login
 func TestLogin(t *testing.T) {
 	loginRoot(t)
 	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleAuthenticateCommand]), userPath)
@@ -155,6 +156,26 @@ func TestLogin(t *testing.T) {
 	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleAuthenticateCommand]), userPath)
 	userLogin, _ = json.Marshal(userData{defs.RootUserName + "1", []byte(string(rootPwd))})
 	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusMethodNotAllowed, string(userLogin), cr.Match{Match: false})
+
+	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleAuthenticateCommand]), logoutPath)
+	userLogin, _ = json.Marshal(pUserData{defs.RootUserName, rootPwd})
+	exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNoContent, "", cr.StringMessage{Str: ""})
+
+	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleAuthenticateCommand]), userPath)
+	userLogin, _ = json.Marshal(userData{"undef user", []byte(string(rootPwd))})
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusMethodNotAllowed, string(userLogin), cr.Match{Match: false})
+}
+
+// 1. Verify that delete root user can't be done
+// 2. Verify that delete undefined user can't be done
+func Test_removeRootAndUndefUser(t *testing.T) {
+	initAListOfUsers(t, usersName)
+
+	url := resourcePath + "/" + defs.RootUserName
+	data := cr.StringMessage{Str: cr.GetMessageStr}
+	exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusBadRequest, "", data)
+	url = resourcePath + "/aa" + defs.RootUserName
+	exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusBadRequest, "", data)
 }
 
 // Add AM property and get it
@@ -176,17 +197,27 @@ func Test_addRemoveAm(t *testing.T) {
 	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusNotFound, "", cr.Error{Code: http.StatusNotFound})
 }
 
-// 1. As a root: Update the user privilege, verify the results
-// 2. As a root: Update the root privilege, verify that it is not allowed
-// 3. As the user: Update the user privilege, verify that it is not allowed
+// 1. Generate token and verify it is OK
+// 2. As a root: Update the user privilege, verify the results
+// 3. As a root: Update the user privilege to undefined previlege, verify the results are StatusBadRequest
+// 4. As a root: Update the root privilege, verify that it is not allowed
+// 5. As the user: Update the user privilege, verify that it is not allowed
 func TestUpdatePrivilege(t *testing.T) {
 	userName := usersName[0]
 
 	initAListOfUsers(t, usersName)
-	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserPwdCommand]), usersPath, userName, privilegePath)
+	
+	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleAuthenticateCommand]), verifyPath)
+	data := cr.StringMessage{Str: cr.GetMessageStr}
+	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusOK, "", data)
+
+	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserPwdCommand]), usersPath, userName, privilegePath)
 	okURLJ := cr.URL{URL: fmt.Sprintf("%v/%v", servicePath, userName)}
 	privilege, _ := json.Marshal(privilegePwd{Privilege: am.SuperUserPermission})
 	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusCreated, string(privilege), okURLJ)
+
+	privilege, _ = json.Marshal(privilegePwd{Privilege: "no p"})
+	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusBadRequest, string(privilege), cr.Error{Code: http.StatusBadRequest})
 
 	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserPwdCommand]), usersPath, defs.RootUserName, privilegePath)
 	okURLJ = cr.URL{URL: fmt.Sprintf("%v/%v", servicePath, defs.RootUserName)}

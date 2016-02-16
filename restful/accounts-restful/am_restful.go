@@ -105,6 +105,7 @@ func (l AmRestful) getPrivilege(request *restful.Request, response *restful.Resp
 	return &privilege
 }
 
+/* old use
 func (l AmRestful) getPwd(request *restful.Request, response *restful.Response) *secretData {
 	var pwd secretData
 
@@ -115,6 +116,7 @@ func (l AmRestful) getPwd(request *restful.Request, response *restful.Response) 
 	}
 	return &pwd
 }
+*/
 
 func (l AmRestful) getPrivilegePwd(request *restful.Request, response *restful.Response) *privilegePwd {
 	var privilegePwd privilegePwd
@@ -289,21 +291,6 @@ func (l AmRestful) restUpdatePwd(request *restful.Request, response *restful.Res
 	}
 	addLoginCookie(response, tokenStr)
 	response.WriteHeaderAndEntity(http.StatusCreated, l.getURLPath(request, userName))
-}
-
-func (l AmRestful) generateUpdateOnlyCookie(userName string, pwd string, request *restful.Request, response *restful.Response) bool {
-	data, err := l.st.UsersList.GetEntityAccount(userName, []byte(pwd))
-	if err != nil {
-		l.setError(response, http.StatusMethodNotAllowed, err)
-		return false
-	}
-	tokenStr, err := app.GenerateToken(userName, data.Privilege, true, getIPAddress(request), l.st.SignKey)
-	if err != nil {
-		l.setError(response, http.StatusInternalServerError, err)
-		return false
-	}
-	addLoginCookie(response, tokenStr)
-	return true
 }
 
 func (l AmRestful) restResetPwd(request *restful.Request, response *restful.Response) {
