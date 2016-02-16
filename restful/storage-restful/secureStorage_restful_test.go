@@ -120,6 +120,12 @@ func exeCommandCheckRes(t *testing.T, method string, url string, expCode int, da
 }
 
 func initState(t *testing.T) {
+	headerInfo := make(headerMapT)
+	headerInfo[secretIDParam] = secretCode
+	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleStorageCommand]), storagePath)
+	okURLJ := cr.URL{URL: fmt.Sprintf("%v", servicePath)}
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusCreated, "", baseHeaderInfo, okURLJ)
+	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusOK, cr.GetMessageStr, baseHeaderInfo, cr.StringMessage{Str: cr.GetMessageStr})
 }
 
 // Test the following functions: add/get/delete item to/from storage and get storage
@@ -151,7 +157,26 @@ func TestAddGetDeleteItem(t *testing.T) {
 		exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNoContent, "", headerInfo, cr.EmptyStr)
 		exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusNotFound, "", headerInfo, cr.Error{Code: http.StatusNotFound})
 	}
-
 	url := fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleStorageCommand]), resourcePath)
 	exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNoContent, "", baseHeaderInfo, cr.EmptyStr)
+}
+
+// 1. Verify that secure storage with simple password cannot be created
+// 2. Verify that get of undefined secure storage return an error
+// 3. Verify that delete of undefined secure storage return an error
+// 4. VErify that add/get/delete item to secure storage with the wrong secret cannot be done
+func TestErrors(t *testing.T) {
+	headerInfo := make(headerMapT)
+	headerInfo[secretIDParam] = "1234"
+	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleStorageCommand]), storagePath)
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusBadRequest, "", headerInfo, cr.StringMessage{Str: cr.GetMessageStr})
+
+	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusNotFound, cr.GetMessageStr, headerInfo, cr.StringMessage{Str: cr.GetMessageStr})
+	exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNotFound, cr.GetMessageStr, headerInfo, cr.StringMessage{Str: cr.GetMessageStr})
+
+	url = itemPath
+	item, _ := json.Marshal(itemData{"123", "1"})
+	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusNotFound, string(item), headerInfo, cr.StringMessage{Str: cr.GetMessageStr})
+	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusNotFound, string(item), headerInfo, cr.StringMessage{Str: cr.GetMessageStr})
+	exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNotFound, string(item), headerInfo, cr.StringMessage{Str: cr.GetMessageStr})
 }

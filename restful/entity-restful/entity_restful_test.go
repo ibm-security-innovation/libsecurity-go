@@ -34,6 +34,7 @@ const (
 	usersIdx = iota
     groupsIdx
     resourceIdx
+    permissionIdx
 
 	protectedEntityManagerLen = 2 // set it if the EntityManager.protectedEntityManager is chaned
 )
@@ -45,8 +46,9 @@ var (
 	usersName     = []string{userName1, userName2}
 	resourcesName = []string{resourceName1, resourceName2}
 	groupsName = []string{groupName1, groupName2}
+	permissionsName = []string{"read", "write", "can get"}
 
-	servicePath = map[int]string {usersIdx: usersPath, groupsIdx: groupsPath, resourceIdx: resourcesPath}
+	servicePath = map[int]string {usersIdx: usersPath, groupsIdx: groupsPath, resourceIdx: resourcesPath, permissionIdx: permissionsPath}
 	stRestful  *libsecurityRestful.LibsecurityRestful
 	BasicUsers = ent.New()
 )
@@ -126,8 +128,15 @@ func generateEn() error {
 	return nil
 }
 
-func addDataVerifyResults(t *testing.T, url string, okJ cr.URL) {
+func addDataVerifyResults(t *testing.T, url string, okJ cr.URL, testGet bool) {
 	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusCreated, url, okJ)
+
+	if testGet == true {
+		exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusOK, "", cr.StringMessage{Str: cr.GetMessageStr})
+	}else { // it is add user to group, so delete the user and re add it
+		exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNoContent, "", cr.StringMessage{Str: ""})
+		exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusCreated, url, okJ)
+	}
 
 	code, sData, _ := cr.HTTPDataMethod(cr.HTTPGetStr, enPath, "")
 	var resData ent.EntityManager
@@ -149,6 +158,8 @@ func verifyLen(t *testing.T, url string, lenType string, length int) {
 		curentLen = len(stRestful.UsersList.Resources)
 	}else if lenType == groupsPath {
 		curentLen = len(stRestful.UsersList.Groups)
+	}else if lenType == permissionsPath {
+		curentLen = len(stRestful.UsersList.Permissions)
 	}
 	if code != http.StatusOK || curentLen != length {
 		t.Errorf("Test fail: run GET '%v' Expected status: %v recived %v, expected length: %v, received: %v",
@@ -163,6 +174,8 @@ func initState(t *testing.T) {
 	exeCommandCheckRes(t, cr.HTTPDeleteStr, enAllPath + resourcesPath, http.StatusNoContent, "", cr.StringMessage{Str: ""})
 	// remove all groups
 	exeCommandCheckRes(t, cr.HTTPDeleteStr, enAllPath + groupsPath, http.StatusNoContent, "", cr.StringMessage{Str: ""})
+	// remove all permissions
+	exeCommandCheckRes(t, cr.HTTPDeleteStr, enAllPath + permissionsPath, http.StatusNoContent, "", cr.StringMessage{Str: ""})
 	exeCommandCheckRes(t, cr.HTTPGetStr, enPath, http.StatusOK, "", *BasicUsers)
 	verifyLen(t, enPath, usersPath, protectedEntityManagerLen)
 	verifyLen(t, enPath, enAllPath + resourcesPath, protectedEntityManagerLen)
@@ -175,8 +188,8 @@ func setUm(t *testing.T, url string) {
 		iURL := url + enServicePath
 		okURLJ := cr.URL{URL: fmt.Sprintf("%v/%v", enServicePath + servicePath[usersIdx], name)}
 		specificURL := iURL + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUmUserCommand]), name)
-		addDataVerifyResults(t, specificURL, okURLJ)
-		verifyLen(t, enPath, usersPath, i+1+protectedEntityManagerLen)
+		addDataVerifyResults(t, specificURL, okURLJ, true)
+		verifyLen(t, enPath + usersPath, usersPath, i+1+protectedEntityManagerLen)
 	}
 }
 
@@ -186,8 +199,8 @@ func setResource(t *testing.T, url string) {
 		iURL := url + enServicePath
 		okURLJ := cr.URL{URL: fmt.Sprintf("%v/%v", enServicePath + servicePath[resourceIdx], name)}
 		specificURL := iURL + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUmResourceCommand]), name)
-		addDataVerifyResults(t, specificURL, okURLJ)
-		verifyLen(t, enPath, resourcesPath, i+1)
+		addDataVerifyResults(t, specificURL, okURLJ, true)
+		verifyLen(t, enPath + resourcesPath, resourcesPath, i+1)
 	}
 }
 
@@ -197,15 +210,26 @@ func setGroup(t *testing.T, url string) {
 	for i, gName := range groupsName {
 		okURLJ := cr.URL{URL: fmt.Sprintf("%v/%v", enServicePath + servicePath[groupsIdx], gName)}
 		specificURL := iURL + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUmGroupCommand]), gName)
-		addDataVerifyResults(t, specificURL, okURLJ)
-		verifyLen(t, enPath, groupsPath, i+1)
+		addDataVerifyResults(t, specificURL, okURLJ, true)
+		verifyLen(t, enPath + groupsPath, groupsPath, i+1)
 	}
 	setUm(t, url)
 	gName := groupsName[0]
 	for _, uName := range usersName {
 		okURLJ := cr.URL{URL: fmt.Sprintf("%v%v/%v%v/%v", enServicePath + servicePath[groupsIdx], groupsPath, gName, servicePath[usersIdx], uName)}
 		specificURL := iURL + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[addToGroupCommand]), gName, userIDToken, uName)
-		addDataVerifyResults(t, specificURL, okURLJ)
+		addDataVerifyResults(t, specificURL, okURLJ, false)
+	}
+}
+
+// Initialize the UsersList to include Permissions
+func setPermissions(t *testing.T, url string) {
+	for i, name := range permissionsName {
+		iURL := url + enServicePath
+		okURLJ := cr.URL{URL: fmt.Sprintf("%v/%v", enServicePath + servicePath[permissionIdx], name)}
+		specificURL := iURL + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handlePermissionCommand]), name)
+		addDataVerifyResults(t, specificURL, okURLJ, false)
+		verifyLen(t, enPath + permissionsPath, permissionsPath, i+1)
 	}
 }
 
@@ -238,9 +262,6 @@ func TestAddRemoveGroup(t *testing.T) {
 	// remove groups and verify that the number of groups decrease
 	for i, name := range groupsName {
 		url := listener + enServicePath + servicePath[groupsIdx] + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUmCommand]), name)
-//		d1, _ := json.Marshal(stRestful.UsersList)
-//		t.Error("Ravid: d1 is", string(d1))
-//		exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusOK, string(d1), stRestful.UsersList.(ent.EntityManager))
 		exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNoContent, "", cr.StringMessage{Str: ""})
 		verifyLen(t, enPath, groupsPath, len(groupsName)-i-1)
 	}
@@ -261,4 +282,62 @@ func TestAddRemoveResource(t *testing.T) {
 		exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNoContent, "", cr.StringMessage{Str: ""})
 		verifyLen(t, enPath, resourcesPath, len(resourcesName)-i-1)
 	}
+}
+
+// Test the following:
+// 1. The users list is empty
+// 2. Add a new permission, verify the response code and that there is only one permission
+// 4. Add a new permission, verify the response code and that there are 2 permission
+// 5. Remove the first permission, verify the response code and that there is only one permission, the second one
+// 6. Remove the second permission, verify the response code and that the permission list is empty
+func TestAddRemovePermission(t *testing.T) {
+	initState(t)
+	setPermissions(t, listener)
+	// remove permission and verify that the number of permission decrease
+	for i, name := range permissionsName {
+		url := listener + enServicePath + servicePath[permissionIdx] + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUmCommand]), name)
+		exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNoContent, "", cr.StringMessage{Str: ""})
+		verifyLen(t, enPath, permissionsPath, len(permissionsName)-i-1)
+	}
+}
+
+// Test the following:
+// 1. Init users, groups, resources and permissions
+// 2. Remove all the data
+func TestAddRemoveAll(t *testing.T) {
+	initState(t)
+	setGroup(t, listener) // it sets also the users
+	setResource(t, listener)
+	setPermissions(t, listener)
+	initState(t)
+}
+
+// Test the following:
+// for user/group/resource and permission:
+// 1. Add the same entity 2 times and verify error for the second time
+// 2. Remove the entity 2 times, verify not found error for the second time
+// 3. Get undefined entity
+// 4. Add undefined user to a group
+// 4. Remove undefined user from group
+func TestErrors(t *testing.T) {
+	initState(t)
+	name := "entity-1"
+	commands := []int{handleUmUserCommand, handleUmGroupCommand, handleUmResourceCommand, handlePermissionCommand}
+
+	for _, idx := range commands {
+		url := listener + enServicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[idx]), name)
+		exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusCreated, "", cr.StringMessage{Str: cr.GetMessageStr})
+		exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusPreconditionFailed, "", cr.StringMessage{Str: cr.GetMessageStr})
+		exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNoContent, "", cr.StringMessage{Str: cr.GetMessageStr})
+		exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNotFound, "", cr.Error{Code: http.StatusNotFound})
+		if idx != handlePermissionCommand {
+			exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusNotFound, "", cr.Error{Code: http.StatusNotFound})
+		}
+	}
+
+	initState(t)
+	setGroup(t, listener)	
+	url := listener + enServicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[addToGroupCommand]), groupsName[0], userIDToken, "undef user")
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusPreconditionFailed, "", cr.StringMessage{Str: cr.GetMessageStr})
+	exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusPreconditionFailed, "", cr.StringMessage{Str: cr.GetMessageStr})
 }

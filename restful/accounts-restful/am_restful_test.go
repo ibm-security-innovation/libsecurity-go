@@ -83,6 +83,13 @@ func runServer() {
 	l.SetData(stRestful)
 	l.RegisterFull(wsContainer)
 
+	// for coverage purposes
+	wsContainer1 := restful.NewContainer()
+	l1 := NewAmRestful()
+	l1.SetData(stRestful)
+	l1.RegisterBasic(wsContainer1)
+
+
 	fmt.Printf("start listening on %v%v\n", host, port)
 	server := &http.Server{Addr: port, Handler: wsContainer}
 	log.Fatal(server.ListenAndServe())
@@ -311,4 +318,25 @@ func TestResetPassword(t *testing.T) {
 	cr.TestSetCookie(cookieStr)
 	url = resourcePath + "/" + userName
 	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusOK, "", data.(*am.AmUserInfo))
+}
+
+// Verify errors for the following secenarios:
+// 1. Invalid password
+// 2. Ilegal password data
+// 3. Undefined user
+// 4. Reset password for undefined user
+func TestErrors(t *testing.T) {
+	initAListOfUsers(t, usersName)
+
+	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserPwdCommand]), usersPath, defs.RootUserName, pwdPath)
+	data, _ := json.Marshal(cr.UpdateSecret{OldPassword: "123", NewPassword: "123"})
+	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusBadRequest, "", cr.StringMessage{Str: cr.GetMessageStr})
+	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserPwdCommand]), usersPath, "undef user", pwdPath)
+	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusNotFound, string(data), cr.StringMessage{Str: cr.GetMessageStr})
+	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserPwdCommand]), usersPath, defs.RootUserName, pwdPath)
+	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusBadRequest, string(data), cr.StringMessage{Str: cr.GetMessageStr})
+
+	// reset undefined user password
+	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserCommand]), usersPath, "undefined user")
+	exeCommandCheckRes(t, cr.HTTPPatchStr, url, http.StatusNotFound, cr.GetMessageStr, cr.StringMessage{Str: cr.GetMessageStr})
 }

@@ -74,6 +74,9 @@ func (s SRestful) isSecureStorgaeValid(response *restful.Response) bool {
 }
 
 func (s SRestful) isSecretMatch(request *restful.Request, response *restful.Response) bool {
+	if s.isSecureStorgaeValid(response) == false {
+		return false
+	}
 	secret := request.HeaderParameter(secretIDParam)
 	if s.st.SecureStorage.IsSecretMatch([]byte(secret)) == false {
 		s.setError(response, http.StatusNotFound, fmt.Errorf("Error: The password that you entered does not match the secure storage password"))
@@ -94,6 +97,9 @@ func (s *SRestful) restCreateSecureStorage(request *restful.Request, response *r
 }
 
 func (s SRestful) restDeleteSecureStorage(request *restful.Request, response *restful.Response) {
+	if s.isSecureStorgaeValid(response) == false {
+		return
+	}
 	if s.isSecretMatch(request, response) == false {
 		return
 	}

@@ -132,7 +132,7 @@ func (en *EnRestful) restRemoveGroup(request *restful.Request, response *restful
 	groupID := request.PathParameter(groupIDParam)
 	err := en.st.UsersList.RemoveGroup(groupID)
 	if err != nil {
-		en.setError(response, http.StatusBadRequest, err)
+		en.setError(response, http.StatusNotFound, err)
 	} else {
 		response.WriteHeader(http.StatusNoContent)
 	}
@@ -143,7 +143,7 @@ func (en *EnRestful) restAddUserToGroup(request *restful.Request, response *rest
 	userID := request.PathParameter(userIDParam)
 	err := en.st.UsersList.AddUserToGroup(groupID, userID)
 	if err != nil {
-		en.setError(response, http.StatusBadRequest, err)
+		en.setError(response, http.StatusPreconditionFailed, err)
 		return
 	}
 	response.WriteHeaderAndEntity(http.StatusCreated, en.getGroupURLPath(request, fmt.Sprintf("%v/%v/%v/%v", groupIDToken, groupID, userIDToken, userID)))
@@ -154,7 +154,7 @@ func (en *EnRestful) restRemoveUserFromGroup(request *restful.Request, response 
 	userID := request.PathParameter(userIDParam)
 	err := en.st.UsersList.RemoveUserFromGroup(groupID, userID)
 	if err != nil {
-		en.setError(response, http.StatusBadRequest, err)
+		en.setError(response, http.StatusPreconditionFailed, err)
 		return
 	}
 	response.WriteHeader(http.StatusNoContent)
@@ -206,16 +206,6 @@ func (en *EnRestful) restRemoveUser(request *restful.Request, response *restful.
 	} else {
 		response.WriteHeader(http.StatusNoContent)
 	}
-}
-
-func (en EnRestful) getUserByUserID(request *restful.Request, response *restful.Response) (*ent.User, string) {
-	userID := request.PathParameter(userIDParam)
-	user, exist := en.st.UsersList.Users[userID]
-	if exist == false {
-		en.setError(response, http.StatusNotFound, fmt.Errorf("Error: User: '%v' cannot be found", userID))
-		return nil, userID
-	}
-	return user, userID
 }
 
 func (en *EnRestful) restCreateResource(request *restful.Request, response *restful.Response) {

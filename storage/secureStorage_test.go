@@ -8,6 +8,8 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	logger "github.com/ibm-security-innovation/libsecurity-go/logger"
 )
 
 const (
@@ -50,6 +52,18 @@ func Test_checkAddRemoveItemToSecureStorage(t *testing.T) {
 			t.Errorf("Test fail: The recieved value: '%v' was not as expected '%v'", val, values[i])
 		} else if val == values[i] && i == 0 {
 			t.Errorf("Test fail: The recieved value: '%v' for key '%v' was changed", val, key)
+		}
+	}
+	s1 := s.GetDecryptStorageData()
+	for key, val := range s1.Data {
+		sVal, err := s.GetItem(key)
+		if err != nil {
+			t.Errorf("Test fail: decrypted key '%v' was not found in the storage, error: %v", key, err)
+		}
+		if val != sVal {
+			t.Errorf("Test fail: key '%v' decrepted val '%v' is not equal to the one in the storage %v\n", key, val, sVal)
+			t.Errorf("Storage %v", s.GetDecryptStorageData())
+			t.Errorf("Decrypted storage %v", s1)
 		}
 	}
 	for _, key := range keys {
@@ -102,5 +116,35 @@ func Test_checkStoreLoadSecureStorageFile(t *testing.T) {
 	_, err = LoadInfo(fileName, secret)
 	if err == nil {
 		t.Errorf("Test fail: Successfully read secure storage from file while the file was currpted")
+	}
+}
+
+
+func Test_corners(t *testing.T) {
+	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard)
+	s, _ := NewStorage([]byte(baseSecret), true)
+	s.AddItem("key", "value")
+	logger.Trace.Println("The storage is", s.GetDecryptStorageData())
+	if s.IsSecretMatch([]byte("a1234")) == true {
+		t.Errorf("Test fail: wrong secret match to the storage secret")
+	}
+	fileName := "tmp.txt"
+	defer os.Remove(fileName)
+	fileName1 := "tmp1.txt"
+	defer os.Remove(fileName1)
+	ioutil.WriteFile(fileName, []byte("12345678111111111111111111111111111111111111111111111"), os.ModePerm)
+	ioutil.WriteFile(fileName1, []byte("12345678111111111111111111111111111111111111111111111 "), os.ModePerm)
+	v1 := GetSecureKey(fileName)
+	v2 := GetSecureKey(fileName)
+	v3 := GetSecureKey(fileName1)
+	if string(v1) != string(v2) {
+		t.Errorf("Test fail: the same GetSecureKey return 2 different results")
+	}
+	if string(v1) == string(v3) {
+		t.Errorf("Test fail: different inputs to GetSecureKey return the same results")
+	}
+	_, err := NewStorage([]byte("1234"), true)
+	if err == nil {
+		t.Errorf("Test fail: simple secret was accepted")
 	}
 }

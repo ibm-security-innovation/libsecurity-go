@@ -158,6 +158,7 @@ func isValidSecret(secret []byte) error {
 
 // AddItem : Add (or replace) to the storage a new item using the given key and value
 func (s *SecureStorage) AddItem(key string, value string) error {
+	s.RemoveItem(key) // if the key already exist, remove it
 	lock.Lock()
 	defer lock.Unlock()
 
