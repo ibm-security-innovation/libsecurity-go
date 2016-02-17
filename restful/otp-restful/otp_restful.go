@@ -83,7 +83,6 @@ func (u OtpRestful) getOtp(request *restful.Request, response *restful.Response)
 func (u OtpRestful) restAddOtp(request *restful.Request, response *restful.Response) {
 	var secret cr.Secret
 	name := request.PathParameter(userIDParam)
-
 	err := request.ReadEntity(&secret)
 	if err != nil {
 		u.setError(response, http.StatusBadRequest, err)
@@ -114,7 +113,7 @@ func (u OtpRestful) restDeleteOtp(request *restful.Request, response *restful.Re
 	name := request.PathParameter(userIDParam)
 	err := u.st.UsersList.RemovePropertyFromEntity(name, defs.OtpPropertyName)
 	if err != nil {
-		u.setError(response, http.StatusBadRequest, err)
+		u.setError(response, http.StatusNotFound, err)
 	} else {
 		response.WriteHeader(http.StatusNoContent)
 	}
@@ -154,23 +153,6 @@ func (u OtpRestful) restSetOtpBlockedState(request *restful.Request, response *r
 		return
 	}
 	response.WriteHeaderAndEntity(http.StatusOK, u.getURLPath(request, name))
-}
-
-func (u OtpRestful) getExpectedCodes(request *restful.Request, response *restful.Response) string {
-	var secret cr.Secret
-	data := u.getOtp(request, response)
-	if data == nil {
-		return ""
-	}
-	err := request.ReadEntity(&secret)
-	if err != nil {
-		u.setError(response, http.StatusBadRequest, err)
-		return ""
-	}
-	valHot, _ := data.BaseHotp.AtCount(data.BaseHotp.Count)
-	valTot, _ := data.BaseTotp.Now()
-	return fmt.Sprintf("Expected Hotp code: %v, Count: %v, Expected Totp code: %v",
-		valHot, data.BaseHotp.Count, valTot)
 }
 
 func (u OtpRestful) restVerifyOtpHotpUserCode(request *restful.Request, response *restful.Response) {

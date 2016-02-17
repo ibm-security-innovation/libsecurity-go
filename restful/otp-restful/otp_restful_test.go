@@ -187,3 +187,26 @@ func TestVerifyHotpCode(t *testing.T) {
 		exeCommandCheckRes(t, cr.HTTPPostStr, url, http.StatusOK, string(secret), cr.Match{Match: false, Message: cr.NoMessageStr})
 	}
 }
+
+// Verify errors for the following secenarios:
+// 1. Verify that simple password is not accepted
+// 2. Verify that wrong parameter as password is not accepted
+// 3. Verify that put new OPT to undefined user return with error
+// 4. Verify that delete OPT from undefined user return with error
+// 5. Verify that get block status from undefined user return with error
+// 6. Verify that put block status to undefined user return with error
+func TestErrors(t *testing.T) {
+	data, _ := json.Marshal(cr.Secret{Secret: "123"})
+	sData, _ := json.Marshal(userState{true})
+
+	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserCommand]), usersPath, usersName[0])
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusBadRequest, string(data), cr.StringMessage{Str: cr.GetMessageStr})
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusBadRequest, string(sData), cr.StringMessage{Str: cr.GetMessageStr})
+	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserCommand]), usersPath, "undef user")
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusNotFound, string(uData), cr.StringMessage{Str: cr.GetMessageStr})
+	exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNotFound, string(uData), cr.StringMessage{Str: cr.GetMessageStr})
+
+	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserBlockCommand]), usersPath, "undef user", blockedStateToken)
+	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusNotFound, string(sData), cr.StringMessage{Str: cr.GetMessageStr})
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusNotFound, string(sData), cr.StringMessage{Str: cr.GetMessageStr})
+}
