@@ -119,6 +119,26 @@ func Test_checkStoreLoadSecureStorageFile(t *testing.T) {
 	}
 }
 
+// Verify that when the version of the saved file is not equal to the loaded one, an error is generated
+func Test_checkVersionInSecureStorageFile(t *testing.T) {
+	keys := []string{"k1", "k2", "k3"}
+	values := []string{"v1", "v2", "v3"}
+	secret := []byte(baseSecret)
+	fileName := "./tmp.txt"
+
+	s, _ := NewStorage(secret, true)
+	s.Version = "new 1"
+	for i, key := range keys {
+		s.AddItem(key, values[i])
+	}
+	s.StoreInfo(fileName)
+	defer os.Remove(fileName)
+	_, err := LoadInfo(fileName, secret)
+	if err == nil {
+		t.Errorf("Test fail: The saved and loaded versions must not be equal")
+		t.FailNow()
+	}
+}
 
 func Test_corners(t *testing.T) {
 	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard)

@@ -200,13 +200,18 @@ func TestErrors(t *testing.T) {
 	sData, _ := json.Marshal(userState{true})
 
 	url := listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserCommand]), usersPath, usersName[0])
-	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusBadRequest, string(data), cr.StringMessage{Str: cr.GetMessageStr})
-	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusBadRequest, string(sData), cr.StringMessage{Str: cr.GetMessageStr})
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusBadRequest, string(data), cr.Match{Match: false, Message: cr.NoMessageStr})
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusBadRequest, string(sData), cr.Match{Match: false, Message: cr.NoMessageStr})
 	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserCommand]), usersPath, "undef user")
-	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusNotFound, string(uData), cr.StringMessage{Str: cr.GetMessageStr})
-	exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNotFound, string(uData), cr.StringMessage{Str: cr.GetMessageStr})
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusNotFound, string(uData), cr.Match{Match: false, Message: cr.NoMessageStr})
+	exeCommandCheckRes(t, cr.HTTPDeleteStr, url, http.StatusNotFound, string(uData), cr.Match{Match: false, Message: cr.NoMessageStr})
 
 	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserBlockCommand]), usersPath, "undef user", blockedStateToken)
-	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusNotFound, string(sData), cr.StringMessage{Str: cr.GetMessageStr})
-	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusNotFound, string(sData), cr.StringMessage{Str: cr.GetMessageStr})
+	exeCommandCheckRes(t, cr.HTTPGetStr, url, http.StatusNotFound, string(sData), cr.Match{Match: false, Message: cr.NoMessageStr})
+	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusNotFound, string(sData), cr.Match{Match: false, Message: cr.NoMessageStr})
+
+	// use the wrong object return with error: it is not checked by golang, if it is critical, unmarshal to map and verify the relevant fields can be used
+	//	initAListOfUsers(t, usersName)
+	//	url = listener + servicePath + fmt.Sprintf(cr.ConvertCommandToRequest(urlCommands[handleUserBlockCommand]), usersPath, usersName[0], blockedStateToken)
+	//	exeCommandCheckRes(t, cr.HTTPPutStr, url, http.StatusBadRequest, string(uData), cr.Match{Match: false, Message: cr.NoMessageStr})
 }

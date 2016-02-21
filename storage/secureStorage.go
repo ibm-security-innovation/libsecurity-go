@@ -60,6 +60,9 @@ const (
 	minLowerCase  = 2
 	minDigits     = 2
 	minExtraChars = 1
+
+	// version : version number to be used when the file is stored
+	version = "V 1.2"
 )
 
 var (
@@ -89,6 +92,7 @@ type SecureStorage struct {
 	Salt   []byte
 	Sign   []byte
 	Data   SecureDataMap
+	Version string
 	secret []byte
 }
 
@@ -118,7 +122,7 @@ func NewStorage(secret []byte, checkSecretStrength bool) (*SecureStorage, error)
 	}
 	saltData, _ := salt.GetRandomSalt(SaltLen)
 	pass := getSaltedPass(secret, saltData)
-	s := SecureStorage{Data: make(SecureDataMap), secret: pass, Salt: saltData}
+	s := SecureStorage{Data: make(SecureDataMap), secret: pass, Salt: saltData, Version: version}
 	return &s, nil
 }
 
@@ -343,6 +347,9 @@ func LoadInfo(fileName string, secret []byte) (*SecureStorage, error) {
 	sign := s.calcHMac(sData, pass)
 	if bytes.Compare(sign, s.Sign) != 0 {
 		return nil, fmt.Errorf("The file '%v' is not genuine", fileName)
+	}
+	if s.Version != version {
+		return nil, fmt.Errorf("The loaded file version '%v' is not as the current version %v", s.Version, version)
 	}
 	s.secret = pass
 	return &s, nil

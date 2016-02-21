@@ -137,6 +137,7 @@ func (u OtpRestful) restIsOtpBlocked(request *restful.Request, response *restful
 
 func (u OtpRestful) restSetOtpBlockedState(request *restful.Request, response *restful.Response) {
 	var blockedState userState
+
 	name := request.PathParameter(userIDParam)
 	err := request.ReadEntity(&blockedState)
 	if err != nil {
